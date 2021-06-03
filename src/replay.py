@@ -11,7 +11,7 @@ import platform
 BALLCHASING = "https://ballchasing.com/api"
 
 def require_token(func):
-    """Make sure user is logged in before proceeding"""
+    """Make sure user has a token"""
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         if self.token is None:
@@ -24,11 +24,12 @@ def require_token(func):
 
 class ReplayManager:
 
-    def __init__(self, token=None):
+    def __init__(self, token=None, tracking=True):
         # Ballchasing token
         self.token = token
         self.replay_list = None
         self.header = dict()
+        self.tracking = tracking
 
     @require_token
     def get_remote_replay_list(self, player1=None, player2=None):
@@ -68,11 +69,12 @@ class ReplayManager:
                 if not os.path.exists(json_file_name):
                     parent = pathlib.Path() / ".."
                     log = open(json_file_name, "w")
-                    # Windows!
+
+                    tracking_str = "-n" if self.tracking else ""
                     if platform.system() == 'Windows':
-                        p = subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p {replay_file_name}").split(), stdout=log)
+                        p = subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p {tracking_str} {replay_file_name}").split(), stdout=log)
                     elif platform.system() == 'Linux':
-                        p = subprocess.Popen((f"{parent / 'bin/rrrocket'} -p {replay_file_name}").split(), stdout=log)
+                        p = subprocess.Popen((f"{parent / 'bin/rrrocket'} -p {tracking_str} {replay_file_name}").split(), stdout=log)
  
             except:
                 print(f"Exception occured, skipping {game['id']}")
