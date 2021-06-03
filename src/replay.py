@@ -3,6 +3,10 @@ import functools
 import warnings
 import time
 import os
+import subprocess
+import pathlib
+import pickle
+import platform
 
 BALLCHASING = "https://ballchasing.com/api"
 
@@ -48,16 +52,30 @@ class ReplayManager:
         print(f"Total number of games: {count}")
         game_list = self.replay_list['list']
         for game in game_list:
-            file_name = rf"../data/replay/{game['id']}.replay"
-            if os.path.exists(file_name):
-                print(f"Game {game['id']} exists, skipping...")
-                continue
-            r = requests.get(BALLCHASING + f"/replays/{game['id']}/file", headers=self.header)
-            if r.status_code == 200:
-                with open(file_name, "wb") as f:
-                    f.write(r.content)
+            try:
+                replay_file_name = rf"../data/replay/{game['id']}.replay"
+                json_file_name = rf"../data/json/{game['id']}.json"
+                
+                if not os.path.exists(replay_file_name):
+                    r = requests.get(BALLCHASING + f"/replays/{game['id']}/file", headers=self.header)
+                    if r.status_code == 200:
+                        with open(replay_file_name, "wb") as f:
+                            f.write(r.content)
+                    time.sleep(0.5)
+                else:
+                    print(f"Replay file {game['id']} exists!")
 
-            time.sleep(0.5)        
+                if not os.path.exists(json_file_name):
+                    parent = pathlib.Path() / ".."
+                    log = open(json_file_name, "w")
+                    # Windows!
+                    if platform.system() == 'Windows':
+                        p = subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p {replay_file_name}").split(), stdout=log)
+                    elif platform.system() == 'Linux':
+                        p = subprocess.Popen((f"{parent / 'bin/rrrocket'} -p {replay_file_name}").split(), stdout=log)
+ 
+            except:
+                print(f"Exception occured, skipping {game['id']}")
 
 if __name__ == '__main__':
     from dotenv import dotenv_values
