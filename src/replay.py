@@ -56,6 +56,7 @@ class ReplayManager:
             try:
                 replay_file_name = rf"../data/replay/{game['id']}.replay"
                 json_file_name = rf"../data/json/{game['id']}.json"
+                json_tracking_file_name = rf"../data/json/{game['id']}.tracking.json"
                 
                 if not os.path.exists(replay_file_name):
                     r = requests.get(BALLCHASING + f"/replays/{game['id']}/file", headers=self.header)
@@ -68,13 +69,15 @@ class ReplayManager:
 
                 if not os.path.exists(json_file_name):
                     parent = pathlib.Path() / ".."
-                    log = open(json_file_name, "w")
+                    meta_json = open(json_file_name, "w")
+                    tracking_json = open(json_tracking_file_name, "w")
 
-                    tracking_str = "-n" if self.tracking else ""
                     if platform.system() == 'Windows':
-                        p = subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p {tracking_str} {replay_file_name}").split(), stdout=log)
+                        subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p {replay_file_name}").split(), stdout=meta_json)
+                        subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p -n {replay_file_name}").split(), stdout=tracking_json)
                     elif platform.system() == 'Linux':
-                        p = subprocess.Popen((f"{parent / 'bin/rrrocket'} -p {tracking_str} {replay_file_name}").split(), stdout=log)
+                        subprocess.Popen((f"{parent / 'bin/rrrocket'} -p {replay_file_name}").split(), stdout=meta_json)
+                        subprocess.Popen((f"{parent / 'bin/rrrocket'} -p -n {replay_file_name}").split(), stdout=tracking_json)
  
             except:
                 print(f"Exception occured, skipping {game['id']}")
