@@ -1,0 +1,11 @@
+version: '3'
+services:
+  rocket_league_container:
+    container_name: rocket_league_analyzer
+    build: .
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LANG=C.UTF-8
+    volumes:
+      - ./data:/data
+      - ./src:/src

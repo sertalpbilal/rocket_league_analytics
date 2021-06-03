@@ -55,8 +55,8 @@ class ReplayManager:
         for game in game_list:
             try:
                 replay_file_name = rf"../data/replay/{game['id']}.replay"
-                json_file_name = rf"../data/json/{game['id']}.json"
-                json_tracking_file_name = rf"../data/json/{game['id']}.tracking.json"
+                json_file_name = rf"../data/json_detailed/{game['id']}.json"
+                json_tracking_file_name = rf"../data/json_detailed/{game['id']}.tracking.json"
                 
                 if not os.path.exists(replay_file_name):
                     r = requests.get(BALLCHASING + f"/replays/{game['id']}/file", headers=self.header)
@@ -70,17 +70,20 @@ class ReplayManager:
                 if not os.path.exists(json_file_name):
                     parent = pathlib.Path() / ".."
                     meta_json = open(json_file_name, "w")
-                    tracking_json = open(json_tracking_file_name, "w")
+                    # tracking_json = open(json_tracking_file_name, "w")
 
                     if platform.system() == 'Windows':
-                        subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p {replay_file_name}").split(), stdout=meta_json)
-                        subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p -n {replay_file_name}").split(), stdout=tracking_json)
+                        # subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p {replay_file_name}").split(), stdout=meta_json)
+                        # subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p -n {replay_file_name}").split(), stdout=tracking_json)
+                        subprocess.Popen((f"{parent / 'bin/rattletrap.exe'} -i {replay_file_name} -o {json_tracking_file_name}").split())
+                        # subprocess.Popen((f"{parent / 'bin/parser/RocketLeagueReplayParser.Console.exe'} {replay_file_name} --fileoutput {json_tracking_file_name}").split())
                     elif platform.system() == 'Linux':
-                        subprocess.Popen((f"{parent / 'bin/rrrocket'} -p {replay_file_name}").split(), stdout=meta_json)
-                        subprocess.Popen((f"{parent / 'bin/rrrocket'} -p -n {replay_file_name}").split(), stdout=tracking_json)
+                        pass
+                        # subprocess.Popen((f"{parent / 'bin/rrrocket'} -p {replay_file_name}").split(), stdout=meta_json)
+                        # subprocess.Popen((f"{parent / 'bin/rrrocket'} -p -n {replay_file_name}").split(), stdout=tracking_json)
  
-            except:
-                print(f"Exception occured, skipping {game['id']}")
+            except Exception as e:
+                print(f"Exception occured, skipping {game['id']}", e)
 
 if __name__ == '__main__':
     from dotenv import dotenv_values

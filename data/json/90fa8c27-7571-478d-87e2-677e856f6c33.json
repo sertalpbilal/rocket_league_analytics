@@ -1,2102 +1,945 @@
 {
-  "header_size": 3268,
-  "header_crc": 2114956550,
-  "major_version": 868,
-  "minor_version": 31,
-  "net_version": 10,
-  "game_type": "TAGame.Replay_Soccar_TA",
-  "properties": {
-    "TeamSize": 2,
-    "UnfairTeamSize": 1,
-    "Team0Score": 1,
-    "Goals": [
+  "gameMetadata": {
+    "id": "CEAD084A4BB83E58CE7D59A611E075E4",
+    "name": "2021-06-02.16.50 enpitsu Private Win",
+    "map": "Stadium_P",
+    "version": 8,
+    "time": "1622652656",
+    "frames": 1160,
+    "score": {
+      "team0Score": 1,
+      "team1Score": 0
+    },
+    "goals": [
       {
-        "PlayerName": "enpitsu",
-        "frame": 1077,
-        "PlayerTeam": 0
+        "frameNumber": 1077,
+        "playerId": {
+          "id": "76561198039309853"
+        }
       }
     ],
-    "HighLights": [
-      {
-        "frame": 1077,
-        "CarName": "Car_TA_27",
-        "BallName": "None"
-      }
-    ],
-    "PlayerStats": [
-      {
-        "Assists": 0,
-        "OnlineID": "76561198039309853",
-        "Team": 0,
-        "Platform": 0,
-        "Saves": 0,
-        "bBot": false,
-        "Goals": 1,
-        "Name": "enpitsu",
-        "Score": 104,
-        "Shots": 0
-      },
-      {
-        "Score": 92,
-        "Name": "games5425898691",
-        "Platform": 0,
-        "Goals": 0,
-        "Shots": 1,
-        "Saves": 0,
-        "OnlineID": "0",
-        "Team": 0,
-        "bBot": false,
-        "Assists": 1
-      },
-      {
-        "Platform": 0,
-        "Saves": 0,
-        "bBot": true,
-        "Team": 1,
-        "Name": "Casper",
-        "Goals": 0,
-        "Score": 4,
-        "OnlineID": "0",
-        "Assists": 0,
-        "Shots": 0
-      },
-      {
-        "OnlineID": "0",
-        "Score": 2,
-        "Saves": 0,
-        "bBot": true,
-        "Assists": 0,
-        "Platform": 0,
-        "Name": "Foamer",
-        "Team": 1,
-        "Goals": 0,
-        "Shots": 0
-      }
-    ],
-    "ReplayName": "2021-06-02.16.50 enpitsu Private Win",
-    "ReplayVersion": 8,
-    "ReplayLastSaveVersion": 8,
-    "GameVersion": 30,
-    "BuildID": -1404869363,
-    "Changelist": 328414,
-    "BuildVersion": "210520.55509.328414",
-    "ReserveMegabytes": 4,
-    "RecordFPS": 30.0,
-    "KeyframeDelay": 10.0,
-    "MaxChannels": 2047,
-    "MaxReplaySizeMB": 10,
-    "Id": "CEAD084A4BB83E58CE7D59A611E075E4",
-    "MapName": "Stadium_P",
-    "Date": "2021-06-02 16-50-56",
-    "NumFrames": 1161,
-    "MatchType": "Private"
+    "length": 35.201593700796366,
+    "gameServerId": "727330",
+    "serverName": "EU712-Sprocket6",
+    "matchGuid": "F6EBAB7811EBC3E39E0D0C848BF616A9",
+    "teamSize": 2,
+    "playlist": "CUSTOM_LOBBY"
   },
-  "content_size": 131840,
-  "content_crc": 3732289993,
-  "network_frames": null,
-  "levels": [
-    "Stadium_OOB_Audio_Map"
-  ],
-  "keyframes": [
+  "players": [
     {
-      "time": 61.552376,
-      "frame": 0,
-      "position": 0
+      "id": {
+        "id": "76561198039309853"
+      },
+      "name": "enpitsu",
+      "titleId": 27,
+      "score": 104,
+      "goals": 1,
+      "assists": 0,
+      "saves": 0,
+      "shots": 0,
+      "cameraSettings": {
+        "stiffness": 0.699999988079071,
+        "height": 160.0,
+        "transitionSpeed": 1.0,
+        "pitch": -10.0,
+        "swivelSpeed": 4.199999809265137,
+        "fieldOfView": 110.0,
+        "distance": 400.0
+      },
+      "loadout": {
+        "banner": 4563,
+        "boost": 5868,
+        "car": 5964,
+        "goalExplosion": 1903,
+        "skin": 0,
+        "trail": 1899,
+        "wheels": 6003,
+        "version": 28,
+        "topper": 0,
+        "antenna": 0,
+        "engineAudio": 5980,
+        "primaryColor": 4,
+        "accentColor": 34,
+        "primaryFinish": 270,
+        "accentFinish": 270,
+        "avatarBorderUserColor": "-1"
+      },
+      "isOrange": 0,
+      "stats": {
+        "boost": {
+          "boostUsage": 114.18655191120304,
+          "numSmallBoosts": 5,
+          "numLargeBoosts": 1,
+          "wastedCollection": 12.343749999999998,
+          "wastedUsage": 0.0,
+          "timeFullBoost": 16.63987299799919,
+          "timeLowBoost": 9.026353105902672,
+          "timeNoBoost": 5.747334599494934,
+          "numStolenBoosts": 1,
+          "averageBoostLevel": 67.34924996134914,
+          "wastedBig": 12.109375,
+          "wastedSmall": 0.23437499999999778
+        },
+        "distance": {
+          "ballHitForward": 1247.8499565124512,
+          "ballHitBackward": 525.9501953125,
+          "timeClosestToBall": 11.71553149819374,
+          "timeFurthestFromBall": 5.753951001912355,
+          "timeCloseToBall": 4.472128000110388,
+          "timeClosestToTeamCenter": 26.75051609426737,
+          "timeFurthestFromTeamCenter": 0.6907465979456902
+        },
+        "possession": {
+          "possessionTime": 7.639921702444553
+        },
+        "positionalTendencies": {
+          "timeOnGround": 23.410089302808046,
+          "timeLowInAir": 11.79150439798832,
+          "timeHighInAir": 0.0,
+          "timeInDefendingHalf": 16.094585701823235,
+          "timeInAttackingHalf": 19.10700799897313,
+          "timeInDefendingThird": 1.0925295986235142,
+          "timeInNeutralThird": 22.606622997671366,
+          "timeInAttackingThird": 11.502441104501486,
+          "timeBehindBall": 21.65540459752083,
+          "timeInFrontBall": 13.546189103275537,
+          "timeNearWall": 3.637014899402857,
+          "timeInCorner": 1.0572519972920418,
+          "timeOnWall": 3.637014899402857
+        },
+        "averages": {
+          "averageSpeed": 10964.686212081193,
+          "averageHitDistance": 2319.2943970332035,
+          "averageDistanceFromCenter": 1327.8717101556645
+        },
+        "hitCounts": {
+          "totalHits": 2,
+          "totalGoals": 1
+        },
+        "controller": {
+          "isKeyboard": true,
+          "analogueSteeringInputPercent": 0.0,
+          "analogueThrottleInputPercent": 0.0,
+          "timeBallcam": 35.201593700796366,
+          "timeHandbrake": 0.6198805011808872
+        },
+        "speed": {
+          "timeAtSlowSpeed": 8.883681297302246,
+          "timeAtSuperSonic": 1.1987465023994446,
+          "timeAtBoostSpeed": 11.321864001452923
+        },
+        "relativePositioning": {
+          "timeInFrontOfCenterOfMass": 23.328958801925182,
+          "timeBehindCenterOfMass": 11.872634898871183
+        },
+        "kickoffStats": {
+          "totalKickoffs": 1,
+          "numTimeGoToBall": 1,
+          "numTimeFirstTouch": 1,
+          "averageBoostUsed": 0.0
+        }
+      },
+      "isBot": false,
+      "timeInGame": 35.201593700796366,
+      "firstFrameInGame": 1
     },
     {
-      "time": 71.56608,
-      "frame": 275,
-      "position": 140397
+      "id": {
+        "id": "bf81d8692db"
+      },
+      "name": "games5425898691",
+      "score": 92,
+      "goals": 0,
+      "assists": 1,
+      "saves": 0,
+      "shots": 1,
+      "cameraSettings": {
+        "stiffness": 0.5,
+        "height": 100.0,
+        "transitionSpeed": 1.0,
+        "pitch": -3.0,
+        "swivelSpeed": 2.5,
+        "fieldOfView": 110.0,
+        "distance": 270.0
+      },
+      "loadout": {
+        "banner": 2526,
+        "boost": 63,
+        "car": 23,
+        "goalExplosion": 1903,
+        "skin": 306,
+        "trail": 1948,
+        "wheels": 376,
+        "version": 28,
+        "topper": 0,
+        "antenna": 0,
+        "engineAudio": 0,
+        "primaryColor": 35,
+        "accentColor": 24,
+        "primaryFinish": 270,
+        "accentFinish": 270,
+        "avatarBorderUserColor": "0"
+      },
+      "isOrange": 0,
+      "stats": {
+        "boost": {
+          "boostUsage": 255.47003660578028,
+          "numSmallBoosts": 6,
+          "numLargeBoosts": 2,
+          "wastedCollection": 0.0,
+          "wastedUsage": 63.11183978202796,
+          "timeFullBoost": 0.218597199767828,
+          "timeLowBoost": 16.01697300374508,
+          "timeNoBoost": 1.1302460990846157,
+          "numStolenBoosts": 0,
+          "averageBoostLevel": 36.42131219097526,
+          "wastedBig": 0.0,
+          "wastedSmall": 0.0
+        },
+        "distance": {
+          "ballHitForward": 13989.660186767578,
+          "ballHitBackward": 5508.730163574219,
+          "timeClosestToBall": 13.62056590616703,
+          "timeFurthestFromBall": 4.5877837017178535,
+          "timeCloseToBall": 5.537175502628088,
+          "timeClosestToTeamCenter": 0,
+          "timeFurthestFromTeamCenter": 0
+        },
+        "possession": {
+          "possessionTime": 19.9896686039865,
+          "wonTurnovers": 2
+        },
+        "positionalTendencies": {
+          "timeOnGround": 21.031951401382685,
+          "timeLowInAir": 9.54348100349307,
+          "timeHighInAir": 0.0,
+          "timeInDefendingHalf": 18.2016859985888,
+          "timeInAttackingHalf": 16.999907702207565,
+          "timeInDefendingThird": 11.504681900143623,
+          "timeInNeutralThird": 14.597915701568127,
+          "timeInAttackingThird": 9.098996099084616,
+          "timeBehindBall": 30.35816479846835,
+          "timeInFrontBall": 4.843428902328014,
+          "timeNearWall": 9.684340197592974,
+          "timeInCorner": 0.0,
+          "timeOnWall": 9.684340197592974
+        },
+        "averages": {
+          "averageSpeed": 14253.713452510452,
+          "averageHitDistance": 3070.5525650149675,
+          "averageDistanceFromCenter": 1327.8717101556645
+        },
+        "hitCounts": {
+          "totalHits": 7,
+          "totalPasses": 1,
+          "totalDribbles": 4,
+          "totalDribbleConts": 3,
+          "totalClears": 1
+        },
+        "controller": {
+          "isKeyboard": false,
+          "analogueSteeringInputPercent": 0.0,
+          "analogueThrottleInputPercent": 23.991726990692868,
+          "timeBallcam": 35.201593700796366
+        },
+        "speed": {
+          "timeAtSlowSpeed": 5.063038196414709,
+          "timeAtSuperSonic": 4.586387898772955,
+          "timeAtBoostSpeed": 17.62234639748931
+        },
+        "relativePositioning": {
+          "timeInFrontOfCenterOfMass": 11.872634898871183,
+          "timeBehindCenterOfMass": 23.328958801925182
+        },
+        "perPossessionStats": {
+          "averageCounts": {
+            "pass": 1.0,
+            "passed": 0.0,
+            "dribble": 1.0,
+            "dribbleContinuation": 1.0,
+            "shot": 0.0,
+            "goal": 0.0,
+            "assist": 1.0,
+            "assisted": 0.0,
+            "save": 0.0,
+            "aerial": 0.0
+          },
+          "averageDuration": 7.35546875,
+          "averageHits": 2.0,
+          "count": 1
+        },
+        "kickoffStats": {
+          "totalKickoffs": 1,
+          "numTimeCheat": 1,
+          "averageBoostUsed": 37.0
+        }
+      },
+      "isBot": false,
+      "timeInGame": 35.201593700796366,
+      "firstFrameInGame": 1
     },
     {
-      "time": 81.58047,
-      "frame": 550,
-      "position": 376919
+      "id": {
+        "id": "b6b"
+      },
+      "name": "Casper",
+      "score": 4,
+      "goals": 0,
+      "assists": 0,
+      "saves": 0,
+      "shots": 0,
+      "loadout": {
+        "banner": 0,
+        "boost": 67,
+        "car": 25,
+        "goalExplosion": 1903,
+        "skin": 322,
+        "trail": 1948,
+        "wheels": 377,
+        "version": 28,
+        "topper": 0,
+        "antenna": 0,
+        "engineAudio": 0,
+        "primaryColor": 33,
+        "accentColor": 0,
+        "primaryFinish": 270,
+        "accentFinish": 270
+      },
+      "isOrange": 1,
+      "stats": {
+        "boost": {
+          "boostUsage": 256.7094514170403,
+          "numSmallBoosts": 2,
+          "numLargeBoosts": 3,
+          "wastedCollection": 95.59640788262891,
+          "wastedUsage": 64.81233644254242,
+          "timeFullBoost": 0.8370858989655972,
+          "timeLowBoost": 8.479399003088474,
+          "timeNoBoost": 4.872622601687908,
+          "numStolenBoosts": 0,
+          "averageBoostLevel": 50.78203942609382,
+          "wastedBig": 95.59640788262891,
+          "wastedSmall": 0.0
+        },
+        "distance": {
+          "ballHitForward": 3838.8298950195312,
+          "timeClosestToBall": 7.5717476941645145,
+          "timeFurthestFromBall": 11.321840196847916,
+          "timeCloseToBall": 2.2899489030241966,
+          "timeClosestToTeamCenter": 21.58473290130496,
+          "timeFurthestFromTeamCenter": 4.0086244978010654
+        },
+        "possession": {
+          "possessionTime": 2.3672860004007816,
+          "turnovers": 1,
+          "turnoversOnMyHalf": 1
+        },
+        "positionalTendencies": {
+          "timeOnGround": 27.08080680295825,
+          "timeLowInAir": 6.190859094262123,
+          "timeHighInAir": 0.0,
+          "timeInDefendingHalf": 30.866844099014997,
+          "timeInAttackingHalf": 4.334749601781368,
+          "timeInDefendingThird": 23.117896899580956,
+          "timeInNeutralThird": 12.08369680121541,
+          "timeInAttackingThird": 0.0,
+          "timeBehindBall": 28.503960199654102,
+          "timeInFrontBall": 6.697633501142263,
+          "timeNearWall": 9.644638907164335,
+          "timeInCorner": 0.6913910023868084,
+          "timeOnWall": 9.644638907164335
+        },
+        "averages": {
+          "averageSpeed": 13283.405999417459,
+          "averageHitDistance": 4560.661387175352,
+          "averageDistanceFromCenter": 1762.9146828370885
+        },
+        "hitCounts": {
+          "totalHits": 1,
+          "totalClears": 1
+        },
+        "controller": {
+          "isKeyboard": false,
+          "analogueSteeringInputPercent": 10.85832471561531,
+          "analogueThrottleInputPercent": 40.641158221303,
+          "timeHandbrake": 2.0044148042798042
+        },
+        "speed": {
+          "timeAtSlowSpeed": 5.201128005981445,
+          "timeAtSuperSonic": 3.8240949995815754,
+          "timeAtBoostSpeed": 13.982918202877045
+        },
+        "relativePositioning": {
+          "timeInFrontOfCenterOfMass": 14.050450999289751,
+          "timeBehindCenterOfMass": 21.151142701506615
+        },
+        "kickoffStats": {
+          "totalKickoffs": 1,
+          "numTimeGoToBall": 1,
+          "averageBoostUsed": 0.0
+        }
+      },
+      "isBot": true,
+      "timeInGame": 35.201593700796366,
+      "firstFrameInGame": 6
     },
     {
-      "time": 91.592804,
-      "frame": 825,
-      "position": 607784
-    },
-    {
-      "time": 101.61675,
-      "frame": 1101,
-      "position": 834979
+      "id": {
+        "id": "b13b"
+      },
+      "name": "Foamer",
+      "score": 2,
+      "goals": 0,
+      "assists": 0,
+      "saves": 0,
+      "shots": 0,
+      "loadout": {
+        "banner": 0,
+        "boost": 58,
+        "car": 29,
+        "goalExplosion": 1903,
+        "skin": 340,
+        "trail": 1948,
+        "wheels": 367,
+        "version": 28,
+        "topper": 0,
+        "antenna": 0,
+        "engineAudio": 0,
+        "primaryColor": 33,
+        "accentColor": 0,
+        "primaryFinish": 270,
+        "accentFinish": 270
+      },
+      "isOrange": 1,
+      "stats": {
+        "boost": {
+          "boostUsage": 114.34197413275417,
+          "numSmallBoosts": 6,
+          "wastedCollection": 0.0,
+          "wastedUsage": 0.0,
+          "timeFullBoost": 0.0,
+          "timeLowBoost": 26.829436101019382,
+          "timeNoBoost": 12.089749101549387,
+          "numStolenBoosts": 0,
+          "averageBoostLevel": 7.850726898305525,
+          "wastedBig": 0,
+          "wastedSmall": 0.0
+        },
+        "distance": {
+          "ballHitForward": 1581.7999572753906,
+          "timeClosestToBall": 2.29374860227108,
+          "timeFurthestFromBall": 13.538018800318241,
+          "timeCloseToBall": 2.0761055946350098,
+          "timeClosestToTeamCenter": 0,
+          "timeFurthestFromTeamCenter": 0
+        },
+        "possession": {
+          "possessionTime": 1.5662076994776726,
+          "turnovers": 1,
+          "turnoversOnMyHalf": 1
+        },
+        "positionalTendencies": {
+          "timeOnGround": 30.685151897370815,
+          "timeLowInAir": 3.8974104039371014,
+          "timeHighInAir": 0.0,
+          "timeInDefendingHalf": 24.824328500777483,
+          "timeInAttackingHalf": 10.377265200018883,
+          "timeInDefendingThird": 19.003420799970627,
+          "timeInNeutralThird": 9.716035798192024,
+          "timeInAttackingThird": 6.482137102633715,
+          "timeBehindBall": 21.623987801373005,
+          "timeInFrontBall": 13.57760589942336,
+          "timeNearWall": 13.874224405735731,
+          "timeInCorner": 0.0,
+          "timeOnWall": 13.874224405735731
+        },
+        "averages": {
+          "averageSpeed": 11041.924013669459,
+          "averageHitDistance": 1603.1381500924715,
+          "averageDistanceFromCenter": 1762.9146828370885
+        },
+        "hitCounts": {
+          "totalHits": 1
+        },
+        "controller": {
+          "isKeyboard": false,
+          "analogueSteeringInputPercent": 4.033092037228542,
+          "analogueThrottleInputPercent": 55.429162357807655,
+          "timeHandbrake": 0.10925740003585815
+        },
+        "speed": {
+          "timeAtSlowSpeed": 9.39628179743886,
+          "timeAtSuperSonic": 0.0,
+          "timeAtBoostSpeed": 12.583963092416525
+        },
+        "relativePositioning": {
+          "timeInFrontOfCenterOfMass": 21.151142701506615,
+          "timeBehindCenterOfMass": 14.050450999289751
+        },
+        "kickoffStats": {
+          "totalKickoffs": 1,
+          "numTimeDefend": 1,
+          "averageBoostUsed": 85.0
+        }
+      },
+      "isBot": true,
+      "timeInGame": 35.201593700796366,
+      "firstFrameInGame": 9
     }
   ],
-  "debug_info": [
+  "teams": [
     {
-      "frame": 0,
-      "user": "Message from the Wizard",
-      "text": "Additional replay data provided by BakkesMod. You can support our work at: https://www.patreon.com/bakkesmod"
+      "playerIds": [
+        {
+          "id": "bf81d8692db"
+        },
+        {
+          "id": "76561198039309853"
+        }
+      ],
+      "score": 1,
+      "isOrange": false,
+      "stats": {
+        "possession": {
+          "possessionTime": 29.22941740229726,
+          "wonTurnovers": 2
+        },
+        "hitCounts": {
+          "totalHits": 9,
+          "totalGoals": 1,
+          "totalPasses": 1,
+          "totalDribbles": 4,
+          "totalDribbleConts": 3,
+          "totalClears": 1
+        },
+        "centerOfMass": {
+          "positionalTendencies": {
+            "timeOnGround": 13.354727298021317,
+            "timeLowInAir": 21.84686640277505,
+            "timeHighInAir": 0.0,
+            "timeInDefendingHalf": 17.290053099393845,
+            "timeInAttackingHalf": 17.91154060140252,
+            "timeInDefendingThird": 7.684245798736811,
+            "timeInNeutralThird": 17.72689490392804,
+            "timeInAttackingThird": 9.790452998131514,
+            "timeBehindBall": 26.57194099575281,
+            "timeInFrontBall": 8.629652705043554,
+            "timeNearWall": 2.222272999584675,
+            "timeInCorner": 0.0,
+            "timeOnWall": 2.222272999584675
+          },
+          "averageDistanceFromCenter": 1327.8717101556645,
+          "averageMaxDistanceFromCenter": 3856.2529697190207,
+          "timeClumped": 2.369352798908949,
+          "timeBoondocks": 18.343111399561167
+        }
+      }
     },
     {
-      "frame": 0,
-      "user": "GameStartTime",
-      "text": "2021-06-02T16:49:07-0400"
+      "playerIds": [
+        {
+          "id": "b13b"
+        },
+        {
+          "id": "b6b"
+        }
+      ],
+      "score": 0,
+      "isOrange": true,
+      "stats": {
+        "possession": {
+          "possessionTime": 3.860565099865198,
+          "turnovers": 2,
+          "turnoversOnMyHalf": 2
+        },
+        "hitCounts": {
+          "totalHits": 2,
+          "totalClears": 1
+        },
+        "centerOfMass": {
+          "positionalTendencies": {
+            "timeOnGround": 24.713931806385517,
+            "timeLowInAir": 10.487661894410849,
+            "timeHighInAir": 0.0,
+            "timeInDefendingHalf": 28.2479258030653,
+            "timeInAttackingHalf": 6.953667897731066,
+            "timeInDefendingThird": 25.84315649792552,
+            "timeInNeutralThird": 5.9355048052966595,
+            "timeInAttackingThird": 3.4229323975741863,
+            "timeBehindBall": 23.40757740288973,
+            "timeInFrontBall": 11.794016297906637,
+            "timeNearWall": 3.423120401799679,
+            "timeInCorner": 0.0,
+            "timeOnWall": 3.423120401799679
+          },
+          "averageDistanceFromCenter": 1762.9146828370885,
+          "averageMaxDistanceFromCenter": 3460.939252386091,
+          "timeClumped": 0.0,
+          "timeBoondocks": 12.884134195744991
+        }
+      }
     }
   ],
-  "tick_marks": [
-    {
-      "description": "Team0Goal",
-      "frame": 1032
-    }
-  ],
-  "packages": [
-    "..\\..\\TAGame\\CookedPCConsole\\GFxShell_SF.upk",
-    "..\\..\\TAGame\\CookedPCConsole\\GameInfo_Soccar_SF.upk",
-    "..\\..\\TAGame\\CookedPCConsole\\Mutators_SF.upk",
-    "..\\..\\TAGame\\CookedPCConsole\\Stadium_P.upk",
-    "..\\..\\TAGame\\CookedPCConsole\\Stadium_OOB_Audio_Map.upk"
-  ],
-  "objects": [
-    "Core.Object",
-    "Engine.Actor:RelativeRotation",
-    "Engine.Actor:RelativeLocation",
-    "Engine.Actor:Velocity",
-    "Engine.Actor:Instigator",
-    "Engine.Actor:bNetOwner",
-    "Engine.Actor:bBlockActors",
-    "Engine.Actor:bCollideWorld",
-    "Engine.Actor:bCollideActors",
-    "Engine.Actor:bHardAttach",
-    "Engine.Actor:bTearOff",
-    "Engine.Actor:bHidden",
-    "Engine.Actor:Base",
-    "Engine.Actor:Owner",
-    "Engine.Actor:ReplicatedCollisionType",
-    "Engine.Actor:Role",
-    "Engine.Actor:RemoteRole",
-    "Engine.Actor:Physics",
-    "Engine.Actor:DrawScale",
-    "Engine.Actor:Rotation",
-    "Engine.Actor:Location",
-    "Engine.Actor",
-    "Engine.Pawn:RootMotionInterpCurveLastValue",
-    "Engine.Pawn:RootMotionInterpCurrentTime",
-    "Engine.Pawn:RootMotionInterpRate",
-    "Engine.Pawn:PlayerReplicationInfo",
-    "Engine.Pawn:AirControl",
-    "Engine.Pawn:JumpZ",
-    "Engine.Pawn:AccelRate",
-    "Engine.Pawn:AirSpeed",
-    "Engine.Pawn:GroundSpeed",
-    "Engine.Pawn:RemoteViewPitch",
-    "Engine.Pawn:bFastAttachedMove",
-    "Engine.Pawn:bRootMotionFromInterpCurve",
-    "Engine.Pawn:bUsedByMatinee",
-    "Engine.Pawn:bCanSwatTurn",
-    "Engine.Pawn:bSimulateGravity",
-    "Engine.Pawn:bIsCrouched",
-    "Engine.Pawn:bIsWalking",
-    "Engine.Pawn:Controller",
-    "Engine.Pawn",
-    "ProjectX.Pawn_X",
-    "TAGame.RBActor_TA:WeldedInfo",
-    "TAGame.RBActor_TA:ReplicatedRBState",
-    "TAGame.RBActor_TA:bIgnoreSyncing",
-    "TAGame.RBActor_TA:bFrozen",
-    "TAGame.RBActor_TA:bReplayActor",
-    "TAGame.RBActor_TA:MaxAngularSpeed",
-    "TAGame.RBActor_TA:MaxLinearSpeed",
-    "TAGame.RBActor_TA",
-    "TAGame.Ball_TA:ReplicatedExplosionDataExtended",
-    "TAGame.Ball_TA:ReplicatedExplosionData",
-    "TAGame.Ball_TA:GameEvent",
-    "TAGame.Ball_TA:HitTeamNum",
-    "TAGame.Ball_TA:ReplicatedPhysMatOverride",
-    "TAGame.Ball_TA:ReplicatedAddedCarBounceScale",
-    "TAGame.Ball_TA:ReplicatedBallMaxLinearSpeedScale",
-    "TAGame.Ball_TA:ReplicatedBallGravityScale",
-    "TAGame.Ball_TA:ReplicatedWorldBounceScale",
-    "TAGame.Ball_TA:ReplicatedBallMesh",
-    "TAGame.Ball_TA:ReplicatedBallScale",
-    "TAGame.Ball_TA:MagnusCoefficient",
-    "TAGame.Ball_TA:bEndOfGameHidden",
-    "TAGame.Ball_TA",
-    "Archetypes.Ball.Ball_Default",
-    "TAGame.GameEvent_TA:ReplicatedRoundCountDownNumber",
-    "TAGame.GameEvent_TA:MatchSettings",
-    "TAGame.GameEvent_TA:GameOwner",
-    "TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining",
-    "TAGame.GameEvent_TA:ReplicatedStateName",
-    "TAGame.GameEvent_TA:ReplicatedStateIndex",
-    "TAGame.GameEvent_TA:ActivatorCar",
-    "TAGame.GameEvent_TA:BotSkill",
-    "TAGame.GameEvent_TA:bIsBotMatch",
-    "TAGame.GameEvent_TA:bCanVoteToForfeit",
-    "TAGame.GameEvent_TA:bHasLeaveMatchPenalty",
-    "TAGame.GameEvent_TA:bAllowReadyUp",
-    "TAGame.GameEvent_TA:MatchTypeClass",
-    "TAGame.GameEvent_TA",
-    "TAGame.GameEvent_Team_TA:bForfeit",
-    "TAGame.GameEvent_Team_TA:bDisableMutingOtherTeam",
-    "TAGame.GameEvent_Team_TA:MaxTeamSize",
-    "TAGame.GameEvent_Team_TA",
-    "TAGame.GameEvent_Soccar_TA:ReplicatedStatEvent",
-    "TAGame.GameEvent_Soccar_TA:SubRulesArchetype",
-    "TAGame.GameEvent_Soccar_TA:RoundNum",
-    "TAGame.GameEvent_Soccar_TA:MVP",
-    "TAGame.GameEvent_Soccar_TA:ReplicatedServerPerformanceState",
-    "TAGame.GameEvent_Soccar_TA:ReplicatedScoredOnTeam",
-    "TAGame.GameEvent_Soccar_TA:TieBreakDecision",
-    "TAGame.GameEvent_Soccar_TA:MatchWinner",
-    "TAGame.GameEvent_Soccar_TA:GameWinner",
-    "TAGame.GameEvent_Soccar_TA:ReplayDirector",
-    "TAGame.GameEvent_Soccar_TA:bCanDropOnlineRewards",
-    "TAGame.GameEvent_Soccar_TA:bClubMatch",
-    "TAGame.GameEvent_Soccar_TA:bShowIntroScene",
-    "TAGame.GameEvent_Soccar_TA:bMatchEnded",
-    "TAGame.GameEvent_Soccar_TA:bNoContest",
-    "TAGame.GameEvent_Soccar_TA:bUnlimitedTime",
-    "TAGame.GameEvent_Soccar_TA:bOverTime",
-    "TAGame.GameEvent_Soccar_TA:bBallHasBeenHit",
-    "TAGame.GameEvent_Soccar_TA:WaitTimeRemaining",
-    "TAGame.GameEvent_Soccar_TA:SecondsRemaining",
-    "TAGame.GameEvent_Soccar_TA:MaxScore",
-    "TAGame.GameEvent_Soccar_TA:GameTime",
-    "TAGame.GameEvent_Soccar_TA:SeriesLength",
-    "TAGame.GameEvent_Soccar_TA",
-    "Archetypes.GameEvent.GameEvent_Soccar",
-    "Engine.Info",
-    "Engine.ReplicationInfo",
-    "ProjectX.NetModeReplicator_X",
-    "ProjectX.Default__NetModeReplicator_X",
-    "Engine.TeamInfo:TeamIndex",
-    "Engine.TeamInfo:Score",
-    "Engine.TeamInfo:TeamName",
-    "Engine.TeamInfo",
-    "TAGame.Team_TA:Difficulty",
-    "TAGame.Team_TA:ClubColors",
-    "TAGame.Team_TA:LogoData",
-    "TAGame.Team_TA:ClubID",
-    "TAGame.Team_TA:CustomTeamName",
-    "TAGame.Team_TA:GameEvent",
-    "TAGame.Team_TA",
-    "TAGame.Team_Soccar_TA:GameScore",
-    "TAGame.Team_Soccar_TA",
-    "Archetypes.Teams.Team0",
-    "Archetypes.Teams.Team1",
-    "Engine.GameReplicationInfo:Winner",
-    "Engine.GameReplicationInfo:ServerName",
-    "Engine.GameReplicationInfo:TimeLimit",
-    "Engine.GameReplicationInfo:GoalScore",
-    "Engine.GameReplicationInfo:RemainingMinute",
-    "Engine.GameReplicationInfo:ElapsedTime",
-    "Engine.GameReplicationInfo:RemainingTime",
-    "Engine.GameReplicationInfo:bMatchIsOver",
-    "Engine.GameReplicationInfo:bMatchHasBegun",
-    "Engine.GameReplicationInfo:bStopCountDown",
-    "Engine.GameReplicationInfo:GameClass",
-    "Engine.GameReplicationInfo",
-    "ProjectX.GRI_X:MatchGUID",
-    "ProjectX.GRI_X:bGameStarted",
-    "ProjectX.GRI_X:GameServerID",
-    "ProjectX.GRI_X:Reservations",
-    "ProjectX.GRI_X:ReplicatedGameMutatorIndex",
-    "ProjectX.GRI_X:ReplicatedGamePlaylist",
-    "ProjectX.GRI_X",
-    "TAGame.GRI_TA",
-    "GameInfo_Soccar.GameInfo.GameInfo_Soccar:GameReplicationInfoArchetype",
-    "Engine.PlayerReplicationInfo:RemoteUserData",
-    "Engine.PlayerReplicationInfo:UniqueId",
-    "Engine.PlayerReplicationInfo:bTimedOut",
-    "Engine.PlayerReplicationInfo:bFromPreviousLevel",
-    "Engine.PlayerReplicationInfo:bIsInactive",
-    "Engine.PlayerReplicationInfo:bBot",
-    "Engine.PlayerReplicationInfo:bOutOfLives",
-    "Engine.PlayerReplicationInfo:bReadyToPlay",
-    "Engine.PlayerReplicationInfo:bWaitingPlayer",
-    "Engine.PlayerReplicationInfo:bOnlySpectator",
-    "Engine.PlayerReplicationInfo:bIsSpectator",
-    "Engine.PlayerReplicationInfo:bAdmin",
-    "Engine.PlayerReplicationInfo:Team",
-    "Engine.PlayerReplicationInfo:PlayerID",
-    "Engine.PlayerReplicationInfo:PlayerName",
-    "Engine.PlayerReplicationInfo:Ping",
-    "Engine.PlayerReplicationInfo:Deaths",
-    "Engine.PlayerReplicationInfo:Score",
-    "Engine.PlayerReplicationInfo:ClientFillRemoteUserData",
-    "Engine.PlayerReplicationInfo:ServerUpdateRemoteUserData",
-    "Engine.PlayerReplicationInfo",
-    "ProjectX.PRI_X",
-    "TAGame.PRI_TA:PickupTimer",
-    "TAGame.PRI_TA:StayAsPartyVoteYes",
-    "TAGame.PRI_TA:StayAsPartyVoter",
-    "TAGame.PRI_TA:SpectatorShortcut",
-    "TAGame.PRI_TA:ClubID",
-    "TAGame.PRI_TA:BotBannerProductID",
-    "TAGame.PRI_TA:BotAvatarProductID",
-    "TAGame.PRI_TA:BotProductName",
-    "TAGame.PRI_TA:SecondaryTitle",
-    "TAGame.PRI_TA:PrimaryTitle",
-    "TAGame.PRI_TA:ReplacingBotPRI",
-    "TAGame.PRI_TA:PREI",
-    "TAGame.PRI_TA:SteeringSensitivity",
-    "TAGame.PRI_TA:SkillTier",
-    "TAGame.PRI_TA:Title",
-    "TAGame.PRI_TA:PartyLeader",
-    "TAGame.PRI_TA:ReplicatedWorstNetQualityBeyondLatency",
-    "TAGame.PRI_TA:PlayerHistoryKey",
-    "TAGame.PRI_TA:PawnType",
-    "TAGame.PRI_TA:PersistentCamera",
-    "TAGame.PRI_TA:ClientLoadoutsOnline",
-    "TAGame.PRI_TA:ClientLoadouts",
-    "TAGame.PRI_TA:ClientLoadoutOnline",
-    "TAGame.PRI_TA:ClientLoadout",
-    "TAGame.PRI_TA:ReplicatedGameEvent",
-    "TAGame.PRI_TA:PlayerHistoryValid",
-    "TAGame.PRI_TA:bUsingItems",
-    "TAGame.PRI_TA:bStartVoteToForfeitDisabled",
-    "TAGame.PRI_TA:bIsInSplitScreen",
-    "TAGame.PRI_TA:bIsDistracted",
-    "TAGame.PRI_TA:bReady",
-    "TAGame.PRI_TA:bOnlineLoadoutSet",
-    "TAGame.PRI_TA:bMatchAdmin",
-    "TAGame.PRI_TA:bMatchMVP",
-    "TAGame.PRI_TA:MatchBreakoutDamage",
-    "TAGame.PRI_TA:MatchShots",
-    "TAGame.PRI_TA:MatchSaves",
-    "TAGame.PRI_TA:MatchAssists",
-    "TAGame.PRI_TA:MatchGoals",
-    "TAGame.PRI_TA:MatchScore",
-    "TAGame.PRI_TA:ServerSetPlayerHistoryKey",
-    "TAGame.PRI_TA:ServerSetDistracted",
-    "TAGame.PRI_TA:ServerSetPartyLeader",
-    "TAGame.PRI_TA:ServerSplitScreenStatusChanged",
-    "TAGame.PRI_TA:ServerSetTeamLoadout",
-    "TAGame.PRI_TA:ClientNotifyGainedStat",
-    "TAGame.PRI_TA:ClientScoredGoal",
-    "TAGame.PRI_TA:ClientNotifyStatTickerMessage",
-    "TAGame.PRI_TA:ClientGiveOnlineReward",
-    "TAGame.PRI_TA:ClientGiveRewardDrop",
-    "TAGame.PRI_TA:ClientGiveOnlineCurrencyDrop",
-    "TAGame.PRI_TA:ClientUpdateOnlineProductStats",
-    "TAGame.PRI_TA:ServerReadyUp",
-    "TAGame.PRI_TA:ServerMatchAdminSetScoreAndTime",
-    "TAGame.PRI_TA:ServerMatchAdminSetPaused",
-    "TAGame.PRI_TA:ServerSetVoteStatus",
-    "TAGame.PRI_TA:ServerChangeTeam",
-    "TAGame.PRI_TA:ClientChangeTeamFailed",
-    "TAGame.PRI_TA:ServerSpectate",
-    "TAGame.PRI_TA:ServerSetUserCarPreferences",
-    "TAGame.PRI_TA:ServerVoteToForfeit",
-    "TAGame.PRI_TA:ServerSetPlayerActivatedFX",
-    "TAGame.PRI_TA:ClientUnlockAchievement",
-    "TAGame.PRI_TA:ClientAchievementProgression",
-    "TAGame.PRI_TA:ServerSetPublicIP",
-    "TAGame.PRI_TA:ClientStayAsPartyFollower",
-    "TAGame.PRI_TA:ServerInviteeConfirmedMerge",
-    "TAGame.PRI_TA:ClientStayAsPartyLeader",
-    "TAGame.PRI_TA",
-    "TAGame.Default__PRI_TA",
-    "TAGame.CameraSettingsActor_TA:CameraYaw",
-    "TAGame.CameraSettingsActor_TA:CameraPitch",
-    "TAGame.CameraSettingsActor_TA:bResetCamera",
-    "TAGame.CameraSettingsActor_TA:bHoldMouseCamera",
-    "TAGame.CameraSettingsActor_TA:bMouseCameraToggleEnabled",
-    "TAGame.CameraSettingsActor_TA:bUsingSwivel",
-    "TAGame.CameraSettingsActor_TA:bUsingFreecam",
-    "TAGame.CameraSettingsActor_TA:bUsingBehindView",
-    "TAGame.CameraSettingsActor_TA:bUsingSecondaryCamera",
-    "TAGame.CameraSettingsActor_TA:ProfileSettings",
-    "TAGame.CameraSettingsActor_TA:PRI",
-    "TAGame.CameraSettingsActor_TA:ServerSetHoldMouseCameraEnabled",
-    "TAGame.CameraSettingsActor_TA:ServerSetUseSwivel",
-    "TAGame.CameraSettingsActor_TA:ServerSetCameraSettings",
-    "TAGame.CameraSettingsActor_TA:ServerSetUsingSecondaryCamera",
-    "TAGame.CameraSettingsActor_TA:ServerSetUsingBehindView",
-    "TAGame.CameraSettingsActor_TA:ServerSetUsingFreecam",
-    "TAGame.CameraSettingsActor_TA:ServerSetCameraRotation",
-    "TAGame.CameraSettingsActor_TA:ServerSetCameraRotationReliable",
-    "TAGame.CameraSettingsActor_TA:ServerSetHoldMouseCamera",
-    "TAGame.CameraSettingsActor_TA:ServerSetResetCamera",
-    "TAGame.CameraSettingsActor_TA",
-    "TAGame.Default__CameraSettingsActor_TA",
-    "TAGame.Vehicle_TA:ReplicatedSteer",
-    "TAGame.Vehicle_TA:ReplicatedThrottle",
-    "TAGame.Vehicle_TA:bPodiumMode",
-    "TAGame.Vehicle_TA:bReplicatedHandbrake",
-    "TAGame.Vehicle_TA:bDriving",
-    "TAGame.Vehicle_TA",
-    "TAGame.Car_TA:AddedCarForceMultiplier",
-    "TAGame.Car_TA:AddedBallForceMultiplier",
-    "TAGame.Car_TA:RumblePickups",
-    "TAGame.Car_TA:AttachedPickup",
-    "TAGame.Car_TA:ReplicatedDemolish_CustomFX",
-    "TAGame.Car_TA:ReplicatedDemolish",
-    "TAGame.Car_TA:ReplicatedCarScale",
-    "TAGame.Car_TA:ClubColors",
-    "TAGame.Car_TA:TeamPaint",
-    "TAGame.Car_TA:bOverrideBoostOn",
-    "TAGame.Car_TA:bOverrideHandbrakeOn",
-    "TAGame.Car_TA:ServerEquipProduct",
-    "TAGame.Car_TA",
-    "Archetypes.Car.Car_Default",
-    "TAGame.RumblePickups_TA:PreviewTimeSeconds",
-    "TAGame.RumblePickups_TA:ConcurrentItemCount",
-    "TAGame.RumblePickups_TA:PickupInfo",
-    "TAGame.RumblePickups_TA",
-    "TAGame.Default__RumblePickups_TA",
-    "TAGame.CarComponent_TA:ReplicatedActivityTime",
-    "TAGame.CarComponent_TA:Vehicle",
-    "TAGame.CarComponent_TA:ReplicatedActive",
-    "TAGame.CarComponent_TA",
-    "TAGame.CarComponent_Dodge_TA:DodgeTorque",
-    "TAGame.CarComponent_Dodge_TA",
-    "Archetypes.CarComponents.CarComponent_Dodge",
-    "TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount",
-    "TAGame.CarComponent_Boost_TA:UnlimitedBoostRefCount",
-    "TAGame.CarComponent_Boost_TA:RechargeDelay",
-    "TAGame.CarComponent_Boost_TA:RechargeRate",
-    "TAGame.CarComponent_Boost_TA:bNoBoost",
-    "TAGame.CarComponent_Boost_TA:bRechargeGroundOnly",
-    "TAGame.CarComponent_Boost_TA:BoostModifier",
-    "TAGame.CarComponent_Boost_TA:CurrentBoostAmount",
-    "TAGame.CarComponent_Boost_TA:StartBoostAmount",
-    "TAGame.CarComponent_Boost_TA:ServerConfirmBoostAmount",
-    "TAGame.CarComponent_Boost_TA:ClientFixBoostAmount",
-    "TAGame.CarComponent_Boost_TA:ClientGiveBoost",
-    "TAGame.CarComponent_Boost_TA",
-    "Archetypes.CarComponents.CarComponent_Boost",
-    "TAGame.CarComponent_Jump_TA",
-    "Archetypes.CarComponents.CarComponent_Jump",
-    "TAGame.CarComponent_DoubleJump_TA",
-    "Archetypes.CarComponents.CarComponent_DoubleJump",
-    "TAGame.CarComponent_FlipCar_TA:bFlipRight",
-    "TAGame.CarComponent_FlipCar_TA:FlipCarTime",
-    "TAGame.CarComponent_FlipCar_TA",
-    "Archetypes.CarComponents.CarComponent_FlipCar",
-    "TAGame.CrowdActor_TA:ReplicatedRoundCountDownNumber",
-    "TAGame.CrowdActor_TA:ReplicatedCountDownNumber",
-    "TAGame.CrowdActor_TA:ReplicatedOneShotSound",
-    "TAGame.CrowdActor_TA:ModifiedNoise",
-    "TAGame.CrowdActor_TA:GameEvent",
-    "TAGame.CrowdActor_TA",
-    "Stadium_OOB_Audio_Map.TheWorld:PersistentLevel.CrowdActor_TA_0",
-    "TAGame.CrowdManager_TA:GameEvent",
-    "TAGame.CrowdManager_TA:ReplicatedGlobalOneShotSound",
-    "TAGame.CrowdManager_TA",
-    "Stadium_OOB_Audio_Map.TheWorld:PersistentLevel.CrowdManager_TA_0",
-    "TAGame.MatchType_Private_TA",
-    "TAGame.GameInfo_Soccar_TA",
-    "TAGame.ProductAttribute_UserColor_TA",
-    "TAGame.ProductAttribute_TitleID_TA",
-    "TAGame.VehiclePickup_TA:bNoPickup",
-    "TAGame.VehiclePickup_TA:NewReplicatedPickupData",
-    "TAGame.VehiclePickup_TA:ReplicatedPickupData",
-    "TAGame.VehiclePickup_TA",
-    "TAGame.VehiclePickup_Boost_TA",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_27",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_48",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_24",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_61",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_53",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_25",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_0",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_6",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_47",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_57",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_55",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_9",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_49",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_54",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_8",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_59",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_16",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_46",
-    "Stadium_P.TheWorld:PersistentLevel.VehiclePickup_Boost_TA_58",
-    "Stadium_P.TheWorld:PersistentLevel.GoalVolume_TA_4.Goal_TA_1",
-    "StatEvents.Events.Goal"
-  ],
-  "names": [
-    "Ball_TA_8",
-    "GameEvent_Soccar_TA_3",
-    "NetModeReplicator_X_3",
-    "Team_Soccar_TA_12",
-    "Team_Soccar_TA_13",
-    "GRI_TA_6",
-    "PRI_TA_8",
-    "CameraSettingsActor_TA_32",
-    "CameraSettingsActor_TA_33",
-    "PRI_TA_9",
-    "Car_TA_27",
-    "RumblePickups_TA_27",
-    "CarComponent_Dodge_TA_27",
-    "CarComponent_Boost_TA_27",
-    "CarComponent_Jump_TA_27",
-    "CarComponent_DoubleJump_TA_27",
-    "CarComponent_FlipCar_TA_27",
-    "Car_TA_28",
-    "CarComponent_Boost_TA_28",
-    "CarComponent_Jump_TA_28",
-    "CarComponent_DoubleJump_TA_28",
-    "CarComponent_FlipCar_TA_28",
-    "CarComponent_Dodge_TA_28",
-    "RumblePickups_TA_28",
-    "CrowdActor_TA_0",
-    "CrowdManager_TA_0",
-    "Countdown",
-    "RP5_SoccerSenpai",
-    "Car_TA_29",
-    "CarComponent_Boost_TA_29",
-    "CarComponent_DoubleJump_TA_29",
-    "CarComponent_Dodge_TA_29",
-    "CarComponent_FlipCar_TA_29",
-    "CarComponent_Jump_TA_29",
-    "PRI_TA_10",
-    "CameraSettingsActor_TA_34",
-    "RumblePickups_TA_29",
-    "Bot_Jet",
-    "Car_TA_30",
-    "CarComponent_Dodge_TA_30",
-    "CarComponent_DoubleJump_TA_30",
-    "CarComponent_Jump_TA_30",
-    "CarComponent_Boost_TA_30",
-    "CarComponent_FlipCar_TA_30",
-    "PRI_TA_11",
-    "CameraSettingsActor_TA_35",
-    "RumblePickups_TA_30",
-    "Bot_Zap",
-    "Active",
-    "VehiclePickup_Boost_TA_27",
-    "VehiclePickup_Boost_TA_48",
-    "VehiclePickup_Boost_TA_24",
-    "VehiclePickup_Boost_TA_61",
-    "VehiclePickup_Boost_TA_53",
-    "VehiclePickup_Boost_TA_25",
-    "VehiclePickup_Boost_TA_0",
-    "VehiclePickup_Boost_TA_6",
-    "VehiclePickup_Boost_TA_47",
-    "VehiclePickup_Boost_TA_57",
-    "VehiclePickup_Boost_TA_55",
-    "VehiclePickup_Boost_TA_9",
-    "VehiclePickup_Boost_TA_49",
-    "VehiclePickup_Boost_TA_54",
-    "VehiclePickup_Boost_TA_8",
-    "VehiclePickup_Boost_TA_59",
-    "VehiclePickup_Boost_TA_16",
-    "VehiclePickup_Boost_TA_46",
-    "VehiclePickup_Boost_TA_58",
-    "PostGoalScored"
-  ],
-  "class_indices": [
-    {
-      "class": "Core.Object",
-      "index": 0
-    },
-    {
-      "class": "Engine.Actor",
-      "index": 21
-    },
-    {
-      "class": "Engine.Pawn",
-      "index": 40
-    },
-    {
-      "class": "ProjectX.Pawn_X",
-      "index": 41
-    },
-    {
-      "class": "TAGame.RBActor_TA",
-      "index": 49
-    },
-    {
-      "class": "TAGame.Ball_TA",
-      "index": 63
-    },
-    {
-      "class": "TAGame.GameEvent_TA",
-      "index": 78
-    },
-    {
-      "class": "TAGame.GameEvent_Team_TA",
-      "index": 82
-    },
-    {
-      "class": "TAGame.GameEvent_Soccar_TA",
-      "index": 106
-    },
-    {
-      "class": "Engine.Info",
-      "index": 108
-    },
-    {
-      "class": "Engine.ReplicationInfo",
-      "index": 109
-    },
-    {
-      "class": "ProjectX.NetModeReplicator_X",
-      "index": 110
-    },
-    {
-      "class": "Engine.TeamInfo",
-      "index": 115
-    },
-    {
-      "class": "TAGame.Team_TA",
-      "index": 122
-    },
-    {
-      "class": "TAGame.Team_Soccar_TA",
-      "index": 124
-    },
-    {
-      "class": "Engine.GameReplicationInfo",
-      "index": 138
-    },
-    {
-      "class": "ProjectX.GRI_X",
-      "index": 145
-    },
-    {
-      "class": "TAGame.GRI_TA",
-      "index": 146
-    },
-    {
-      "class": "Engine.PlayerReplicationInfo",
-      "index": 168
-    },
-    {
-      "class": "ProjectX.PRI_X",
-      "index": 169
-    },
-    {
-      "class": "TAGame.PRI_TA",
-      "index": 238
-    },
-    {
-      "class": "TAGame.CameraSettingsActor_TA",
-      "index": 261
-    },
-    {
-      "class": "TAGame.Vehicle_TA",
-      "index": 268
-    },
-    {
-      "class": "TAGame.Car_TA",
-      "index": 281
-    },
-    {
-      "class": "TAGame.RumblePickups_TA",
-      "index": 286
-    },
-    {
-      "class": "TAGame.CarComponent_TA",
-      "index": 291
-    },
-    {
-      "class": "TAGame.CarComponent_Dodge_TA",
-      "index": 293
-    },
-    {
-      "class": "TAGame.CarComponent_Boost_TA",
-      "index": 307
-    },
-    {
-      "class": "TAGame.CarComponent_Jump_TA",
-      "index": 309
-    },
-    {
-      "class": "TAGame.CarComponent_DoubleJump_TA",
-      "index": 311
-    },
-    {
-      "class": "TAGame.CarComponent_FlipCar_TA",
-      "index": 315
-    },
-    {
-      "class": "TAGame.CrowdActor_TA",
-      "index": 322
-    },
-    {
-      "class": "TAGame.CrowdManager_TA",
-      "index": 326
-    },
-    {
-      "class": "TAGame.MatchType_Private_TA",
-      "index": 328
-    },
-    {
-      "class": "TAGame.GameInfo_Soccar_TA",
-      "index": 329
-    },
-    {
-      "class": "TAGame.ProductAttribute_UserColor_TA",
-      "index": 330
-    },
-    {
-      "class": "TAGame.ProductAttribute_TitleID_TA",
-      "index": 331
-    },
-    {
-      "class": "TAGame.VehiclePickup_TA",
-      "index": 335
-    },
-    {
-      "class": "TAGame.VehiclePickup_Boost_TA",
-      "index": 336
-    }
-  ],
-  "net_cache": [
-    {
-      "object_ind": 0,
-      "parent_id": 0,
-      "cache_id": 0,
-      "properties": []
-    },
-    {
-      "object_ind": 21,
-      "parent_id": 0,
-      "cache_id": 20,
-      "properties": [
-        {
-          "object_ind": 1,
-          "stream_id": 0
+  "gameStats": {
+    "hits": [
+      {
+        "frameNumber": 171,
+        "playerId": {
+          "id": "76561198039309853"
         },
-        {
-          "object_ind": 2,
-          "stream_id": 1
+        "collisionDistance": 33.17036735805543,
+        "ballData": {
+          "posX": -101.70999908447266,
+          "posY": 39.72999954223633,
+          "posZ": 127.87000274658203
         },
-        {
-          "object_ind": 3,
-          "stream_id": 2
+        "distance": 3976.293325738139,
+        "distanceToGoal": 5161.748800854592,
+        "previousHitFrameNumber": 1027,
+        "nextHitFrameNumber": 299,
+        "goalNumber": 0,
+        "isKickoff": false
+      },
+      {
+        "frameNumber": 299,
+        "playerId": {
+          "id": "b13b"
         },
-        {
-          "object_ind": 4,
-          "stream_id": 3
+        "collisionDistance": 91.26323590236704,
+        "ballData": {
+          "posX": -3875.14990234375,
+          "posY": 1287.5799560546875,
+          "posZ": 250.05999755859375
         },
-        {
-          "object_ind": 5,
-          "stream_id": 4
+        "distance": 1603.1381500924715,
+        "distanceToGoal": 7084.427869073886,
+        "previousHitFrameNumber": 171,
+        "nextHitFrameNumber": 341,
+        "goalNumber": 0,
+        "isKickoff": false
+      },
+      {
+        "frameNumber": 341,
+        "playerId": {
+          "id": "bf81d8692db"
         },
-        {
-          "object_ind": 6,
-          "stream_id": 5
+        "collisionDistance": 97.78241634728371,
+        "ballData": {
+          "posX": -3622.429931640625,
+          "posY": -294.2200012207031,
+          "posZ": 186.0800018310547
         },
-        {
-          "object_ind": 7,
-          "stream_id": 6
+        "dribble": true,
+        "distance": 5271.0907295376255,
+        "distanceToGoal": 6079.816378297378,
+        "previousHitFrameNumber": 299,
+        "nextHitFrameNumber": 467,
+        "goalNumber": 0,
+        "isKickoff": false
+      },
+      {
+        "frameNumber": 467,
+        "playerId": {
+          "id": "bf81d8692db"
         },
-        {
-          "object_ind": 8,
-          "stream_id": 7
+        "collisionDistance": 126.99325594837258,
+        "ballData": {
+          "posX": -2591.31005859375,
+          "posY": 4875.02001953125,
+          "posZ": 173.9600067138672
         },
-        {
-          "object_ind": 9,
-          "stream_id": 8
+        "pass": true,
+        "dribbleContinuation": true,
+        "assist": true,
+        "distance": 5207.742392038261,
+        "distanceToGoal": 1715.8935237415994,
+        "previousHitFrameNumber": 341,
+        "nextHitFrameNumber": 543,
+        "goalNumber": 0,
+        "isKickoff": false
+      },
+      {
+        "frameNumber": 543,
+        "playerId": {
+          "id": "76561198039309853"
         },
-        {
-          "object_ind": 10,
-          "stream_id": 9
+        "collisionDistance": 156.42535374978354,
+        "ballData": {
+          "posX": 2498.530029296875,
+          "posY": 3773.85009765625,
+          "posZ": 213.1199951171875
         },
-        {
-          "object_ind": 11,
-          "stream_id": 10
+        "passed": true,
+        "goal": true,
+        "assisted": true,
+        "distance": 662.295468328268,
+        "distanceToGoal": 3659.125534259802,
+        "previousHitFrameNumber": 467,
+        "nextHitFrameNumber": 623,
+        "goalNumber": 0,
+        "isKickoff": false
+      },
+      {
+        "frameNumber": 623,
+        "playerId": {
+          "id": "b6b"
         },
-        {
-          "object_ind": 12,
-          "stream_id": 11
+        "collisionDistance": 192.30048612561808,
+        "ballData": {
+          "posX": 2900.639892578125,
+          "posY": 3247.89990234375,
+          "posZ": 230.99000549316406
         },
-        {
-          "object_ind": 13,
-          "stream_id": 12
+        "distance": 4560.661387175352,
+        "distanceToGoal": 9207.135235547154,
+        "previousHitFrameNumber": 543,
+        "nextHitFrameNumber": 687,
+        "goalNumber": 0,
+        "isKickoff": false,
+        "clear": true
+      },
+      {
+        "frameNumber": 687,
+        "playerId": {
+          "id": "bf81d8692db"
         },
-        {
-          "object_ind": 14,
-          "stream_id": 13
+        "collisionDistance": 147.1212505292877,
+        "ballData": {
+          "posX": 441.9599914550781,
+          "posY": -590.9299926757812,
+          "posZ": 97.16000366210938
         },
-        {
-          "object_ind": 15,
-          "stream_id": 14
+        "dribble": true,
+        "distance": 3980.839895220119,
+        "distanceToGoal": 5885.039976048192,
+        "previousHitFrameNumber": 623,
+        "nextHitFrameNumber": 735,
+        "goalNumber": 0,
+        "isKickoff": false
+      },
+      {
+        "frameNumber": 735,
+        "playerId": {
+          "id": "bf81d8692db"
         },
-        {
-          "object_ind": 16,
-          "stream_id": 15
+        "collisionDistance": 134.7065813477378,
+        "ballData": {
+          "posX": -692.8900146484375,
+          "posY": -4406.580078125,
+          "posZ": 93.13999938964844
         },
-        {
-          "object_ind": 17,
-          "stream_id": 16
+        "dribbleContinuation": true,
+        "distance": 619.1473618600556,
+        "distanceToGoal": 9548.74048522645,
+        "previousHitFrameNumber": 687,
+        "nextHitFrameNumber": 743,
+        "goalNumber": 0,
+        "isKickoff": false
+      },
+      {
+        "frameNumber": 743,
+        "playerId": {
+          "id": "bf81d8692db"
         },
-        {
-          "object_ind": 18,
-          "stream_id": 17
+        "collisionDistance": 172.88133941667712,
+        "ballData": {
+          "posX": -874.510009765625,
+          "posY": -4998.490234375,
+          "posZ": 93.13999938964844
         },
-        {
-          "object_ind": 19,
-          "stream_id": 18
+        "dribble": true,
+        "distance": 174.37842479931962,
+        "distanceToGoal": 10138.513009914102,
+        "previousHitFrameNumber": 735,
+        "nextHitFrameNumber": 836,
+        "goalNumber": 0,
+        "isKickoff": false
+      },
+      {
+        "frameNumber": 836,
+        "playerId": {
+          "id": "bf81d8692db"
         },
-        {
-          "object_ind": 20,
-          "stream_id": 19
+        "collisionDistance": 114.72059224721552,
+        "ballData": {
+          "posX": -915.3800048828125,
+          "posY": -4869.41015625,
+          "posZ": 203.02999877929688
+        },
+        "dribbleContinuation": true,
+        "distance": 6455.320506161554,
+        "distanceToGoal": 10009.428917806945,
+        "previousHitFrameNumber": 743,
+        "nextHitFrameNumber": 943,
+        "goalNumber": 0,
+        "isKickoff": false,
+        "clear": true
+      },
+      {
+        "frameNumber": 943,
+        "playerId": {
+          "id": "bf81d8692db"
+        },
+        "collisionDistance": 209.27668879241065,
+        "ballData": {
+          "posX": -3970.090087890625,
+          "posY": 815.8300170898438,
+          "posZ": 337.0199890136719
+        },
+        "dribble": true,
+        "distance": 3578.071901171226,
+        "distanceToGoal": 5305.513727205746,
+        "previousHitFrameNumber": 836,
+        "nextHitFrameNumber": 1027,
+        "goalNumber": 0,
+        "isKickoff": false
+      },
+      {
+        "frameNumber": 1027,
+        "playerId": {
+          "id": "bf81d8692db"
+        },
+        "collisionDistance": 115.29357349432406,
+        "ballData": {
+          "posX": -2035.5999755859375,
+          "posY": 3821.929931640625,
+          "posZ": 183.0399932861328
+        },
+        "dribbleContinuation": true,
+        "shot": true,
+        "distanceToGoal": 1742.411205617192,
+        "previousHitFrameNumber": 943,
+        "goalNumber": 0,
+        "isKickoff": false
+      }
+    ],
+    "neutralPossessionTime": 11.573415402323008,
+    "ballStats": {
+      "positionalTendencies": {
+        "timeOnGround": 3.424404304474592,
+        "timeLowInAir": 32.07551800087094,
+        "timeHighInAir": 2.986090797930956,
+        "timeInDefendingHalf": 9.358411103487015,
+        "timeInAttackingHalf": 23.73157139867544,
+        "timeInDefendingThird": 6.773693598806858,
+        "timeInNeutralThird": 13.90371510386467,
+        "timeInAttackingThird": 14.524184998124838,
+        "timeBehindBall": 0.0,
+        "timeInFrontBall": 0.0,
+        "timeNearWall": 14.445329509675503,
+        "timeInCorner": 1.3465529009699821,
+        "timeOnWall": 14.445329509675503
+      },
+      "averages": {
+        "averageSpeed": 14335.030479153973
+      }
+    },
+    "kickoffs": [
+      {
+        "startFrameNumber": 111,
+        "endFrameNumber": 169
+      }
+    ],
+    "kickoffStats": [
+      {
+        "startFrame": 111,
+        "touchFrame": 169,
+        "touchTime": 2.1124801635742188,
+        "type": "TWOS_DIAG_OFFCENT",
+        "touch": {
+          "players": [
+            {
+              "player": {
+                "id": "76561198039309853"
+              },
+              "kickoffPosition": "DIAGONAL",
+              "touchPosition": "BALL",
+              "playerPosition": {
+                "posX": 19.989999771118164,
+                "posY": -104.25,
+                "posZ": 107.1500015258789
+              },
+              "boost": 0.0,
+              "ballDist": 150.82700493560546,
+              "startLeft": true,
+              "startPosition": {
+                "posX": 2047.6199951171875,
+                "posY": -2559.6201171875,
+                "posZ": 17.049999237060547
+              }
+            },
+            {
+              "player": {
+                "id": "bf81d8692db"
+              },
+              "kickoffPosition": "OFFCENTER",
+              "touchPosition": "CHEAT",
+              "playerPosition": {
+                "posX": 30.59000015258789,
+                "posY": -2658.25,
+                "posZ": 17.010000228881836
+              },
+              "boost": 37.0,
+              "ballDist": 2658.4804213529806,
+              "startLeft": true,
+              "startPosition": {
+                "posX": 256.0,
+                "posY": -3839.4599609375,
+                "posZ": 17.010000228881836
+              }
+            },
+            {
+              "player": {
+                "id": "b6b"
+              },
+              "kickoffPosition": "DIAGONAL",
+              "touchPosition": "BALL",
+              "playerPosition": {
+                "posX": -53.5,
+                "posY": 289.0400085449219,
+                "posZ": 68.95999908447266
+              },
+              "boost": 0.0,
+              "ballDist": 301.93022043740336,
+              "startLeft": true,
+              "startPosition": {
+                "posX": -2048.0,
+                "posY": 2560.0,
+                "posZ": 16.389999389648438
+              }
+            },
+            {
+              "player": {
+                "id": "b13b"
+              },
+              "kickoffPosition": "OFFCENTER",
+              "touchPosition": "GOAL",
+              "playerPosition": {
+                "posX": -33.279998779296875,
+                "posY": 5403.77978515625,
+                "posZ": 19.049999237060547
+              },
+              "boost": 85.0,
+              "ballDist": 5403.915841984682,
+              "startLeft": true,
+              "startPosition": {
+                "posX": -256.0,
+                "posY": 3840.0,
+                "posZ": 16.229999542236328
+              }
+            }
+          ],
+          "kickoffGoal": 33.05250549316406,
+          "firstTouchPlayer": {
+            "id": "76561198039309853"
+          }
         }
-      ]
-    },
-    {
-      "object_ind": 40,
-      "parent_id": 20,
-      "cache_id": 38,
-      "properties": [
-        {
-          "object_ind": 22,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 23,
-          "stream_id": 21
-        },
-        {
-          "object_ind": 24,
-          "stream_id": 22
-        },
-        {
-          "object_ind": 25,
-          "stream_id": 23
-        },
-        {
-          "object_ind": 26,
-          "stream_id": 24
-        },
-        {
-          "object_ind": 27,
-          "stream_id": 25
-        },
-        {
-          "object_ind": 28,
-          "stream_id": 26
-        },
-        {
-          "object_ind": 29,
-          "stream_id": 27
-        },
-        {
-          "object_ind": 30,
-          "stream_id": 28
-        },
-        {
-          "object_ind": 31,
-          "stream_id": 29
-        },
-        {
-          "object_ind": 32,
-          "stream_id": 30
-        },
-        {
-          "object_ind": 33,
-          "stream_id": 31
-        },
-        {
-          "object_ind": 34,
-          "stream_id": 32
-        },
-        {
-          "object_ind": 35,
-          "stream_id": 33
-        },
-        {
-          "object_ind": 36,
-          "stream_id": 34
-        },
-        {
-          "object_ind": 37,
-          "stream_id": 35
-        },
-        {
-          "object_ind": 38,
-          "stream_id": 36
-        },
-        {
-          "object_ind": 39,
-          "stream_id": 37
-        }
-      ]
-    },
-    {
-      "object_ind": 41,
-      "parent_id": 38,
-      "cache_id": 38,
-      "properties": []
-    },
-    {
-      "object_ind": 49,
-      "parent_id": 38,
-      "cache_id": 45,
-      "properties": [
-        {
-          "object_ind": 42,
-          "stream_id": 38
-        },
-        {
-          "object_ind": 43,
-          "stream_id": 39
-        },
-        {
-          "object_ind": 44,
-          "stream_id": 40
-        },
-        {
-          "object_ind": 45,
-          "stream_id": 41
-        },
-        {
-          "object_ind": 46,
-          "stream_id": 42
-        },
-        {
-          "object_ind": 47,
-          "stream_id": 43
-        },
-        {
-          "object_ind": 48,
-          "stream_id": 44
-        }
-      ]
-    },
-    {
-      "object_ind": 63,
-      "parent_id": 45,
-      "cache_id": 58,
-      "properties": [
-        {
-          "object_ind": 50,
-          "stream_id": 45
-        },
-        {
-          "object_ind": 51,
-          "stream_id": 46
-        },
-        {
-          "object_ind": 52,
-          "stream_id": 47
-        },
-        {
-          "object_ind": 53,
-          "stream_id": 48
-        },
-        {
-          "object_ind": 54,
-          "stream_id": 49
-        },
-        {
-          "object_ind": 55,
-          "stream_id": 50
-        },
-        {
-          "object_ind": 56,
-          "stream_id": 51
-        },
-        {
-          "object_ind": 57,
-          "stream_id": 52
-        },
-        {
-          "object_ind": 58,
-          "stream_id": 53
-        },
-        {
-          "object_ind": 59,
-          "stream_id": 54
-        },
-        {
-          "object_ind": 60,
-          "stream_id": 55
-        },
-        {
-          "object_ind": 61,
-          "stream_id": 56
-        },
-        {
-          "object_ind": 62,
-          "stream_id": 57
-        }
-      ]
-    },
-    {
-      "object_ind": 78,
-      "parent_id": 20,
-      "cache_id": 33,
-      "properties": [
-        {
-          "object_ind": 65,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 66,
-          "stream_id": 21
-        },
-        {
-          "object_ind": 67,
-          "stream_id": 22
-        },
-        {
-          "object_ind": 68,
-          "stream_id": 23
-        },
-        {
-          "object_ind": 69,
-          "stream_id": 24
-        },
-        {
-          "object_ind": 70,
-          "stream_id": 25
-        },
-        {
-          "object_ind": 71,
-          "stream_id": 26
-        },
-        {
-          "object_ind": 72,
-          "stream_id": 27
-        },
-        {
-          "object_ind": 73,
-          "stream_id": 28
-        },
-        {
-          "object_ind": 74,
-          "stream_id": 29
-        },
-        {
-          "object_ind": 75,
-          "stream_id": 30
-        },
-        {
-          "object_ind": 76,
-          "stream_id": 31
-        },
-        {
-          "object_ind": 77,
-          "stream_id": 32
-        }
-      ]
-    },
-    {
-      "object_ind": 82,
-      "parent_id": 33,
-      "cache_id": 36,
-      "properties": [
-        {
-          "object_ind": 79,
-          "stream_id": 33
-        },
-        {
-          "object_ind": 80,
-          "stream_id": 34
-        },
-        {
-          "object_ind": 81,
-          "stream_id": 35
-        }
-      ]
-    },
-    {
-      "object_ind": 106,
-      "parent_id": 36,
-      "cache_id": 59,
-      "properties": [
-        {
-          "object_ind": 83,
-          "stream_id": 36
-        },
-        {
-          "object_ind": 84,
-          "stream_id": 37
-        },
-        {
-          "object_ind": 85,
-          "stream_id": 38
-        },
-        {
-          "object_ind": 86,
-          "stream_id": 39
-        },
-        {
-          "object_ind": 87,
-          "stream_id": 40
-        },
-        {
-          "object_ind": 88,
-          "stream_id": 41
-        },
-        {
-          "object_ind": 89,
-          "stream_id": 42
-        },
-        {
-          "object_ind": 90,
-          "stream_id": 43
-        },
-        {
-          "object_ind": 91,
-          "stream_id": 44
-        },
-        {
-          "object_ind": 92,
-          "stream_id": 45
-        },
-        {
-          "object_ind": 93,
-          "stream_id": 46
-        },
-        {
-          "object_ind": 94,
-          "stream_id": 47
-        },
-        {
-          "object_ind": 95,
-          "stream_id": 48
-        },
-        {
-          "object_ind": 96,
-          "stream_id": 49
-        },
-        {
-          "object_ind": 97,
-          "stream_id": 50
-        },
-        {
-          "object_ind": 98,
-          "stream_id": 51
-        },
-        {
-          "object_ind": 99,
-          "stream_id": 52
-        },
-        {
-          "object_ind": 100,
-          "stream_id": 53
-        },
-        {
-          "object_ind": 101,
-          "stream_id": 54
-        },
-        {
-          "object_ind": 102,
-          "stream_id": 55
-        },
-        {
-          "object_ind": 103,
-          "stream_id": 56
-        },
-        {
-          "object_ind": 104,
-          "stream_id": 57
-        },
-        {
-          "object_ind": 105,
-          "stream_id": 58
-        }
-      ]
-    },
-    {
-      "object_ind": 108,
-      "parent_id": 20,
-      "cache_id": 20,
-      "properties": []
-    },
-    {
-      "object_ind": 109,
-      "parent_id": 20,
-      "cache_id": 20,
-      "properties": []
-    },
-    {
-      "object_ind": 110,
-      "parent_id": 20,
-      "cache_id": 20,
-      "properties": []
-    },
-    {
-      "object_ind": 115,
-      "parent_id": 20,
-      "cache_id": 23,
-      "properties": [
-        {
-          "object_ind": 112,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 113,
-          "stream_id": 21
-        },
-        {
-          "object_ind": 114,
-          "stream_id": 22
-        }
-      ]
-    },
-    {
-      "object_ind": 122,
-      "parent_id": 23,
-      "cache_id": 29,
-      "properties": [
-        {
-          "object_ind": 116,
-          "stream_id": 23
-        },
-        {
-          "object_ind": 117,
-          "stream_id": 24
-        },
-        {
-          "object_ind": 118,
-          "stream_id": 25
-        },
-        {
-          "object_ind": 119,
-          "stream_id": 26
-        },
-        {
-          "object_ind": 120,
-          "stream_id": 27
-        },
-        {
-          "object_ind": 121,
-          "stream_id": 28
-        }
-      ]
-    },
-    {
-      "object_ind": 124,
-      "parent_id": 29,
-      "cache_id": 30,
-      "properties": [
-        {
-          "object_ind": 123,
-          "stream_id": 29
-        }
-      ]
-    },
-    {
-      "object_ind": 138,
-      "parent_id": 20,
-      "cache_id": 31,
-      "properties": [
-        {
-          "object_ind": 127,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 128,
-          "stream_id": 21
-        },
-        {
-          "object_ind": 129,
-          "stream_id": 22
-        },
-        {
-          "object_ind": 130,
-          "stream_id": 23
-        },
-        {
-          "object_ind": 131,
-          "stream_id": 24
-        },
-        {
-          "object_ind": 132,
-          "stream_id": 25
-        },
-        {
-          "object_ind": 133,
-          "stream_id": 26
-        },
-        {
-          "object_ind": 134,
-          "stream_id": 27
-        },
-        {
-          "object_ind": 135,
-          "stream_id": 28
-        },
-        {
-          "object_ind": 136,
-          "stream_id": 29
-        },
-        {
-          "object_ind": 137,
-          "stream_id": 30
-        }
-      ]
-    },
-    {
-      "object_ind": 145,
-      "parent_id": 31,
-      "cache_id": 37,
-      "properties": [
-        {
-          "object_ind": 139,
-          "stream_id": 31
-        },
-        {
-          "object_ind": 140,
-          "stream_id": 32
-        },
-        {
-          "object_ind": 141,
-          "stream_id": 33
-        },
-        {
-          "object_ind": 142,
-          "stream_id": 34
-        },
-        {
-          "object_ind": 143,
-          "stream_id": 35
-        },
-        {
-          "object_ind": 144,
-          "stream_id": 36
-        }
-      ]
-    },
-    {
-      "object_ind": 146,
-      "parent_id": 37,
-      "cache_id": 37,
-      "properties": []
-    },
-    {
-      "object_ind": 168,
-      "parent_id": 20,
-      "cache_id": 38,
-      "properties": [
-        {
-          "object_ind": 148,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 149,
-          "stream_id": 21
-        },
-        {
-          "object_ind": 150,
-          "stream_id": 22
-        },
-        {
-          "object_ind": 151,
-          "stream_id": 23
-        },
-        {
-          "object_ind": 152,
-          "stream_id": 24
-        },
-        {
-          "object_ind": 153,
-          "stream_id": 25
-        },
-        {
-          "object_ind": 154,
-          "stream_id": 26
-        },
-        {
-          "object_ind": 155,
-          "stream_id": 27
-        },
-        {
-          "object_ind": 156,
-          "stream_id": 28
-        },
-        {
-          "object_ind": 157,
-          "stream_id": 29
-        },
-        {
-          "object_ind": 158,
-          "stream_id": 30
-        },
-        {
-          "object_ind": 159,
-          "stream_id": 31
-        },
-        {
-          "object_ind": 160,
-          "stream_id": 32
-        },
-        {
-          "object_ind": 161,
-          "stream_id": 33
-        },
-        {
-          "object_ind": 162,
-          "stream_id": 34
-        },
-        {
-          "object_ind": 163,
-          "stream_id": 35
-        },
-        {
-          "object_ind": 164,
-          "stream_id": 36
-        },
-        {
-          "object_ind": 165,
-          "stream_id": 37
-        },
-        {
-          "object_ind": 166,
-          "stream_id": 38
-        },
-        {
-          "object_ind": 167,
-          "stream_id": 39
-        }
-      ]
-    },
-    {
-      "object_ind": 169,
-      "parent_id": 40,
-      "cache_id": 38,
-      "properties": []
-    },
-    {
-      "object_ind": 238,
-      "parent_id": 40,
-      "cache_id": 78,
-      "properties": [
-        {
-          "object_ind": 170,
-          "stream_id": 40
-        },
-        {
-          "object_ind": 171,
-          "stream_id": 41
-        },
-        {
-          "object_ind": 172,
-          "stream_id": 42
-        },
-        {
-          "object_ind": 173,
-          "stream_id": 43
-        },
-        {
-          "object_ind": 174,
-          "stream_id": 44
-        },
-        {
-          "object_ind": 175,
-          "stream_id": 45
-        },
-        {
-          "object_ind": 176,
-          "stream_id": 46
-        },
-        {
-          "object_ind": 177,
-          "stream_id": 47
-        },
-        {
-          "object_ind": 178,
-          "stream_id": 48
-        },
-        {
-          "object_ind": 179,
-          "stream_id": 49
-        },
-        {
-          "object_ind": 180,
-          "stream_id": 50
-        },
-        {
-          "object_ind": 181,
-          "stream_id": 51
-        },
-        {
-          "object_ind": 182,
-          "stream_id": 52
-        },
-        {
-          "object_ind": 183,
-          "stream_id": 53
-        },
-        {
-          "object_ind": 184,
-          "stream_id": 54
-        },
-        {
-          "object_ind": 185,
-          "stream_id": 55
-        },
-        {
-          "object_ind": 186,
-          "stream_id": 56
-        },
-        {
-          "object_ind": 187,
-          "stream_id": 57
-        },
-        {
-          "object_ind": 188,
-          "stream_id": 58
-        },
-        {
-          "object_ind": 189,
-          "stream_id": 59
-        },
-        {
-          "object_ind": 190,
-          "stream_id": 60
-        },
-        {
-          "object_ind": 191,
-          "stream_id": 61
-        },
-        {
-          "object_ind": 192,
-          "stream_id": 62
-        },
-        {
-          "object_ind": 193,
-          "stream_id": 63
-        },
-        {
-          "object_ind": 194,
-          "stream_id": 64
-        },
-        {
-          "object_ind": 195,
-          "stream_id": 65
-        },
-        {
-          "object_ind": 196,
-          "stream_id": 66
-        },
-        {
-          "object_ind": 197,
-          "stream_id": 67
-        },
-        {
-          "object_ind": 198,
-          "stream_id": 68
-        },
-        {
-          "object_ind": 199,
-          "stream_id": 69
-        },
-        {
-          "object_ind": 200,
-          "stream_id": 70
-        },
-        {
-          "object_ind": 201,
-          "stream_id": 71
-        },
-        {
-          "object_ind": 202,
-          "stream_id": 72
-        },
-        {
-          "object_ind": 203,
-          "stream_id": 73
-        },
-        {
-          "object_ind": 204,
-          "stream_id": 74
-        },
-        {
-          "object_ind": 205,
-          "stream_id": 75
-        },
-        {
-          "object_ind": 206,
-          "stream_id": 76
-        },
-        {
-          "object_ind": 207,
-          "stream_id": 77
-        },
-        {
-          "object_ind": 208,
-          "stream_id": 78
-        },
-        {
-          "object_ind": 209,
-          "stream_id": 79
-        },
-        {
-          "object_ind": 210,
-          "stream_id": 80
-        },
-        {
-          "object_ind": 211,
-          "stream_id": 81
-        },
-        {
-          "object_ind": 212,
-          "stream_id": 82
-        },
-        {
-          "object_ind": 213,
-          "stream_id": 83
-        },
-        {
-          "object_ind": 214,
-          "stream_id": 84
-        },
-        {
-          "object_ind": 215,
-          "stream_id": 85
-        },
-        {
-          "object_ind": 216,
-          "stream_id": 86
-        },
-        {
-          "object_ind": 217,
-          "stream_id": 87
-        },
-        {
-          "object_ind": 218,
-          "stream_id": 88
-        },
-        {
-          "object_ind": 219,
-          "stream_id": 89
-        },
-        {
-          "object_ind": 220,
-          "stream_id": 90
-        },
-        {
-          "object_ind": 221,
-          "stream_id": 91
-        },
-        {
-          "object_ind": 222,
-          "stream_id": 92
-        },
-        {
-          "object_ind": 223,
-          "stream_id": 93
-        },
-        {
-          "object_ind": 224,
-          "stream_id": 94
-        },
-        {
-          "object_ind": 225,
-          "stream_id": 95
-        },
-        {
-          "object_ind": 226,
-          "stream_id": 96
-        },
-        {
-          "object_ind": 227,
-          "stream_id": 97
-        },
-        {
-          "object_ind": 228,
-          "stream_id": 98
-        },
-        {
-          "object_ind": 229,
-          "stream_id": 99
-        },
-        {
-          "object_ind": 230,
-          "stream_id": 100
-        },
-        {
-          "object_ind": 231,
-          "stream_id": 101
-        },
-        {
-          "object_ind": 232,
-          "stream_id": 102
-        },
-        {
-          "object_ind": 233,
-          "stream_id": 103
-        },
-        {
-          "object_ind": 234,
-          "stream_id": 104
-        },
-        {
-          "object_ind": 235,
-          "stream_id": 105
-        },
-        {
-          "object_ind": 236,
-          "stream_id": 106
-        },
-        {
-          "object_ind": 237,
-          "stream_id": 107
-        }
-      ]
-    },
-    {
-      "object_ind": 261,
-      "parent_id": 20,
-      "cache_id": 31,
-      "properties": [
-        {
-          "object_ind": 240,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 241,
-          "stream_id": 21
-        },
-        {
-          "object_ind": 242,
-          "stream_id": 22
-        },
-        {
-          "object_ind": 243,
-          "stream_id": 23
-        },
-        {
-          "object_ind": 244,
-          "stream_id": 24
-        },
-        {
-          "object_ind": 245,
-          "stream_id": 25
-        },
-        {
-          "object_ind": 246,
-          "stream_id": 26
-        },
-        {
-          "object_ind": 247,
-          "stream_id": 27
-        },
-        {
-          "object_ind": 248,
-          "stream_id": 28
-        },
-        {
-          "object_ind": 249,
-          "stream_id": 29
-        },
-        {
-          "object_ind": 250,
-          "stream_id": 30
-        },
-        {
-          "object_ind": 251,
-          "stream_id": 31
-        },
-        {
-          "object_ind": 252,
-          "stream_id": 32
-        },
-        {
-          "object_ind": 253,
-          "stream_id": 33
-        },
-        {
-          "object_ind": 254,
-          "stream_id": 34
-        },
-        {
-          "object_ind": 255,
-          "stream_id": 35
-        },
-        {
-          "object_ind": 256,
-          "stream_id": 36
-        },
-        {
-          "object_ind": 257,
-          "stream_id": 37
-        },
-        {
-          "object_ind": 258,
-          "stream_id": 38
-        },
-        {
-          "object_ind": 259,
-          "stream_id": 39
-        },
-        {
-          "object_ind": 260,
-          "stream_id": 40
-        }
-      ]
-    },
-    {
-      "object_ind": 268,
-      "parent_id": 45,
-      "cache_id": 50,
-      "properties": [
-        {
-          "object_ind": 263,
-          "stream_id": 45
-        },
-        {
-          "object_ind": 264,
-          "stream_id": 46
-        },
-        {
-          "object_ind": 265,
-          "stream_id": 47
-        },
-        {
-          "object_ind": 266,
-          "stream_id": 48
-        },
-        {
-          "object_ind": 267,
-          "stream_id": 49
-        }
-      ]
-    },
-    {
-      "object_ind": 281,
-      "parent_id": 50,
-      "cache_id": 61,
-      "properties": [
-        {
-          "object_ind": 269,
-          "stream_id": 50
-        },
-        {
-          "object_ind": 270,
-          "stream_id": 51
-        },
-        {
-          "object_ind": 271,
-          "stream_id": 52
-        },
-        {
-          "object_ind": 272,
-          "stream_id": 53
-        },
-        {
-          "object_ind": 273,
-          "stream_id": 54
-        },
-        {
-          "object_ind": 274,
-          "stream_id": 55
-        },
-        {
-          "object_ind": 275,
-          "stream_id": 56
-        },
-        {
-          "object_ind": 276,
-          "stream_id": 57
-        },
-        {
-          "object_ind": 277,
-          "stream_id": 58
-        },
-        {
-          "object_ind": 278,
-          "stream_id": 59
-        },
-        {
-          "object_ind": 279,
-          "stream_id": 60
-        },
-        {
-          "object_ind": 280,
-          "stream_id": 61
-        }
-      ]
-    },
-    {
-      "object_ind": 286,
-      "parent_id": 20,
-      "cache_id": 23,
-      "properties": [
-        {
-          "object_ind": 283,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 284,
-          "stream_id": 21
-        },
-        {
-          "object_ind": 285,
-          "stream_id": 22
-        }
-      ]
-    },
-    {
-      "object_ind": 291,
-      "parent_id": 20,
-      "cache_id": 23,
-      "properties": [
-        {
-          "object_ind": 288,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 289,
-          "stream_id": 21
-        },
-        {
-          "object_ind": 290,
-          "stream_id": 22
-        }
-      ]
-    },
-    {
-      "object_ind": 293,
-      "parent_id": 23,
-      "cache_id": 24,
-      "properties": [
-        {
-          "object_ind": 292,
-          "stream_id": 23
-        }
-      ]
-    },
-    {
-      "object_ind": 307,
-      "parent_id": 23,
-      "cache_id": 32,
-      "properties": [
-        {
-          "object_ind": 295,
-          "stream_id": 23
-        },
-        {
-          "object_ind": 296,
-          "stream_id": 24
-        },
-        {
-          "object_ind": 297,
-          "stream_id": 25
-        },
-        {
-          "object_ind": 298,
-          "stream_id": 26
-        },
-        {
-          "object_ind": 299,
-          "stream_id": 27
-        },
-        {
-          "object_ind": 300,
-          "stream_id": 28
-        },
-        {
-          "object_ind": 301,
-          "stream_id": 29
-        },
-        {
-          "object_ind": 302,
-          "stream_id": 30
-        },
-        {
-          "object_ind": 303,
-          "stream_id": 31
-        },
-        {
-          "object_ind": 304,
-          "stream_id": 32
-        },
-        {
-          "object_ind": 305,
-          "stream_id": 33
-        },
-        {
-          "object_ind": 306,
-          "stream_id": 34
-        }
-      ]
-    },
-    {
-      "object_ind": 309,
-      "parent_id": 23,
-      "cache_id": 23,
-      "properties": []
-    },
-    {
-      "object_ind": 311,
-      "parent_id": 23,
-      "cache_id": 23,
-      "properties": []
-    },
-    {
-      "object_ind": 315,
-      "parent_id": 23,
-      "cache_id": 25,
-      "properties": [
-        {
-          "object_ind": 313,
-          "stream_id": 23
-        },
-        {
-          "object_ind": 314,
-          "stream_id": 24
-        }
-      ]
-    },
-    {
-      "object_ind": 322,
-      "parent_id": 20,
-      "cache_id": 25,
-      "properties": [
-        {
-          "object_ind": 317,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 318,
-          "stream_id": 21
-        },
-        {
-          "object_ind": 319,
-          "stream_id": 22
-        },
-        {
-          "object_ind": 320,
-          "stream_id": 23
-        },
-        {
-          "object_ind": 321,
-          "stream_id": 24
-        }
-      ]
-    },
-    {
-      "object_ind": 326,
-      "parent_id": 20,
-      "cache_id": 22,
-      "properties": [
-        {
-          "object_ind": 324,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 325,
-          "stream_id": 21
-        }
-      ]
-    },
-    {
-      "object_ind": 335,
-      "parent_id": 20,
-      "cache_id": 23,
-      "properties": [
-        {
-          "object_ind": 332,
-          "stream_id": 20
-        },
-        {
-          "object_ind": 333,
-          "stream_id": 21
-        },
-        {
-          "object_ind": 334,
-          "stream_id": 22
-        }
-      ]
-    },
-    {
-      "object_ind": 336,
-      "parent_id": 23,
-      "cache_id": 23,
-      "properties": []
-    }
-  ]
+      }
+    ]
+  },
+  "version": 7,
+  "mutators": {
+    "ballType": "DEFAULT",
+    "gameMutatorIndex": -1
+  }
 }
