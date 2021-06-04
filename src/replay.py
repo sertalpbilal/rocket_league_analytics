@@ -73,9 +73,10 @@ class ReplayManager:
                     # tracking_json = open(json_tracking_file_name, "w")
 
                     if platform.system() == 'Windows':
+                        pass
                         # subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p {replay_file_name}").split(), stdout=meta_json)
                         # subprocess.Popen((f"{parent / 'bin/rrrocket.exe'} -p -n {replay_file_name}").split(), stdout=tracking_json)
-                        subprocess.Popen((f"{parent / 'bin/rattletrap.exe'} -i {replay_file_name} -o {json_tracking_file_name}").split())
+                        # subprocess.Popen((f"{parent / 'bin/rattletrap.exe'} -i {replay_file_name} -o {json_tracking_file_name}").split())
                         # subprocess.Popen((f"{parent / 'bin/parser/RocketLeagueReplayParser.Console.exe'} {replay_file_name} --fileoutput {json_tracking_file_name}").split())
                     elif platform.system() == 'Linux':
                         pass
