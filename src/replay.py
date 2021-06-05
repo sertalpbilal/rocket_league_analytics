@@ -58,6 +58,7 @@ class ReplayManager:
                 json_tracking_file_name = rf"../data/json_detailed/{game['id']}.tracking.json"
                 
                 if not os.path.exists(replay_file_name):
+                    print(f"Fetching {game['id']}")
                     r = requests.get(BALLCHASING + f"/replays/{game['id']}/file", headers=self.header)
                     if r.status_code == 200:
                         with open(replay_file_name, "wb") as f:
