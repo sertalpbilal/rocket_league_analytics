@@ -1,6 +1,7 @@
 # TODO: set alpha on heatmaps based on how many games we are plotting
-# TODO: plot ball's heatmap
 # TODO: split ground and aerial heatmap based on z values
+# TODO: find a way to speed up proccessing .csv files for heatmap data
+# TODO: calculate how long the ball is in our half vs. the opponent's half
 import csv
 from math import pi
 from pprint import pprint
@@ -493,7 +494,7 @@ for val in your_shots_goal_or_miss:
 # plt.ylabel("Distance to goal")
 # plt.xlabel("Shot number")
 
-fig = plt.figure(figsize=(30, 20))
+fig = plt.figure(figsize=(40, 20))
 
 # ax.set_ylim(-5050,5050)
 # ax.set_xlim(-5050,5050)
@@ -552,6 +553,12 @@ your_x_coords = []
 your_y_coords = []
 your_z_coords = []
 
+ball_x_coords = []
+ball_y_coords = []
+ball_z_coords = []
+
+#TODO: see what happens if a user is called "ball"
+
 file_counter = 0
 
 for file in new_csv_files:
@@ -597,10 +604,23 @@ for file in new_csv_files:
                     if my_list[1][col] == "pos_z":
                         if row > 1 and my_list[row][col] != "":
                             your_z_coords.append(float(my_list[row][col]))
+            if my_list[0][col] == "ball":
+                for row in range(nrows):
+                    if my_list[1][col] == "pos_x":
+                        if row > 1 and my_list[row][col] != "":
+                            local_x = float(my_list[row][col])
+                            ball_x_coords.append(local_x * multiplier)
+                    if my_list[1][col] == "pos_y":
+                        if row > 1 and my_list[row][col] != "":
+                            local_y = float(my_list[row][col])
+                            ball_y_coords.append(local_y * multiplier)
+                    if my_list[1][col] == "pos_z":
+                        if row > 1 and my_list[row][col] != "":
+                            ball_z_coords.append(float(my_list[row][col]))
         if quick_mode:
             break
 
-n_plots = 11
+n_plots = 12
 widths = [1]
 heights = [1] * n_plots
 spec = fig.add_gridspec(ncols=1, nrows=n_plots, width_ratios=widths, height_ratios=heights)
@@ -630,6 +650,8 @@ ax2.scatter(their_misses_x, their_misses_y, their_misses_z, color="red", alpha=0
 
 ax2.scatter(my_x_coords, my_y_coords, my_z_coords, color="green", alpha=0.01, s=1, marker=",")
 ax2.scatter(your_x_coords, your_y_coords, your_z_coords, color="blue", alpha=0.01, s=1, marker=",")
+ax2.scatter(ball_x_coords, ball_y_coords, ball_z_coords, color="grey", alpha=0.1, s=1, marker="1")
+
 
 # side view
 # ax2.view_init(0, 180)
@@ -677,12 +699,12 @@ ax3.pie(sizes, colors=["green", "red"], startangle=90, autopct='%1.1f%%', explod
 ax4 = fig.add_subplot(spec[3, 0])  # My heatmap
 ax4.set_title("Allan's Heatmap")
 ax4.axis("off")
-ax4.scatter(my_x_coords, my_y_coords, alpha=0.015, color="green", s=1)
+ax4.scatter(my_x_coords, my_y_coords, alpha=0.005, color="green", s=1)
 
 ax5 = fig.add_subplot(spec[4, 0])  # Your heatmap
 ax5.set_title("Sertalp's Heatmap")
 ax5.axis("off")
-ax5.scatter(your_x_coords, your_y_coords, alpha=0.015, color="blue", s=1)
+ax5.scatter(your_x_coords, your_y_coords, alpha=0.005, color="blue", s=1)
 
 ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 ticks = [1, 2, 3, 4, 5, 6]
@@ -983,11 +1005,20 @@ ax11.bar(range(1, games_nr + 1), their_assists_over_time, color="red", width=1, 
 ax11.set_xticklabels("")
 ax11.set_ylabel("ASSISTS", rotation="horizontal", ha="center", va="center", labelpad=35)
 
+ax12 = fig.add_subplot(spec[4, 0])  # Your heatmap
+ax12.set_title("Heatmap of the ball")
+ax12.axis("off")
+ax12.scatter(ball_x_coords, ball_y_coords, alpha=0.005, color="grey", s=1)
+
+
 ax1.set_position([0, 0.88, 1, 0.1])
 ax2.set_position([0, 0, 1, 0.85])  # 3D Scatterplot
 ax3.set_position([0.45, 0.8, 0.1, 0.1])  # Results pie chart
-ax4.set_position([0.75, 0.5, 0.1, 0.3])  # Allan's heatmap
-ax5.set_position([0.88, 0.5, 0.1, 0.3])  # Sertalp's heatmap
+
+ax4.set_position([0.75, 0.55, 0.06, 0.24])  # Allan's heatmap
+ax12.set_position([0.825, 0.55, 0.06, 0.24])  # Heatmap of the ball
+ax5.set_position([0.9, 0.55, 0.06, 0.24])  # Sertalp's heatmap
+
 ax6.set_position([0.07, 0.5, 0.2, 0.3])  # Horizontal Bar Chart (Allan vs Sertalp)
 ax7.set_position([0.07, 0.1, 0.2, 0.3])  # Horizontal Bar Chart (Us vs Opponent)
 ax8.set_position([0.75, 0.05, 0.2, 0.1])  # Goals over time
