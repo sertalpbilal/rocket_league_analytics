@@ -1,7 +1,10 @@
+# TODO: set alpha on heatmaps based on how many games we are plotting
+# TODO: plot ball's heatmap
+# TODO: split ground and aerial heatmap based on z values
 import csv
+from math import pi
 from pprint import pprint
-
-import numpy
+import pandas as pd
 import numpy as np
 
 import json
@@ -9,6 +12,8 @@ import os
 import matplotlib.pyplot as plt
 from statistics import mean
 from mpl_toolkits.mplot3d import Axes3D
+
+quick_mode = True # Only processes one heatmap file to speed up program
 
 path_to_json = 'data/json/'
 path_to_csv = 'data/dataframe/'
@@ -51,7 +56,7 @@ new_csv_files = []
 
 for file in new_json_files:
     f = open(path_to_json + file, )
-    new_csv_files.append(file.replace(".json",".csv"))
+    new_csv_files.append(file.replace(".json", ".csv"))
 
 my_name = "games5425898691"
 your_name = "enpitsu"
@@ -125,7 +130,6 @@ their_misses_x = []
 their_misses_y = []
 their_misses_z = []
 
-
 win_count = 0
 loss_count = 0
 result_array = []
@@ -136,7 +140,33 @@ gs_array = []
 gc_array = []
 shots_alphas = []
 
+shot_diff_array = []
+
 our_team_color = []
+
+my_assists_count = 0
+your_assists_count = 0
+their_assists_count = 0
+
+my_saves_count = 0
+your_saves_count = 0
+their_saves_count = 0
+
+my_goals_over_time = []
+your_goals_over_time = []
+their_goals_over_time = []
+
+my_shots_over_time = []
+your_shots_over_time = []
+their_shots_over_time = []
+
+my_saves_over_time = []
+your_saves_over_time = []
+their_saves_over_time = []
+
+my_assists_over_time = []
+your_assists_over_time = []
+their_assists_over_time = []
 
 for file in new_json_files:
     file_counter += 1
@@ -148,6 +178,18 @@ for file in new_json_files:
         local_color = "blue"
         local_GS = 0
         local_GC = 0
+        local_my_goals = 0
+        local_your_goals = 0
+        local_my_shots = 0
+        local_your_shots = 0
+        local_our_shots = 0
+        local_their_shots = 0
+        local_my_saves = 0
+        local_your_saves = 0
+        local_their_saves = 0
+        local_my_assists = 0
+        local_your_assists = 0
+        local_their_assists = 0
 
         for i in data['players']:
             if i["name"] == my_name:
@@ -159,16 +201,48 @@ for file in new_json_files:
 
         if local_color == "orange":
             our_team_color.append("O")
-            local_GS = data["teams"][1]["score"]
-            local_GC = data["teams"][0]["score"]
+            if data["teams"][0]["isOrange"]:
+                local_GS = data["teams"][0]["score"]
+                local_GC = data["teams"][1]["score"]
+            if data["teams"][1]["isOrange"]:
+                local_GS = data["teams"][1]["score"]
+                local_GC = data["teams"][0]["score"]
         elif local_color == "blue":
             our_team_color.append("B")
-            local_GS = data["teams"][0]["score"]
-            local_GC = data["teams"][1]["score"]
+            if data["teams"][0]["isOrange"]:
+                local_GS = data["teams"][1]["score"]
+                local_GC = data["teams"][0]["score"]
+            if data["teams"][1]["isOrange"]:
+                local_GS = data["teams"][0]["score"]
+                local_GC = data["teams"][1]["score"]
 
         for i in data['gameStats']['hits']:
+
+            if "save" in i:
+                if i["playerId"]["id"] == my_id:
+                    my_saves_count += 1
+                    local_my_saves += 1
+                elif i["playerId"]["id"] == your_id:
+                    your_saves_count += 1
+                    local_your_saves += 1
+                else:
+                    their_saves_count += 1
+                    local_their_saves += 1
+
+            if "assist" in i:
+                if i["playerId"]["id"] == my_id:
+                    my_assists_count += 1
+                    local_my_assists += 1
+                elif i["playerId"]["id"] == your_id:
+                    your_assists_count += 1
+                    local_your_assists += 1
+                else:
+                    their_assists_count += 1
+                    local_their_assists += 1
+
             if "shot" in i:
                 if i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id:
+                    local_our_shots += 1
                     if local_color == "orange":
                         all_shots_x.append(i["ballData"]["posX"] * -1)
                         all_shots_y.append(i["ballData"]["posY"] * -1)
@@ -186,6 +260,7 @@ for file in new_json_files:
                                 my_goals_x.append(i["ballData"]["posX"])
                                 my_goals_y.append(i["ballData"]["posY"])
                             my_goals_z.append(i["ballData"]["posZ"])
+                            local_my_shots += 1
                         else:
                             if local_color == "orange":
                                 your_goals_x.append(i["ballData"]["posX"] * -1)
@@ -194,6 +269,7 @@ for file in new_json_files:
                                 your_goals_x.append(i["ballData"]["posX"])
                                 your_goals_y.append(i["ballData"]["posY"])
                             your_goals_z.append(i["ballData"]["posZ"])
+                            local_your_shots += 1
 
                     else:
                         if i["playerId"]["id"] == my_id:
@@ -204,6 +280,7 @@ for file in new_json_files:
                                 my_misses_x.append(i["ballData"]["posX"])
                                 my_misses_y.append(i["ballData"]["posY"])
                             my_misses_z.append(i["ballData"]["posZ"])
+                            local_my_shots += 1
                         else:
                             if local_color == "orange":
                                 your_misses_x.append(i["ballData"]["posX"] * -1)
@@ -212,8 +289,10 @@ for file in new_json_files:
                                 your_misses_x.append(i["ballData"]["posX"])
                                 your_misses_y.append(i["ballData"]["posY"])
                             your_misses_z.append(i["ballData"]["posZ"])
+                            local_your_shots += 1
 
                 else:
+                    local_their_shots += 1
                     if local_color == "orange":
                         all_shots_x.append(i["ballData"]["posX"] * -1)
                         all_shots_y.append(i["ballData"]["posY"] * -1)
@@ -245,6 +324,7 @@ for file in new_json_files:
             if (i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id) and "shot" in i:
                 if i["playerId"]["id"] == my_id and "goal" in i:
                     our_shots_distancetogoal.append(i["distanceToGoal"])
+                    local_my_goals += 1
 
                     if local_color == "orange":
                         our_shots_x.append(i["ballData"]["posX"] * -1)
@@ -268,6 +348,7 @@ for file in new_json_files:
 
                     our_col.append("red")
                 if i["playerId"]["id"] == your_id and "goal" in i:
+                    local_your_goals += 1
                     our_shots_distancetogoal.append(i["distanceToGoal"])
 
                     if local_color == "orange":
@@ -348,7 +429,7 @@ for file in new_json_files:
 
                     their_col.append("red")
 
-        # print(file, local_GS, local_GC)
+        print(file, local_GS, local_GC, local_our_shots, local_their_shots)
         if local_GS > local_GC:
             win_count += 1
             result_array.append("W")
@@ -362,6 +443,22 @@ for file in new_json_files:
         gd_array.append(local_GS - local_GC)
         gs_array.append(local_GS)
         gc_array.append(local_GC)
+        shot_diff_array.append(local_our_shots - local_their_shots)
+        my_goals_over_time.append(local_my_goals)
+        your_goals_over_time.append(local_your_goals)
+        their_goals_over_time.append(local_GC)
+
+        my_shots_over_time.append(local_my_shots)
+        your_shots_over_time.append(local_your_shots)
+        their_shots_over_time.append(local_their_shots)
+
+        my_saves_over_time.append(local_my_saves)
+        your_saves_over_time.append(local_your_saves)
+        their_saves_over_time.append(local_their_saves)
+
+        my_assists_over_time.append(local_my_assists)
+        your_assists_over_time.append(local_your_assists)
+        their_assists_over_time.append(local_their_assists)
 
 # print("Ball average distance to goal when I score: ", "%.2f" % mean(my_goals_distancetogoal))
 # print("Ball average distance to goal when you score: ", "%.2f" % mean(your_goals_distancetogoal))
@@ -396,7 +493,7 @@ for val in your_shots_goal_or_miss:
 # plt.ylabel("Distance to goal")
 # plt.xlabel("Shot number")
 
-fig = plt.figure(figsize=(20, 20))
+fig = plt.figure(figsize=(30, 20))
 
 # ax.set_ylim(-5050,5050)
 # ax.set_xlim(-5050,5050)
@@ -426,11 +523,21 @@ print("\nAllan goals:", my_goal_count, "\tAllan misses:", my_miss_count)
 print("Sertalp goals:", your_goal_count, "\tSertalp misses:", your_miss_count)
 print("Allan G/Shot ratio:", "%.2f" % (my_goal_count / (my_miss_count + my_goal_count)))
 print("Sertalp G/Shot ratio:", "%.2f" % (your_goal_count / (your_miss_count + your_goal_count)))
+print("Allan assists:", my_assists_count)
+print("Sertalp assists:", your_assists_count)
+print("Allan saves:", my_saves_count)
+print("Sertalp saves:", your_saves_count)
+
 print("\nOur goals:", my_goal_count + your_goal_count, "\tOur misses:", my_miss_count + your_miss_count,
       "\tOur G/Shot ratio:", "%.2f" % ((your_goal_count + my_goal_count) / (
             my_miss_count + your_miss_count + my_goal_count + your_goal_count)))
+print("Our assists:", my_assists_count + your_assists_count)
+print("Our saves:", my_saves_count + your_saves_count)
+
 print("Their goals:", their_goal_count, "\tTheir misses:", their_miss_count, "\tTheir G/Shot ratio:",
       "%.2f" % their_gs_ratio)
+print("Their assists:", their_assists_count)
+print("Their saves:", their_saves_count)
 
 sep = " "
 print("\nResults:", sep.join(result_array))
@@ -452,15 +559,15 @@ for file in new_csv_files:
     if file_counter < len(new_csv_files) + 1:
         print(file_counter)
 
-        with open(path_to_csv+file) as f:
+        with open(path_to_csv + file) as f:
             reader = csv.reader(f)
             my_list = list(reader)
-        f = open(path_to_csv+file, 'r')
-        reader = csv.reader(f)
+
         nrows = len(my_list)
-        ncols = len(next(reader))
+        ncols = len(my_list[0])
+
         multiplier = 1
-        if our_team_color[file_counter-1] == "O":
+        if our_team_color[file_counter - 1] == "O":
             multiplier = -1
 
         for col in range(ncols):
@@ -490,16 +597,18 @@ for file in new_csv_files:
                     if my_list[1][col] == "pos_z":
                         if row > 1 and my_list[row][col] != "":
                             your_z_coords.append(float(my_list[row][col]))
+        if quick_mode:
+            break
 
-
-n_plots = 8
+n_plots = 11
 widths = [1]
 heights = [1] * n_plots
 spec = fig.add_gridspec(ncols=1, nrows=n_plots, width_ratios=widths, height_ratios=heights)
 
 ax1 = fig.add_subplot(spec[0, 0])  # results
 ax1.bar(range(len(gd_array)), gd_array, color=result_color)
-ax1.set_ylim(-7, 7)
+ax1.plot(range(len(shot_diff_array)), shot_diff_array, color="blue", linestyle='--')
+ax1.set_ylim(-10, 10)
 ax1.set_xlim(-1, len(gd_array))
 ax1.axis("off")
 plt.axhline(y=0, color='grey', linestyle=':')
@@ -522,67 +631,369 @@ ax2.scatter(their_misses_x, their_misses_y, their_misses_z, color="red", alpha=0
 ax2.scatter(my_x_coords, my_y_coords, my_z_coords, color="green", alpha=0.01, s=1, marker=",")
 ax2.scatter(your_x_coords, your_y_coords, your_z_coords, color="blue", alpha=0.01, s=1, marker=",")
 
-#ax2.view_init(0, 180)
+# side view
+# ax2.view_init(0, 180)
+games_nr = len(new_json_files)
 
-my_goal_count_per_game = my_goal_count / len(new_json_files)
-your_goal_count_per_game = your_goal_count / len(new_json_files)
-our_goal_count_per_game = (my_goal_count+your_goal_count) / len(new_json_files)
-opp_goal_count_per_game = their_goal_count / len(new_json_files)
+my_goal_count_per_game = my_goal_count / games_nr
+your_goal_count_per_game = your_goal_count / games_nr
+our_goal_count_per_game = (my_goal_count + your_goal_count) / games_nr
+opp_goal_count_per_game = their_goal_count / games_nr
 
-ax3 = fig.add_subplot(spec[2, 0])  # Goals Scored / Game
-ax3_label1 = "Allan (" + str("%.2f" % my_goal_count_per_game) + ")\nSertalp (" + str("%.2f" % your_goal_count_per_game) + ")\nTOTAL (" + str("%.2f" % our_goal_count_per_game) + ")"
-ax3_label2 = "Opp. (" + str("%.2f" % opp_goal_count_per_game) + ")"
-ax3.bar([ax3_label1,ax3_label2], [our_goal_count_per_game, opp_goal_count_per_game], color=["green", "red"])
-ax3.set_title("Goals Scored / Game")
+my_shot_count_per_game = (my_goal_count + my_miss_count) / games_nr
+your_shot_count_per_game = (your_goal_count + your_miss_count) / games_nr
+our_shot_count_per_game = (my_goal_count + my_miss_count + your_goal_count + your_miss_count) / games_nr
+opp_shot_count_per_game = (their_goal_count + their_miss_count) / games_nr
 
-ax4 = fig.add_subplot(spec[3, 0])  # Shots / Game
-my_shot_count_per_game = (my_goal_count + my_miss_count) / len(new_json_files)
-your_shot_count_per_game = (your_goal_count + your_miss_count) / len(new_json_files)
-our_shot_count_per_game = (my_goal_count + my_miss_count + your_goal_count + your_miss_count) / len(new_json_files)
-opp_shot_count_per_game = (their_goal_count + their_miss_count) / len(new_json_files)
-ax4_label1 = "Allan (" + str("%.2f" % my_shot_count_per_game) + ")\nSertalp (" + str("%.2f" % your_shot_count_per_game) + ")\nTOTAL (" + str("%.2f" % our_shot_count_per_game) + ")"
-ax4_label2 = "Opp. (" + str("%.2f" % opp_shot_count_per_game) + ")"
-ax4.bar([ax4_label1, ax4_label2], [our_shot_count_per_game, opp_shot_count_per_game], color=["green", "red"])
-ax4.set_title("Shots / Game")
+my_goalshot_ratio = my_goal_count / (my_goal_count + my_miss_count)
+your_goalshot_ratio = your_goal_count / (your_goal_count + your_miss_count)
+our_goalshot_ratio = (my_goal_count + your_goal_count) / (
+            my_goal_count + my_miss_count + your_goal_count + your_miss_count)
 
-ax5 = fig.add_subplot(spec[4, 0])  # Goal/Shot Ratio
-my_goalshot_ratio = my_goal_count/(my_goal_count+my_miss_count)
-your_goalshot_ratio = your_goal_count/(your_goal_count+your_miss_count)
-our_goalshot_ratio = (my_goal_count+your_goal_count)/(my_goal_count+my_miss_count+your_goal_count+your_miss_count)
-ax5_label1 = "Allan (" + str("%.2f" % my_goalshot_ratio) + ")\nSertalp (" + str("%.2f" % your_goalshot_ratio) + ")\nTOTAL (" + str("%.2f" % our_goalshot_ratio) + ")"
-ax5_label2 = "Opp. (" + str("%.2f" % their_gs_ratio) + ")"
-ax5.bar([ax5_label1, ax5_label2], [our_goalshot_ratio, their_gs_ratio], color=["green", "red"])
-ax5.set_title("Goal/Shot Ratio")
+my_assist_count_per_game = my_assists_count / games_nr
+your_assist_count_per_game = your_assists_count / games_nr
+our_assist_count_per_game = (my_assists_count + your_assists_count) / games_nr
+opp_assist_count_per_game = their_assists_count / games_nr
 
-ax6 = fig.add_subplot(spec[5, 0])  # Results
+my_save_count_per_game = my_saves_count / games_nr
+your_save_count_per_game = your_saves_count / games_nr
+our_save_count_per_game = (my_saves_count + your_saves_count) / games_nr
+opp_save_count_per_game = their_saves_count / games_nr
+
+my_miss_count_per_game = my_miss_count / games_nr
+your_miss_count_per_game = your_miss_count / games_nr
+our_miss_count_per_game = (my_miss_count + your_miss_count) / games_nr
+opp_miss_count_per_game = their_miss_count / games_nr
+
+ax3 = fig.add_subplot(spec[2, 0])  # Results
 our_win_ratio = win_count / len(new_json_files)
 our_loss_ratio = 1 - our_win_ratio
-sizes = [our_win_ratio,our_loss_ratio]
-labels = "Win %","Loss %"
-ax6.pie(sizes, colors=["green","red"],startangle=90,autopct='%1.1f%%',explode=(0.1,0), shadow=True, textprops={'color':"black", 'bbox':dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
-})
-ax6.set_title("Results")
+sizes = [our_win_ratio, our_loss_ratio]
+labels = "Win %", "Loss %"
+ax3.pie(sizes, colors=["green", "red"], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
+        textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
+                   })
 
+ax4 = fig.add_subplot(spec[3, 0])  # My heatmap
+ax4.set_title("Allan's Heatmap")
+ax4.axis("off")
+ax4.scatter(my_x_coords, my_y_coords, alpha=0.015, color="green", s=1)
 
+ax5 = fig.add_subplot(spec[4, 0])  # Your heatmap
+ax5.set_title("Sertalp's Heatmap")
+ax5.axis("off")
+ax5.scatter(your_x_coords, your_y_coords, alpha=0.015, color="blue", s=1)
 
+ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
+ticks = [1, 2, 3, 4, 5, 6]
+ax6.set_yticks(ticks)
 
-ax7 = fig.add_subplot(spec[6, 0])  # My heatmap
-ax7.set_title(my_name+" Heatmap")
-ax7.scatter(my_x_coords,my_y_coords,alpha=0.015,color="green",s=1)
+dic = {1.0: "Assists", 2.0: "Saves", 3.0: "Goals", 4.0: "Misses", 5.0: "Shots", 6.0: "Goals/Shot"}
+labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
+ax6.set_yticklabels(labels)
+ax6.set_xticklabels("")
+ax6.tick_params(bottom=False)  # remove the ticks
 
-ax8 = fig.add_subplot(spec[7, 0])  # Your heatmap
-ax8.set_title(your_name+" Heatmap")
-ax8.scatter(your_x_coords,your_y_coords,alpha=0.015,color="blue",s=1)
+ax6.set_xlim(0, 1)
+
+# ASSISTS
+my_assist_share = my_assists_count / (my_assists_count + your_assists_count)
+your_assist_share = 1 - my_assist_share
+ax6.barh(1, my_assist_share, color="green")
+ax6.barh(1, your_assist_share, left=my_assist_share, color="blue")
+
+# SAVES
+my_save_share = my_saves_count / (my_saves_count + your_saves_count)
+your_save_share = 1 - my_save_share
+ax6.barh(2, my_save_share, color="green")
+ax6.barh(2, your_save_share, left=my_save_share, color="blue")
+
+# GOALS
+my_goal_share = my_goal_count / (my_goal_count + your_goal_count)
+your_goal_share = 1 - my_goal_share
+ax6.barh(3, my_goal_share, color="green")
+ax6.barh(3, your_goal_share, left=my_goal_share, color="blue")
+
+# MISSES
+my_miss_share = my_miss_count / (my_miss_count + your_miss_count)
+your_miss_share = 1 - my_miss_share
+ax6.barh(4, my_miss_share, color="green")
+ax6.barh(4, your_miss_share, left=my_miss_share, color="blue")
+
+# SHOTS
+my_shot_share = (my_miss_count + my_goal_count) / (my_miss_count + my_goal_count + your_miss_count + your_goal_count)
+your_shot_share = 1 - my_shot_share
+ax6.barh(5, my_shot_share, color="green")
+ax6.barh(5, your_shot_share, left=my_shot_share, color="blue")
+
+# GOAL/SHOT RATIO
+my_gs_ratio_share = my_goalshot_ratio / (my_goalshot_ratio + your_goalshot_ratio)
+your_gs_ratio_share = 1 - my_gs_ratio_share
+ax6.barh(6, my_gs_ratio_share, color="green")
+ax6.barh(6, your_gs_ratio_share, left=my_gs_ratio_share, color="blue")
+
+label_count = 0
+for c in ax6.containers:
+    # customize the label to account for cases when there might not be a bar section
+    labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
+
+    # assists
+    if label_count == 0:
+        labels[0] = "%.2f" % my_assist_count_per_game
+    if label_count == 1:
+        labels[0] = "%.2f" % your_assist_count_per_game
+
+    # saves
+    if label_count == 2:
+        labels[0] = "%.2f" % my_save_count_per_game
+    if label_count == 3:
+        labels[0] = "%.2f" % your_save_count_per_game
+
+    # goals
+    if label_count == 4:
+        labels[0] = "%.2f" % my_goal_count_per_game
+    if label_count == 5:
+        labels[0] = "%.2f" % your_goal_count_per_game
+
+    # misses
+    if label_count == 6:
+        labels[0] = "%.2f" % my_miss_count_per_game
+    if label_count == 7:
+        labels[0] = "%.2f" % your_miss_count_per_game
+
+    # shots
+    if label_count == 8:
+        labels[0] = "%.2f" % my_shot_count_per_game
+    if label_count == 9:
+        labels[0] = "%.2f" % your_shot_count_per_game
+
+    # goal / shot ratio
+    if label_count == 10:
+        labels[0] = "%.2f" % my_goalshot_ratio
+    if label_count == 11:
+        labels[0] = "%.2f" % your_goalshot_ratio
+
+    # set the bar label
+    ax6.bar_label(c, labels=labels, label_type='center', color="white")
+    label_count += 1
+
+ax6.set_title("Allan - Sertalp (per Game)")
+
+ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
+ticks = [1, 2, 3, 4, 5, 6]
+ax7.set_yticks(ticks)
+
+dic = {1.0: "Assists", 2.0: "Saves", 3.0: "Goals", 4.0: "Misses", 5.0: "Shots", 6.0: "Goals/Shot"}
+labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
+ax7.set_yticklabels(labels)
+ax7.set_xticklabels("")
+ax7.tick_params(bottom=False)  # remove the ticks
+
+ax7.set_xlim(0, 1)
+
+our_color = "dimgrey"
+opp_color = "darkred"
+
+# ASSISTS
+our_assist_share = (my_assists_count + your_assists_count) / (
+            my_assists_count + your_assists_count + their_assists_count)
+opp_assist_share = 1 - our_assist_share
+ax7.barh(1, our_assist_share, color=our_color)
+ax7.barh(1, opp_assist_share, left=our_assist_share, color=opp_color)
+
+# SAVES
+our_save_share = (my_saves_count + your_saves_count) / (my_saves_count + your_saves_count + their_saves_count)
+opp_save_share = 1 - our_save_share
+ax7.barh(2, our_save_share, color=our_color)
+ax7.barh(2, opp_save_share, left=our_save_share, color=opp_color)
+
+# GOALS
+our_goal_share = (my_goal_count + your_goal_count) / (my_goal_count + your_goal_count + their_goal_count)
+opp_goal_share = 1 - our_goal_share
+ax7.barh(3, our_goal_share, color=our_color)
+ax7.barh(3, opp_goal_share, left=our_goal_share, color=opp_color)
+
+# MISSES
+our_miss_share = (my_miss_count + your_miss_count) / (my_miss_count + your_miss_count + their_miss_count)
+opp_miss_share = 1 - our_miss_share
+ax7.barh(4, our_miss_share, color=our_color)
+ax7.barh(4, opp_miss_share, left=our_miss_share, color=opp_color)
+
+# SHOTS
+our_shot_share = (my_miss_count + my_goal_count + your_miss_count + your_goal_count) / (
+            my_miss_count + my_goal_count + your_miss_count + your_goal_count + their_goal_count + their_miss_count)
+opp_shot_share = 1 - our_shot_share
+ax7.barh(5, our_shot_share, color=our_color)
+ax7.barh(5, opp_shot_share, left=our_shot_share, color=opp_color)
+
+# GOAL/SHOT RATIO
+our_gs_ratio_share = (my_goalshot_ratio + your_goalshot_ratio) / (
+            my_goalshot_ratio + your_goalshot_ratio + their_gs_ratio * 2)
+opp_gs_ratio_share = 1 - our_gs_ratio_share
+ax7.barh(6, our_gs_ratio_share, color=our_color)
+ax7.barh(6, opp_gs_ratio_share, left=our_gs_ratio_share, color=opp_color)
+
+label_count = 0
+for c in ax7.containers:
+    # customize the label to account for cases when there might not be a bar section
+    labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
+
+    # assists
+    if label_count == 0:
+        labels[0] = "%.2f" % our_assist_count_per_game
+    if label_count == 1:
+        labels[0] = "%.2f" % opp_assist_count_per_game
+
+    # saves
+    if label_count == 2:
+        labels[0] = "%.2f" % our_save_count_per_game
+    if label_count == 3:
+        labels[0] = "%.2f" % opp_save_count_per_game
+
+    # goals
+    if label_count == 4:
+        labels[0] = "%.2f" % our_goal_count_per_game
+    if label_count == 5:
+        labels[0] = "%.2f" % opp_goal_count_per_game
+
+    # misses
+    if label_count == 6:
+        labels[0] = "%.2f" % our_miss_count_per_game
+    if label_count == 7:
+        labels[0] = "%.2f" % opp_miss_count_per_game
+
+    # shots
+    if label_count == 8:
+        labels[0] = "%.2f" % our_shot_count_per_game
+    if label_count == 9:
+        labels[0] = "%.2f" % opp_shot_count_per_game
+
+    # goal / shot ratio
+    if label_count == 10:
+        labels[0] = "%.2f" % our_goalshot_ratio
+    if label_count == 11:
+        labels[0] = "%.2f" % their_gs_ratio
+
+    # set the bar label
+    ax7.bar_label(c, labels=labels, label_type='center', color="white")
+    label_count += 1
+
+ax7.set_title("Us - Opponents (per Game)")
+
+new_result_array_num_up = []
+new_result_array_num_down = []
+new_result_color = []
+
+for entry in range(0, len(their_goals_over_time)):
+    their_goals_over_time[entry] *= -1
+
+ax8 = fig.add_subplot(spec[0, 0])  # our goals over time
+ax8.set_xlim(0, games_nr + 1)
+limit1 = min(their_goals_over_time)
+our_goals_over_time = [your_goals_over_time[x] + my_goals_over_time[x] for x in range(games_nr)]
+limit2 = max(our_goals_over_time)
+limit = max(abs(limit1), limit2)
+ax8.set_ylim(-limit, limit)
+
+for entry in range(0, len(result_array_num)):
+    new_result_array_num_up = limit
+    new_result_array_num_down = -limit
+    if result_array_num[entry] == 1:
+        new_result_color.append("green")
+    else:
+        new_result_color.append("red")
+
+ax8.bar(range(1, games_nr + 1), new_result_array_num_up, color=new_result_color, width=1, alpha=0.25)
+ax8.bar(range(1, games_nr + 1), new_result_array_num_down, color=new_result_color, width=1, alpha=0.25)
+
+ax8.bar(range(1, games_nr + 1), my_goals_over_time, color="green", width=1, ec="black")
+ax8.bar(range(1, games_nr + 1), your_goals_over_time, color="blue", bottom=my_goals_over_time, width=1, ec="black")
+ax8.bar(range(1, games_nr + 1), their_goals_over_time, color="red", width=1, ec="black")
+ax8.set_ylabel("GOALS", rotation="horizontal", ha="center", va="center", labelpad=35)
+
+for entry in range(0, len(their_shots_over_time)):
+    their_shots_over_time[entry] *= -1
+
+ax9 = fig.add_subplot(spec[0, 0])  # our goals over time
+ax9.set_xlim(0, games_nr + 1)
+limit1 = min(their_shots_over_time)
+our_shots_over_time = [your_shots_over_time[x] + my_shots_over_time[x] for x in range(games_nr)]
+limit2 = max(our_shots_over_time)
+limit = max(abs(limit1), limit2)
+ax9.set_ylim(-limit, limit)
+
+for entry in range(0, len(result_array_num)):
+    new_result_array_num_up = limit
+    new_result_array_num_down = -limit
+
+ax9.bar(range(1, games_nr + 1), new_result_array_num_up, color=new_result_color, width=1, alpha=0.25)
+ax9.bar(range(1, games_nr + 1), new_result_array_num_down, color=new_result_color, width=1, alpha=0.25)
+
+ax9.bar(range(1, games_nr + 1), my_shots_over_time, color="green", width=1, ec="black")
+ax9.bar(range(1, games_nr + 1), your_shots_over_time, color="blue", bottom=my_shots_over_time, width=1, ec="black")
+ax9.bar(range(1, games_nr + 1), their_shots_over_time, color="red", width=1, ec="black")
+ax9.set_xticklabels("")
+ax9.set_ylabel("SHOTS", rotation="horizontal", ha="center", va="center", labelpad=35)
+
+for entry in range(0, len(their_saves_over_time)):
+    their_saves_over_time[entry] *= -1
+
+ax10 = fig.add_subplot(spec[0, 0])  # our saves over time
+ax10.set_xlim(0, games_nr + 1)
+limit1 = min(their_saves_over_time)
+our_saves_over_time = [your_saves_over_time[x] + my_saves_over_time[x] for x in range(games_nr)]
+limit2 = max(our_saves_over_time)
+limit = max(abs(limit1), limit2)
+
+for entry in range(0, len(result_array_num)):
+    new_result_array_num_up = limit
+    new_result_array_num_down = -limit
+
+ax10.bar(range(1, games_nr + 1), new_result_array_num_up, color=new_result_color, width=1, alpha=0.25)
+ax10.bar(range(1, games_nr + 1), new_result_array_num_down, color=new_result_color, width=1, alpha=0.25)
+
+ax10.set_ylim(-limit, limit)
+ax10.bar(range(1, games_nr + 1), my_saves_over_time, color="green", width=1, ec="black")
+ax10.bar(range(1, games_nr + 1), your_saves_over_time, color="blue", bottom=my_saves_over_time, width=1, ec="black")
+ax10.bar(range(1, games_nr + 1), their_saves_over_time, color="red", width=1, ec="black")
+ax10.set_xticklabels("")
+ax10.set_ylabel("SAVES", rotation="horizontal", ha="center", va="center", labelpad=35)
+
+for entry in range(0, len(their_assists_over_time)):
+    their_assists_over_time[entry] *= -1
+
+ax11 = fig.add_subplot(spec[0, 0])  # our assists over time
+ax11.set_xlim(0, games_nr + 1)
+limit1 = min(their_assists_over_time)
+our_assists_over_time = [your_assists_over_time[x] + my_assists_over_time[x] for x in range(games_nr)]
+limit2 = max(our_assists_over_time)
+limit = max(abs(limit1), limit2)
+ax11.set_ylim(-limit, limit)
+
+for entry in range(0, len(result_array_num)):
+    new_result_array_num_up = limit
+    new_result_array_num_down = -limit
+
+ax11.bar(range(1, games_nr + 1), new_result_array_num_up, color=new_result_color, width=1, alpha=0.25)
+ax11.bar(range(1, games_nr + 1), new_result_array_num_down, color=new_result_color, width=1, alpha=0.25)
+
+ax11.bar(range(1, games_nr + 1), my_assists_over_time, color="green", width=1, ec="black")
+ax11.bar(range(1, games_nr + 1), your_assists_over_time, color="blue", bottom=my_assists_over_time, width=1, ec="black")
+ax11.bar(range(1, games_nr + 1), their_assists_over_time, color="red", width=1, ec="black")
+ax11.set_xticklabels("")
+ax11.set_ylabel("ASSISTS", rotation="horizontal", ha="center", va="center", labelpad=35)
 
 ax1.set_position([0, 0.88, 1, 0.1])
-ax2.set_position([0, 0, 1, 0.85])
-ax3.set_position([0.1, 0.1, 0.1, 0.1])
-ax4.set_position([0.1, 0.3, 0.1, 0.1])
-ax5.set_position([0.1, 0.5, 0.1, 0.1])
-ax6.set_position([0.1, 0.6, 0.1, 0.3])
-
-ax7.set_position([0.85, 0.5, 0.1, 0.3])
-ax8.set_position([0.85, 0.1, 0.1, 0.3])
+ax2.set_position([0, 0, 1, 0.85])  # 3D Scatterplot
+ax3.set_position([0.45, 0.8, 0.1, 0.1])  # Results pie chart
+ax4.set_position([0.75, 0.5, 0.1, 0.3])  # Allan's heatmap
+ax5.set_position([0.88, 0.5, 0.1, 0.3])  # Sertalp's heatmap
+ax6.set_position([0.07, 0.5, 0.2, 0.3])  # Horizontal Bar Chart (Allan vs Sertalp)
+ax7.set_position([0.07, 0.1, 0.2, 0.3])  # Horizontal Bar Chart (Us vs Opponent)
+ax8.set_position([0.75, 0.05, 0.2, 0.1])  # Goals over time
+ax9.set_position([0.75, 0.155, 0.2, 0.1])  # Shots over time
+ax10.set_position([0.75, 0.26, 0.2, 0.1])  # Saves over time
+ax11.set_position([0.75, 0.365, 0.2, 0.1])  # Assists over time
 
 # ax2.get_proj = lambda: np.dot(Axes3D.get_proj(ax), np.diag([1, 1.12, 0.75, 1]))
 
