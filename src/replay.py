@@ -85,7 +85,6 @@ if __name__ == '__main__':
     from dotenv import dotenv_values
     config = dotenv_values("../.env")
     print(config)
-    r = ReplayManager(token=config['TOKEN'])
+    r = ReplayManager(token=config.get('TOKEN', os.environ.get('TOKEN', None)))
     r.get_remote_replay_list("enpitsu", "games5425898691")
     r.fetch_replay_list()
-
