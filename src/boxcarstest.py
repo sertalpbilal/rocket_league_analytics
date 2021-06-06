@@ -1,7 +1,12 @@
 # TODO: set alpha on heatmaps based on how many games we are plotting
 # TODO: split ground and aerial heatmap based on z values
-# TODO: find a way to speed up proccessing .csv files for heatmap data
+# TODO: find a way to speed up processing .csv files for heatmap data
 # TODO: calculate how long the ball is in our half vs. the opponent's half
+# TODO: show games that we won/lost in ET
+# TODO: show touches in each half or third of the pitch
+# TODO: calculate time difference between games and add an outline to the games that took place much later than the last game (distance of more than 30 mins between them)
+
+
 import csv
 from math import pi
 from pprint import pprint
@@ -14,7 +19,7 @@ import matplotlib.pyplot as plt
 from statistics import mean
 from mpl_toolkits.mplot3d import Axes3D
 
-quick_mode = True # Only processes one heatmap file to speed up program
+quick_mode = True  # Only processes one heatmap file to speed up program
 
 path_to_json = 'data/json/'
 path_to_csv = 'data/dataframe/'
@@ -131,6 +136,10 @@ their_misses_x = []
 their_misses_y = []
 their_misses_z = []
 
+my_touches = 0
+your_touches = 0
+their_touches = 0
+
 win_count = 0
 loss_count = 0
 result_array = []
@@ -218,6 +227,13 @@ for file in new_json_files:
                 local_GC = data["teams"][1]["score"]
 
         for i in data['gameStats']['hits']:
+
+            if i["playerId"]["id"] == my_id:
+                my_touches += 1
+            elif i["playerId"]["id"] == your_id:
+                your_touches += 1
+            else:
+                their_touches += 1
 
             if "save" in i:
                 if i["playerId"]["id"] == my_id:
@@ -557,7 +573,7 @@ ball_x_coords = []
 ball_y_coords = []
 ball_z_coords = []
 
-#TODO: see what happens if a user is called "ball"
+# TODO: see what happens if a user is called "ball"
 
 file_counter = 0
 
@@ -652,7 +668,6 @@ ax2.scatter(my_x_coords, my_y_coords, my_z_coords, color="green", alpha=0.01, s=
 ax2.scatter(your_x_coords, your_y_coords, your_z_coords, color="blue", alpha=0.01, s=1, marker=",")
 ax2.scatter(ball_x_coords, ball_y_coords, ball_z_coords, color="grey", alpha=0.1, s=1, marker="1")
 
-
 # side view
 # ax2.view_init(0, 180)
 games_nr = len(new_json_files)
@@ -670,7 +685,7 @@ opp_shot_count_per_game = (their_goal_count + their_miss_count) / games_nr
 my_goalshot_ratio = my_goal_count / (my_goal_count + my_miss_count)
 your_goalshot_ratio = your_goal_count / (your_goal_count + your_miss_count)
 our_goalshot_ratio = (my_goal_count + your_goal_count) / (
-            my_goal_count + my_miss_count + your_goal_count + your_miss_count)
+        my_goal_count + my_miss_count + your_goal_count + your_miss_count)
 
 my_assist_count_per_game = my_assists_count / games_nr
 your_assist_count_per_game = your_assists_count / games_nr
@@ -686,6 +701,11 @@ my_miss_count_per_game = my_miss_count / games_nr
 your_miss_count_per_game = your_miss_count / games_nr
 our_miss_count_per_game = (my_miss_count + your_miss_count) / games_nr
 opp_miss_count_per_game = their_miss_count / games_nr
+
+my_touches_per_game = my_touches / games_nr
+your_touches_per_game = your_touches / games_nr
+their_touches_per_game = their_touches / games_nr
+our_touches_per_game = (my_touches + your_touches) / games_nr
 
 ax3 = fig.add_subplot(spec[2, 0])  # Results
 our_win_ratio = win_count / len(new_json_files)
@@ -707,10 +727,10 @@ ax5.axis("off")
 ax5.scatter(your_x_coords, your_y_coords, alpha=0.005, color="blue", s=1)
 
 ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
-ticks = [1, 2, 3, 4, 5, 6]
+ticks = [1, 2, 3, 4, 5, 6, 7]
 ax6.set_yticks(ticks)
 
-dic = {1.0: "Assists", 2.0: "Saves", 3.0: "Goals", 4.0: "Misses", 5.0: "Shots", 6.0: "Goals/Shot"}
+dic = {1.0: "Assists", 2.0: "Saves", 3.0: "Goals", 4.0: "Misses", 5.0: "Shots", 6.0: "Goals/Shot", 7.0: "Touches"}
 labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
 ax6.set_yticklabels(labels)
 ax6.set_xticklabels("")
@@ -754,6 +774,12 @@ your_gs_ratio_share = 1 - my_gs_ratio_share
 ax6.barh(6, my_gs_ratio_share, color="green")
 ax6.barh(6, your_gs_ratio_share, left=my_gs_ratio_share, color="blue")
 
+# TOUCHES
+my_touch_share = my_touches / (my_touches + your_touches)
+your_touch_share = 1 - my_touch_share
+ax6.barh(7, my_touch_share, color="green")
+ax6.barh(7, your_touch_share, left=my_touch_share, color="blue")
+
 label_count = 0
 for c in ax6.containers:
     # customize the label to account for cases when there might not be a bar section
@@ -795,6 +821,12 @@ for c in ax6.containers:
     if label_count == 11:
         labels[0] = "%.2f" % your_goalshot_ratio
 
+    # touches
+    if label_count == 12:
+        labels[0] = "%.2f" % my_touches_per_game
+    if label_count == 13:
+        labels[0] = "%.2f" % your_touches_per_game
+
     # set the bar label
     ax6.bar_label(c, labels=labels, label_type='center', color="white")
     label_count += 1
@@ -802,10 +834,10 @@ for c in ax6.containers:
 ax6.set_title("Allan - Sertalp (per Game)")
 
 ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
-ticks = [1, 2, 3, 4, 5, 6]
+ticks = [1, 2, 3, 4, 5, 6,7]
 ax7.set_yticks(ticks)
 
-dic = {1.0: "Assists", 2.0: "Saves", 3.0: "Goals", 4.0: "Misses", 5.0: "Shots", 6.0: "Goals/Shot"}
+dic = {1.0: "Assists", 2.0: "Saves", 3.0: "Goals", 4.0: "Misses", 5.0: "Shots", 6.0: "Goals/Shot", 7.0: "Touches"}
 labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
 ax7.set_yticklabels(labels)
 ax7.set_xticklabels("")
@@ -818,7 +850,7 @@ opp_color = "darkred"
 
 # ASSISTS
 our_assist_share = (my_assists_count + your_assists_count) / (
-            my_assists_count + your_assists_count + their_assists_count)
+        my_assists_count + your_assists_count + their_assists_count)
 opp_assist_share = 1 - our_assist_share
 ax7.barh(1, our_assist_share, color=our_color)
 ax7.barh(1, opp_assist_share, left=our_assist_share, color=opp_color)
@@ -843,17 +875,23 @@ ax7.barh(4, opp_miss_share, left=our_miss_share, color=opp_color)
 
 # SHOTS
 our_shot_share = (my_miss_count + my_goal_count + your_miss_count + your_goal_count) / (
-            my_miss_count + my_goal_count + your_miss_count + your_goal_count + their_goal_count + their_miss_count)
+        my_miss_count + my_goal_count + your_miss_count + your_goal_count + their_goal_count + their_miss_count)
 opp_shot_share = 1 - our_shot_share
 ax7.barh(5, our_shot_share, color=our_color)
 ax7.barh(5, opp_shot_share, left=our_shot_share, color=opp_color)
 
 # GOAL/SHOT RATIO
 our_gs_ratio_share = (my_goalshot_ratio + your_goalshot_ratio) / (
-            my_goalshot_ratio + your_goalshot_ratio + their_gs_ratio * 2)
+        my_goalshot_ratio + your_goalshot_ratio + their_gs_ratio * 2)
 opp_gs_ratio_share = 1 - our_gs_ratio_share
 ax7.barh(6, our_gs_ratio_share, color=our_color)
 ax7.barh(6, opp_gs_ratio_share, left=our_gs_ratio_share, color=opp_color)
+
+# TOUCHES
+our_touch_share = (my_touches + your_touches) / (my_touches+your_touches+their_touches)
+opp_touch_share = 1 - our_touch_share
+ax7.barh(7, our_touch_share, color=our_color)
+ax7.barh(7, opp_touch_share, left=our_touch_share, color=opp_color)
 
 label_count = 0
 for c in ax7.containers:
@@ -895,6 +933,12 @@ for c in ax7.containers:
         labels[0] = "%.2f" % our_goalshot_ratio
     if label_count == 11:
         labels[0] = "%.2f" % their_gs_ratio
+
+    # touches
+    if label_count == 12:
+        labels[0] = "%.2f" % our_touches_per_game
+    if label_count == 13:
+        labels[0] = "%.2f" % their_touches_per_game
 
     # set the bar label
     ax7.bar_label(c, labels=labels, label_type='center', color="white")
@@ -1009,7 +1053,6 @@ ax12 = fig.add_subplot(spec[4, 0])  # Your heatmap
 ax12.set_title("Heatmap of the ball")
 ax12.axis("off")
 ax12.scatter(ball_x_coords, ball_y_coords, alpha=0.005, color="grey", s=1)
-
 
 ax1.set_position([0, 0.88, 1, 0.1])
 ax2.set_position([0, 0, 1, 0.85])  # 3D Scatterplot
