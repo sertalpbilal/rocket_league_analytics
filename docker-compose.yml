@@ -1,7 +1,7 @@
 version: '3'
 services:
-  rocket_league_container:
-    container_name: rocket_league_analyzer
+  rocket_league_analysis:
+    container_name: main
     build: .
     environment:
       - PYTHONUNBUFFERED=1
