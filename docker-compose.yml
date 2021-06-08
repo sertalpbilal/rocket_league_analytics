@@ -1,7 +1,6 @@
 version: '3'
 services:
-  rocket_league_analysis:
-    container_name: main
+  convertor:
     build: .
     environment:
       - PYTHONUNBUFFERED=1
@@ -10,4 +9,3 @@ services:
     volumes:
       - ./data:/data
       - ./src:/src
-      # - ..env:/.env
