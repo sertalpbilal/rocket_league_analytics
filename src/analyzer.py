@@ -125,3 +125,4 @@ if __name__ == "__main__":
 # Countdown timer: ReplicatedRoundCountDownNumber
 # Ball bouncing: https://samuelpmish.github.io/notes/RocketLeague/ball_bouncing/
 # Convert quart rotation to euler: https://github.com/SaltieRL/carball/blob/f9e4854e173bb6db3e53cc93ac1daa4e58952e69/carball/json_parser/actor_parsing.py#L96
+# Pitch: https://www.reddit.com/r/RocketLeague/comments/667ps8/clean_dfh_stadium_model_to_replace_the_one_with/
