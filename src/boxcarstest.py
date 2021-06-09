@@ -1,30 +1,28 @@
 # TODO: split ground and aerial heatmap based on z values
-# TODO: find a way to speed up processing .csv files for heatmap data
 # TODO: calculate how long the ball is in our half vs. the opponent's half
 # TODO: show touches in each half or third of the pitch
 # TODO: detect forfeits
-# TODO: make "nets" smaller in background image
+# TODO: add colormap to heatmaps like in this example: https://www.dreamteamfc.com/c/wp-content/uploads/sites/4/2018/05/mesut-ozil-final.jpg?strip=all&w=742&quality=100
+# TODO: fix issues with GD chart when there is only 1 game and it's an overtime game
+# TODO: fix axes on charts which show game numbers to only show ints and not floats
+# TODO: handle own-goals
+# TODO: decide whether to plot "non-shot" goals in the 4 goal heatmaps
 
 import csv
-from collections import Counter
-from math import pi
-from pprint import pprint
-import pandas as pd
-import numpy as np
-import time
 import json
 import os
-import matplotlib.pyplot as plt
+import time
+from collections import Counter
 from statistics import mean
-from mpl_toolkits.mplot3d import Axes3D
-from tabulate import tabulate
+
+import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+from tabulate import tabulate
 
 startTime = time.time()
 
-quick_mode = True  # Only processes one heatmap file to speed up program
 check_new = False  # Only processes new files (in separate directory)
-side_view_3d_scatter = False # Show 3D scatterplot from the side by rotating it 180 degrees
+side_view_3d_scatter = False  # Show 3D scatterplot from the side by rotating it 180 degrees
 
 # Names in Rocket League
 my_name = "games5425898691"
@@ -38,7 +36,7 @@ your_alias = "Sertalp"
 my_color = "royalblue"
 your_color = "mediumblue"
 our_color = "green"
-opp_color = "darkred"
+their_color = "darkred"
 
 bg_img = plt.imread("simple-pitch.png")
 
@@ -47,7 +45,7 @@ if check_new:
 else:
     path_to_json = 'data/json/'
 
-path_to_csv = 'data/dataframe/'
+path_to_csv = 'data/dataframe-trimmed/'
 json_files = [pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
 csv_files = [pos_csv for pos_csv in os.listdir(path_to_csv) if pos_csv.endswith('.csv')]
 
@@ -108,8 +106,6 @@ for file in new_json_files:
 
     new_csv_files.append(file.replace(".json", ".csv"))
     file_pos += 1
-
-
 
 my_misses_distancetogoal = []
 your_misses_distancetogoal = []
@@ -265,6 +261,10 @@ their_turnovers_won_count = 0
 overtime_wins_count = 0
 overtime_losses_count = 0
 
+my_goal_count = 0
+your_goal_count = 0
+their_goal_count = 0
+
 for file in new_json_files:
     file_counter += 1
     if file_counter < len(new_json_files) + 1:
@@ -275,8 +275,11 @@ for file in new_json_files:
         local_color = "blue"
         local_GS = 0
         local_GC = 0
+
         local_my_goals = 0
         local_your_goals = 0
+        local_their_goals = 0
+
         local_my_shots = 0
         local_your_shots = 0
         local_our_shots = 0
@@ -288,6 +291,10 @@ for file in new_json_files:
         local_your_assists = 0
         local_their_assists = 0
 
+
+
+
+
         # Link our names to IDs
         for i in data['players']:
             if i["name"] == my_name:
@@ -298,6 +305,16 @@ for file in new_json_files:
                 your_id = i["id"]["id"]
 
 
+        for i in data["gameMetadata"]["goals"]:
+            if i["playerId"]["id"] == my_id:
+                local_my_goals += 1
+                my_goal_count += 1
+            elif i["playerId"]["id"] == your_id:
+                local_your_goals += 1
+                your_goal_count += 1
+            else:
+                local_their_goals += 1
+                their_goal_count += 1
 
         # TODO: totalAerials, totalDribbles
         for i in data["players"]:
@@ -337,7 +354,6 @@ for file in new_json_files:
                 if "wonTurnovers" in i["stats"]["possession"]:
                     their_turnovers_won_count += i["stats"]["possession"]["wonTurnovers"]
 
-
         if "demos" in data["gameMetadata"]:
             for i in data["gameMetadata"]["demos"]:
                 if i["attackerId"]["id"] == my_id:
@@ -358,7 +374,7 @@ for file in new_json_files:
             if data["teams"][0]["isOrange"]:
                 local_GS = data["teams"][0]["score"]
                 local_GC = data["teams"][1]["score"]
-            if data["teams"][1]["isOrange"]:
+            elif data["teams"][1]["isOrange"]:
                 local_GS = data["teams"][1]["score"]
                 local_GC = data["teams"][0]["score"]
         elif local_color == "blue":
@@ -366,9 +382,10 @@ for file in new_json_files:
             if data["teams"][0]["isOrange"]:
                 local_GS = data["teams"][1]["score"]
                 local_GC = data["teams"][0]["score"]
-            if data["teams"][1]["isOrange"]:
+            elif data["teams"][1]["isOrange"]:
                 local_GS = data["teams"][0]["score"]
                 local_GC = data["teams"][1]["score"]
+
 
         for i in data['gameStats']['hits']:
 
@@ -508,7 +525,7 @@ for file in new_json_files:
             if (i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id) and "shot" in i:
                 if i["playerId"]["id"] == my_id and "goal" in i:
                     our_shots_distancetogoal.append(i["distanceToGoal"])
-                    local_my_goals += 1
+                    #local_my_goals += 1
 
                     if local_color == "orange":
                         our_shots_x.append(i["ballData"]["posX"] * -1)
@@ -532,7 +549,7 @@ for file in new_json_files:
 
                     our_col.append("red")
                 if i["playerId"]["id"] == your_id and "goal" in i:
-                    local_your_goals += 1
+                    #local_your_goals += 1
                     our_shots_distancetogoal.append(i["distanceToGoal"])
 
                     if local_color == "orange":
@@ -615,14 +632,14 @@ for file in new_json_files:
 
         # print(file, local_GS, local_GC, local_our_shots, local_their_shots)
 
-
         gd_array.append(local_GS - local_GC)
         gs_array.append(local_GS)
         gc_array.append(local_GC)
         shot_diff_array.append(local_our_shots - local_their_shots)
+
         my_goals_over_time.append(local_my_goals)
         your_goals_over_time.append(local_your_goals)
-        their_goals_over_time.append(local_GC)
+        their_goals_over_time.append(local_their_goals)
 
         my_shots_over_time.append(local_my_shots)
         your_shots_over_time.append(local_your_shots)
@@ -640,12 +657,11 @@ for file in new_json_files:
 
         # check if game went overtime -- only if there is 1 GD between the teams, or 0 GD (FF in OT)
         if (local_GS - local_GC) == 1 or (local_GC - local_GS) == 1 or (local_GC == local_GS):
-            csv_file = file.replace(".json",".csv")
+            csv_file = file.replace(".json", ".csv")
             with open(path_to_csv + csv_file, newline='') as f:
                 reader = csv.reader(f)
                 row1 = next(reader)
-                row2 = next(reader)
-            if "is_overtime" in row2:
+            if "T" in row1:
                 local_wentOvertime = True
                 if local_GS > local_GC:
                     overtime_wins_count += 1
@@ -663,7 +679,7 @@ for file in new_json_files:
             result_array.append("W")
             result_array_num.append(1)
             result_color.append(our_color)
-            normaltime_gd_array.append(local_GS-local_GC)
+            normaltime_gd_array.append(local_GS - local_GC)
 
         elif local_GC > local_GS and local_wentOvertime:
             loss_count += 1
@@ -675,8 +691,8 @@ for file in new_json_files:
             loss_count += 1
             result_array.append("L")
             result_array_num.append(-1)
-            result_color.append(opp_color)
-            normaltime_gd_array.append(local_GS-local_GC)
+            result_color.append(their_color)
+            normaltime_gd_array.append(local_GS - local_GC)
 
         # TODO: Handle FFs
 
@@ -695,35 +711,43 @@ for val in your_shots_goal_or_miss:
     else:
         your_col.append('red')
 
-
 fig = plt.figure(figsize=(40, 20))
 
 your_miss_count = 0
-your_goal_count = 0
 for shot in range(0, len(your_shots_goal_or_miss)):
     if your_shots_goal_or_miss[shot] == 0:
         your_miss_count += 1
-    else:
-        your_goal_count += 1
 
 my_miss_count = 0
-my_goal_count = 0
 for shot in range(0, len(my_shots_goal_or_miss)):
     if my_shots_goal_or_miss[shot] == 0:
         my_miss_count += 1
-    else:
-        my_goal_count += 1
 
 their_miss_count = len(their_misses_distancetogoal)
-their_goal_count = len(their_goals_distancetogoal)
 
-their_gs_ratio = their_goal_count / (their_goal_count + their_miss_count)
-my_gs_ratio = my_goal_count / (my_miss_count + my_goal_count)
-your_gs_ratio = your_goal_count / (your_miss_count + your_goal_count)
+if (their_goal_count + their_miss_count) > 0:
+    their_gs_ratio = their_goal_count / (their_goal_count + their_miss_count)
+else:
+    their_gs_ratio = 0
+
+if (my_goal_count + my_miss_count) > 0:
+    my_gs_ratio = my_goal_count / (my_goal_count + my_miss_count)
+else:
+    my_gs_ratio = 0
+
+if (your_goal_count + your_miss_count) > 0:
+    your_gs_ratio = your_goal_count / (your_goal_count + your_miss_count)
+else:
+    your_gs_ratio = 0
 
 our_goal_count = my_goal_count + your_goal_count
 our_miss_count = my_miss_count + your_miss_count
-our_gs_ratio = our_goal_count / (our_goal_count + our_miss_count)
+
+if (our_goal_count + our_miss_count) > 0:
+    our_gs_ratio = our_goal_count / (our_goal_count + our_miss_count)
+else:
+    our_gs_ratio = 0
+
 our_assists_count = my_assists_count + your_assists_count
 our_saves_count = my_saves_count + your_saves_count
 our_demos_count = my_demos_count + your_demos_count
@@ -735,23 +759,77 @@ our_touches_count = my_touches_count + your_touches_count
 our_turnovers_count = my_turnovers_count + your_turnovers_count
 our_turnovers_won_count = my_turnovers_won_count + your_turnovers_won_count
 
-my_avg_goal_distance = "%.0f" % mean(my_goals_distancetogoal)
-your_avg_goal_distance = "%.0f" % mean(your_goals_distancetogoal)
+if my_goal_count > 0:
+    my_avg_goal_distance = "%.0f" % mean(my_goals_distancetogoal)
+else:
+    my_avg_goal_distance = 0
 
-my_avg_miss_distance = "%.0f" % mean(my_misses_distancetogoal)
-your_avg_miss_distance = "%.0f" % mean(your_misses_distancetogoal)
+if your_goal_count > 0:
+    your_avg_goal_distance = "%.0f" % mean(your_goals_distancetogoal)
+else:
+    your_avg_goal_distance = 0
 
-my_avg_shot_distance = "%.0f" % mean(my_shots_distancetogoal)
-your_avg_shot_distance = "%.0f" % mean(your_shots_distancetogoal)
+if my_miss_count > 0:
+    my_avg_miss_distance = "%.0f" % mean(my_misses_distancetogoal)
+else:
+    my_avg_miss_distance = 0
 
-our_avg_goal_distance = "%.0f" % mean(my_goals_distancetogoal+your_goals_distancetogoal)
-opp_avg_goal_distance = "%.0f" % mean(their_goals_distancetogoal)
+if your_miss_count > 0:
+    your_avg_miss_distance = "%.0f" % mean(your_misses_distancetogoal)
+else:
+    your_avg_miss_distance = 0
 
-our_avg_miss_distance = "%.0f" % mean(my_misses_distancetogoal+your_misses_distancetogoal)
-opp_avg_miss_distance = "%.0f" % mean(their_misses_distancetogoal)
+if (my_goal_count + my_miss_count) > 0:
+    my_avg_shot_distance = "%.0f" % mean(my_shots_distancetogoal)
+else:
+    my_avg_shot_distance = 0
 
-our_avg_shot_distance = "%.0f" % mean(my_shots_distancetogoal+your_shots_distancetogoal)
-opp_avg_shot_distance = "%.0f" % mean(their_goals_distancetogoal+their_misses_distancetogoal)
+if (your_goal_count + your_miss_count) > 0:
+    your_avg_shot_distance = "%.0f" % mean(your_shots_distancetogoal)
+else:
+    your_avg_shot_distance = 0
+
+if my_goal_count > 0 and your_goal_count == 0:
+    our_avg_goal_distance = my_avg_goal_distance
+if my_goal_count == 0 and your_goal_count > 0:
+    our_avg_goal_distance = your_avg_goal_distance
+if my_goal_count == 0 and your_goal_count == 0:
+    our_avg_goal_distance = 0
+if my_goal_count > 0 and your_goal_count > 0:
+    our_avg_goal_distance = "%.0f" % mean(my_goals_distancetogoal + your_goals_distancetogoal)
+
+if my_miss_count > 0 and your_miss_count == 0:
+    our_avg_miss_distance = my_avg_miss_distance
+if my_miss_count == 0 and your_miss_count > 0:
+    our_avg_miss_distance = your_avg_miss_distance
+if my_miss_count == 0 and your_miss_count == 0:
+    our_avg_miss_distance = 0
+if my_miss_count > 0 and your_miss_count > 0:
+    our_avg_miss_distance = "%.0f" % mean(my_misses_distancetogoal + your_misses_distancetogoal)
+
+if (my_miss_count + my_goal_count) > 0 and (your_miss_count + your_goal_count) == 0:
+    our_avg_shot_distance = my_avg_shot_distance
+if (my_miss_count + my_goal_count) == 0 and (your_miss_count + your_goal_count) > 0:
+    our_avg_shot_distance = your_avg_shot_distance
+if (my_miss_count + my_goal_count) == 0 and (your_miss_count + your_goal_count) == 0:
+    our_avg_shot_distance = 0
+if (my_miss_count + my_goal_count) > 0 and (your_miss_count + your_goal_count) > 0:
+    our_avg_shot_distance = "%.0f" % mean(my_shots_distancetogoal + your_shots_distancetogoal)
+
+if their_goal_count > 0:
+    their_avg_goal_distance = "%.0f" % mean(their_goals_distancetogoal)
+else:
+    their_avg_goal_distance = 0
+
+if their_miss_count > 0:
+    their_avg_miss_distance = "%.0f" % mean(their_misses_distancetogoal)
+else:
+    their_avg_miss_distance = 0
+
+if (their_goal_count + their_miss_count) > 0:
+    their_avg_shot_distance = "%.0f" % mean(their_goals_distancetogoal + their_misses_distancetogoal)
+else:
+    their_avg_shot_distance = 0
 
 individual_data = [["Goals", my_goal_count, your_goal_count],
                    ["Misses", my_miss_count, your_miss_count],
@@ -781,9 +859,9 @@ team_data = [["Goals", our_goal_count, their_goal_count],
              ["Passes", our_passes_count, their_passes_count],
              ["Clears", our_clears_count, their_clears_count],
              ["Touches", our_touches_count, their_touches_count],
-             ["Goal Distance", our_avg_goal_distance, opp_avg_goal_distance],
-             ["Miss Distance", our_avg_miss_distance, opp_avg_miss_distance],
-             ["Shot Distance", our_avg_shot_distance, opp_avg_shot_distance],
+             ["Goal Distance", our_avg_goal_distance, their_avg_goal_distance],
+             ["Miss Distance", our_avg_miss_distance, their_avg_miss_distance],
+             ["Shot Distance", our_avg_shot_distance, their_avg_shot_distance],
              ["Won Ball", our_turnovers_won_count, their_turnovers_won_count],
              ]
 
@@ -812,23 +890,23 @@ streak_num_games = []
 streak_goals = []
 streak_my_goals = []
 streak_your_goals = []
-streak_opp_goals = []
+streak_their_goals = []
 local_my_goals_in_streak = 0
 local_your_goals_in_streak = 0
 local_our_goals_in_streak = 0
-local_opp_goals_in_streak = 0
+local_their_goals_in_streak = 0
 
 for result in range(0, len(result_array)):
     if result_array[result] == "W":
         local_wins_in_streak += 1
     elif result_array[result] == "L":
         local_losses_in_streak += 1
-    
+
     local_my_goals_in_streak += my_goals_over_time[result]
     local_your_goals_in_streak += your_goals_over_time[result]
 
     local_our_goals_in_streak += (my_goals_over_time[result] + your_goals_over_time[result])
-    local_opp_goals_in_streak += their_goals_over_time[result]
+    local_their_goals_in_streak += their_goals_over_time[result]
 
     local_streak_results += str(result_array[result] + " ")
 
@@ -840,17 +918,16 @@ for result in range(0, len(result_array)):
         streak_goals.append(local_our_goals_in_streak)
         streak_my_goals.append(local_my_goals_in_streak)
         streak_your_goals.append(local_your_goals_in_streak)
-        streak_opp_goals.append(local_opp_goals_in_streak)
+        streak_their_goals.append(local_their_goals_in_streak)
         local_wins_in_streak = 0
         local_losses_in_streak = 0
         local_streak_results = ""
         local_our_goals_in_streak = 0
         local_my_goals_in_streak = 0
         local_your_goals_in_streak = 0
-        local_opp_goals_in_streak = 0
+        local_their_goals_in_streak = 0
 
     res_num += 1
-
 
 streak_data = []
 
@@ -859,18 +936,22 @@ for streak in range(0, len(streak_num_games)):
     num_games_in_streak = streak_wins[streak] + streak_losses[streak]
     win_rate = streak_wins[streak] / num_games_in_streak
     win_pct = "%.0f" % (win_rate * 100) + "%"
-    our_goals_per_game_streak = "%.1f" % (streak_goals[streak]/num_games_in_streak)
-    my_goals_per_game_streak = "%.1f" % (streak_my_goals[streak]/num_games_in_streak)
-    your_goals_per_game_streak = "%.1f" % (streak_your_goals[streak]/num_games_in_streak)
-    opp_goals_per_game_streak = "%.1f" % (streak_opp_goals[streak]/num_games_in_streak)
-    gd_per_game_streak = "%.1f" % ((streak_goals[streak] - streak_opp_goals[streak])/num_games_in_streak)
+    our_goals_per_game_streak = "%.1f" % (streak_goals[streak] / num_games_in_streak)
+    my_goals_per_game_streak = "%.1f" % (streak_my_goals[streak] / num_games_in_streak)
+    your_goals_per_game_streak = "%.1f" % (streak_your_goals[streak] / num_games_in_streak)
+    their_goals_per_game_streak = "%.1f" % (streak_their_goals[streak] / num_games_in_streak)
+    gd_per_game_streak = "%.1f" % ((streak_goals[streak] - streak_their_goals[streak]) / num_games_in_streak)
 
-    streak_data.append([win_pct,streak_results[streak],streak_wins[streak]+streak_losses[streak],streak_wins[streak],streak_losses[streak],
-                        my_goals_per_game_streak, your_goals_per_game_streak, our_goals_per_game_streak, opp_goals_per_game_streak,
-                        gd_per_game_streak])
+    streak_data.append(
+        [win_pct, streak_results[streak], streak_wins[streak] + streak_losses[streak], streak_wins[streak],
+         streak_losses[streak],
+         my_goals_per_game_streak, your_goals_per_game_streak, our_goals_per_game_streak, their_goals_per_game_streak,
+         gd_per_game_streak])
 
 print("\n")
-print(tabulate(streak_data, headers=["Win %", "Results", "Games", "Wins", "Losses", my_alias + " Goals/G", your_alias + " Goals/G", "Our Goals/G", "Their Goals/G", "Goal Diff./G"], numalign="right"))
+print(tabulate(streak_data,
+               headers=["Win %", "Results", "Games", "Wins", "Losses", my_alias + " Goals/G", your_alias + " Goals/G",
+                        "Our Goals/G", "Their Goals/G", "Goal Diff./G"], numalign="right"))
 print("\n")
 
 ############
@@ -879,17 +960,37 @@ games_nr = len(new_json_files)
 our_win_ratio = win_count / games_nr
 our_loss_ratio = 1 - our_win_ratio
 overtime_games_count = overtime_wins_count + overtime_losses_count
-normaltime_wins_count = win_count-overtime_wins_count
-normaltime_losses_count = loss_count-overtime_losses_count
+normaltime_wins_count = win_count - overtime_wins_count
+normaltime_losses_count = loss_count - overtime_losses_count
 normaltime_games_count = normaltime_wins_count + normaltime_losses_count
-normaltime_win_rate = normaltime_wins_count / normaltime_games_count
-overtime_win_rate = overtime_wins_count / overtime_games_count
-normaltime_loss_rate = normaltime_losses_count / normaltime_games_count
-overtime_loss_rate = overtime_losses_count / overtime_games_count
 
-result_data = [["Games",games_nr,normaltime_games_count,overtime_games_count],
-               ["Win %", "%.2f" % (our_win_ratio*100),"%.2f" % (normaltime_win_rate*100), "%.2f" % (overtime_win_rate*100)],
-               ["Loss %", "%.2f" % (our_loss_ratio*100),"%.2f" % (normaltime_loss_rate*100), "%.2f" % (overtime_loss_rate*100)],
+if normaltime_games_count > 0:
+    normaltime_win_rate = normaltime_wins_count / normaltime_games_count
+    normaltime_loss_rate = normaltime_losses_count / normaltime_games_count
+    our_NT_win_ratio = normaltime_wins_count / normaltime_games_count
+    our_NT_loss_ratio = normaltime_losses_count / normaltime_games_count
+else:
+    normaltime_win_rate = 0
+    normaltime_loss_rate = 0
+    our_NT_win_ratio = 0
+    our_NT_loss_ratio = 0
+
+if overtime_games_count > 0:
+    overtime_win_rate = overtime_wins_count / overtime_games_count
+    overtime_loss_rate = overtime_losses_count / overtime_games_count
+    our_OT_win_ratio = overtime_wins_count / overtime_games_count
+    our_OT_loss_ratio = overtime_losses_count / overtime_games_count
+else:
+    overtime_win_rate = 0
+    overtime_loss_rate = 0
+    our_OT_win_ratio = 0
+    our_OT_loss_ratio = 0
+
+result_data = [["Games", games_nr, normaltime_games_count, overtime_games_count],
+               ["Win %", "%.2f" % (our_win_ratio * 100), "%.2f" % (normaltime_win_rate * 100),
+                "%.2f" % (overtime_win_rate * 100)],
+               ["Loss %", "%.2f" % (our_loss_ratio * 100), "%.2f" % (normaltime_loss_rate * 100),
+                "%.2f" % (overtime_loss_rate * 100)],
                ["Wins", win_count, normaltime_wins_count, overtime_wins_count],
                ["Losses", loss_count, normaltime_losses_count, overtime_losses_count]
                ]
@@ -910,76 +1011,60 @@ ball_x_coords = []
 ball_y_coords = []
 ball_z_coords = []
 
-# TODO: see what happens if a user is called "ball"
-
 file_counter = 0
 
-for file in new_csv_files:
-    file_counter += 1
-    if file_counter < len(new_csv_files) + 1:
-        # print(file_counter)
+# Only consider at most the last 10 games for positional heatmaps
+game_print_list = []
+for game in range(0, games_nr):
+    if games_nr > 9:
+        if game > (games_nr - 11):
+            game_print_list.append(game)
+    else:
+        game_print_list.append(game)
 
+
+for file in new_csv_files:
+    if file_counter in game_print_list:
         with open(path_to_csv + file) as f:
             reader = csv.reader(f)
             my_list = list(reader)
 
         nrows = len(my_list)
-        ncols = len(my_list[0])
 
         multiplier = 1
         if our_team_color[file_counter - 1] == "O":
             multiplier = -1
 
-        for col in range(ncols):
-            if my_list[0][col] == my_name:
-                for row in range(nrows):
-                    if my_list[1][col] == "pos_x":
-                        if row > 1 and my_list[row][col] != "":
-                            local_x = float(my_list[row][col])
-                            my_x_coords.append(local_x * multiplier)
-                    if my_list[1][col] == "pos_y":
-                        if row > 1 and my_list[row][col] != "":
-                            local_y = float(my_list[row][col])
-                            my_y_coords.append(local_y * multiplier)
-                    if my_list[1][col] == "pos_z":
-                        if row > 1 and my_list[row][col] != "":
-                            my_z_coords.append(float(my_list[row][col]))
-            if my_list[0][col] == your_name:
-                for row in range(nrows):
-                    if my_list[1][col] == "pos_x":
-                        if row > 1 and my_list[row][col] != "":
-                            local_x = float(my_list[row][col])
-                            your_x_coords.append(local_x * multiplier)
-                    if my_list[1][col] == "pos_y":
-                        if row > 1 and my_list[row][col] != "":
-                            local_y = float(my_list[row][col])
-                            your_y_coords.append(local_y * multiplier)
-                    if my_list[1][col] == "pos_z":
-                        if row > 1 and my_list[row][col] != "":
-                            your_z_coords.append(float(my_list[row][col]))
-            if my_list[0][col] == "ball":
-                for row in range(nrows):
-                    if my_list[1][col] == "pos_x":
-                        if row > 1 and my_list[row][col] != "":
-                            local_x = float(my_list[row][col])
-                            ball_x_coords.append(local_x * multiplier)
-                    if my_list[1][col] == "pos_y":
-                        if row > 1 and my_list[row][col] != "":
-                            local_y = float(my_list[row][col])
-                            ball_y_coords.append(local_y * multiplier)
-                    if my_list[1][col] == "pos_z":
-                        if row > 1 and my_list[row][col] != "":
-                            ball_z_coords.append(float(my_list[row][col]))
-        if quick_mode:
-            break
+        for col in range(9):
+            for row in range(3, nrows):
+                if col == 0:
+                    my_x_coords.append(float(my_list[row][col]) * multiplier)
+                if col == 1:
+                    my_y_coords.append(float(my_list[row][col]) * multiplier)
+                if col == 2:
+                    my_z_coords.append(float(my_list[row][col]))
 
-default_pos_alpha = 0.25
+                if col == 3:
+                    your_x_coords.append(float(my_list[row][col]) * multiplier)
+                if col == 4:
+                    your_y_coords.append(float(my_list[row][col]) * multiplier)
+                if col == 5:
+                    your_z_coords.append(float(my_list[row][col]))
+
+                if col == 6:
+                    ball_x_coords.append(float(my_list[row][col]) * multiplier)
+                if col == 7:
+                    ball_y_coords.append(float(my_list[row][col]) * multiplier)
+                if col == 8:
+                    ball_z_coords.append(float(my_list[row][col]))
+    file_counter += 1
+
 n_plots = 21
 widths = [1]
 heights = [1] * n_plots
 spec = fig.add_gridspec(ncols=1, nrows=n_plots, width_ratios=widths, height_ratios=heights)
 
-pitch_min_x = -4500
+pitch_min_x = 4500
 pitch_min_y = -6300
 
 pitch_max_x = pitch_min_x * -1
@@ -987,10 +1072,10 @@ pitch_max_y = pitch_min_y * -1
 
 ax1 = fig.add_subplot(spec[0, 0])  # results
 ax1.bar(range(len(gd_array)), gd_array, color=result_color)
-min_shot_diff = min(shot_diff_array)
-max_shot_diff = max(shot_diff_array)
-shot_diff_lim = max(abs(min_shot_diff), max_shot_diff)
-ax1.set_ylim(-shot_diff_lim, shot_diff_lim)
+min_gd = min(gd_array)
+max_gd = max(gd_array)
+gd_lim = max(abs(min_gd), max_gd)
+ax1.set_ylim(-gd_lim, gd_lim)
 ax1.set_xlim(-1, len(gd_array))
 ax1.axis("off")
 plt.axhline(y=0, color='grey', linestyle=':')
@@ -1005,28 +1090,13 @@ ax2.set_zlabel("Z Axis")
 ax2.set_xlim(pitch_min_x, pitch_max_x)
 ax2.set_ylim(pitch_min_y, pitch_max_y)
 ax2.set_zlim(0, 2050)
-ax2.scatter(my_goals_x, my_goals_y, my_goals_z, color=my_color, alpha=0.5, s=75)
-ax2.scatter(your_goals_x, your_goals_y, your_goals_z, color=your_color, alpha=0.5, s=75)
-ax2.scatter(their_goals_x, their_goals_y, their_goals_z, color=opp_color, alpha=0.5, s=75)
+ax2.scatter(my_goals_x, my_goals_y, my_goals_z, color=my_color, alpha=0.25, s=75)
+ax2.scatter(your_goals_x, your_goals_y, your_goals_z, color=your_color, alpha=0.25, s=75)
+ax2.scatter(their_goals_x, their_goals_y, their_goals_z, color=their_color, alpha=0.25, s=75)
 
-ax2.scatter(my_misses_x, my_misses_y, my_misses_z, color=my_color, alpha=0.5, s=30, marker="x")
-ax2.scatter(your_misses_x, your_misses_y, your_misses_z, color=your_color, alpha=0.5, s=30, marker="x")
-ax2.scatter(their_misses_x, their_misses_y, their_misses_z, color=opp_color, alpha=0.5, s=30, marker="x")
-
-if quick_mode:
-    ax2.scatter(ball_x_coords, ball_y_coords, ball_z_coords, color="grey", alpha=0.25, s=1, marker="1")
-    ax2.scatter(my_x_coords, my_y_coords, my_z_coords, color=my_color, alpha=0.01, s=1, marker=",")
-    ax2.scatter(your_x_coords, your_y_coords, your_z_coords, color=your_color, alpha=0.01, s=1, marker=",")
-else:
-    if games_nr < 20:
-        ax2.scatter(ball_x_coords, ball_y_coords, ball_z_coords, color="grey", alpha=default_pos_alpha/games_nr, s=1, marker="1")
-        ax2.scatter(my_x_coords, my_y_coords, my_z_coords, color=my_color, alpha=default_pos_alpha/games_nr, s=1, marker=",")
-        ax2.scatter(your_x_coords, your_y_coords, your_z_coords, color=your_color, alpha=default_pos_alpha/games_nr, s=1, marker=",")
-    else:
-        ax2.scatter(ball_x_coords, ball_y_coords, ball_z_coords, color="grey", alpha=0.005, s=1, marker="1")
-        ax2.scatter(my_x_coords, my_y_coords, my_z_coords, color=my_color, alpha=0.005, s=1, marker=",")
-        ax2.scatter(your_x_coords, your_y_coords, your_z_coords, color=your_color, alpha=0.005, s=1, marker=",")
-
+ax2.scatter(my_misses_x, my_misses_y, my_misses_z, color=my_color, alpha=0.25, s=30, marker="x")
+ax2.scatter(your_misses_x, your_misses_y, your_misses_z, color=your_color, alpha=0.25, s=30, marker="x")
+ax2.scatter(their_misses_x, their_misses_y, their_misses_z, color=their_color, alpha=0.25, s=30, marker="x")
 
 
 if side_view_3d_scatter:
@@ -1035,31 +1105,32 @@ if side_view_3d_scatter:
 my_goal_count_per_game = my_goal_count / games_nr
 your_goal_count_per_game = your_goal_count / games_nr
 our_goal_count_per_game = our_goal_count / games_nr
-opp_goal_count_per_game = their_goal_count / games_nr
+their_goal_count_per_game = their_goal_count / games_nr
+
+my_shot_count = (my_goal_count + my_miss_count)
+your_shot_count = (your_goal_count + your_miss_count)
+our_shot_count = (our_goal_count + our_miss_count)
+their_shot_count = (their_goal_count + their_miss_count)
 
 my_shot_count_per_game = (my_goal_count + my_miss_count) / games_nr
 your_shot_count_per_game = (your_goal_count + your_miss_count) / games_nr
 our_shot_count_per_game = (our_goal_count + our_miss_count) / games_nr
-opp_shot_count_per_game = (their_goal_count + their_miss_count) / games_nr
-
-my_goalshot_ratio = my_goal_count / (my_goal_count + my_miss_count)
-your_goalshot_ratio = your_goal_count / (your_goal_count + your_miss_count)
-our_goalshot_ratio = our_goal_count / (our_goal_count + our_miss_count)
+their_shot_count_per_game = (their_goal_count + their_miss_count) / games_nr
 
 my_assist_count_per_game = my_assists_count / games_nr
 your_assist_count_per_game = your_assists_count / games_nr
 our_assist_count_per_game = our_assists_count / games_nr
-opp_assist_count_per_game = their_assists_count / games_nr
+their_assist_count_per_game = their_assists_count / games_nr
 
 my_save_count_per_game = my_saves_count / games_nr
 your_save_count_per_game = your_saves_count / games_nr
 our_save_count_per_game = our_saves_count / games_nr
-opp_save_count_per_game = their_saves_count / games_nr
+their_save_count_per_game = their_saves_count / games_nr
 
 my_miss_count_per_game = my_miss_count / games_nr
 your_miss_count_per_game = your_miss_count / games_nr
 our_miss_count_per_game = our_miss_count / games_nr
-opp_miss_count_per_game = their_miss_count / games_nr
+their_miss_count_per_game = their_miss_count / games_nr
 
 my_touches_per_game = my_touches_count / games_nr
 your_touches_per_game = your_touches_count / games_nr
@@ -1105,57 +1176,35 @@ ax3 = fig.add_subplot(spec[2, 0])  # Results
 
 sizes = [our_win_ratio, our_loss_ratio]
 labels = "Win %", "Loss %"
-ax3.pie(sizes, colors=[our_color, opp_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
+ax3.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
         textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
                    })
-ax3.set_title(str(games_nr)+" Games:")
-
+ax3.set_title(str(games_nr) + " Games:")
 
 ax4 = fig.add_subplot(spec[3, 0])  # My heatmap
-ax4.set_title(my_alias + "'s Positional Heatmap")
+ax4.set_title(my_alias + "'s Positional Heatmap\n(Last " + str(len(game_print_list)) + " games)")
 ax4.set_xlim(pitch_min_x, pitch_max_x)
 ax4.set_ylim(pitch_min_y, pitch_max_y)
 ax4.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
 ax4.axis("off")
-if quick_mode:
-    ax4.scatter(my_x_coords, my_y_coords, alpha=0.1, color=my_color, s=1)
-else:
-    if games_nr < 20:
-        ax4.scatter(my_x_coords, my_y_coords, alpha=default_pos_alpha/games_nr, color=my_color, s=1)
-    else:
-        ax4.scatter(my_x_coords, my_y_coords, alpha=0.005, color=my_color, s=1)
+ax4.scatter(my_x_coords, my_y_coords, alpha=0.1, color=my_color, s=10)
 
 ax5 = fig.add_subplot(spec[4, 0])  # Your heatmap
-ax5.set_title(your_alias + "'s Positional Heatmap")
+ax5.set_title(your_alias + "'s Positional Heatmap\n(Last " + str(len(game_print_list)) + " games)")
 ax5.set_xlim(pitch_min_x, pitch_max_x)
 ax5.set_ylim(pitch_min_y, pitch_max_y)
 ax5.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
 ax5.axis("off")
-if quick_mode:
-    ax5.scatter(your_x_coords, your_y_coords, alpha=0.1, color=your_color, s=1)
-else:
-    if games_nr < 20:
-        ax5.scatter(your_x_coords, your_y_coords, alpha=default_pos_alpha/games_nr, color=your_color, s=1)
-    else:
-        ax5.scatter(your_x_coords, your_y_coords, alpha=0.005, color=your_color, s=1)
-
+ax5.scatter(your_x_coords, your_y_coords, alpha=0.1, color=your_color, s=10)
 
 ax12 = fig.add_subplot(spec[4, 0])  # Heatmap of the ball
-ax12.set_title("Heatmap of the ball")
+ax12.set_title("Ball heatmap\n(Last " + str(len(game_print_list)) + " games)")
 ax12.set_xlim(pitch_min_x, pitch_max_x)
 ax12.set_ylim(pitch_min_y, pitch_max_y)
 ax12.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
 ax12.axis("off")
 
-if quick_mode:
-    ax12.scatter(ball_x_coords, ball_y_coords, alpha=0.1, color="grey", s=1)
-else:
-    if games_nr < 20:
-        ax12.scatter(ball_x_coords, ball_y_coords, alpha=default_pos_alpha/games_nr, color="grey", s=1)
-    else:
-        ax12.scatter(ball_x_coords, ball_y_coords, alpha=0.005, color="grey", s=1)
-
-
+ax12.scatter(ball_x_coords, ball_y_coords, alpha=0.1, color="grey", s=10)
 
 ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
@@ -1178,183 +1227,241 @@ ax6.tick_params(bottom=False)  # remove the ticks
 ax6.set_xlim(0, 1)
 
 # ASSISTS
-my_assist_share = my_assists_count / (my_assists_count + your_assists_count)
-your_assist_share = 1 - my_assist_share
+if our_assists_count > 0:
+    my_assist_share = my_assists_count / our_assists_count
+    your_assist_share = your_assists_count / our_assists_count
+else:
+    my_assist_share = 0
+    your_assist_share = 0
+
 ax6.barh(1, my_assist_share, color=my_color)
 ax6.barh(1, your_assist_share, left=my_assist_share, color=your_color)
 
 # SAVES
-my_save_share = my_saves_count / (my_saves_count + your_saves_count)
-your_save_share = 1 - my_save_share
+if our_saves_count > 0:
+    my_save_share = my_saves_count / our_saves_count
+    your_save_share = your_saves_count / our_saves_count
+else:
+    my_save_share = 0
+    your_save_share = 0
 ax6.barh(2, my_save_share, color=my_color)
 ax6.barh(2, your_save_share, left=my_save_share, color=your_color)
 
 # GOALS
-my_goal_share = my_goal_count / (my_goal_count + your_goal_count)
-your_goal_share = 1 - my_goal_share
+if our_goal_count > 0:
+    my_goal_share = my_goal_count / our_goal_count
+    your_goal_share = your_goal_count / our_goal_count
+else:
+    my_goal_share = 0
+    your_goal_share = 0
 ax6.barh(3, my_goal_share, color=my_color)
 ax6.barh(3, your_goal_share, left=my_goal_share, color=your_color)
 
 # MISSES
-my_miss_share = my_miss_count / (my_miss_count + your_miss_count)
-your_miss_share = 1 - my_miss_share
+if our_miss_count > 0:
+    my_miss_share = my_miss_count / our_miss_count
+    your_miss_share = your_miss_count / our_miss_count
+else:
+    my_miss_share = 0
+    your_miss_share = 0
 ax6.barh(4, my_miss_share, color=my_color)
 ax6.barh(4, your_miss_share, left=my_miss_share, color=your_color)
 
 # SHOTS
-my_shot_share = (my_miss_count + my_goal_count) / (my_miss_count + my_goal_count + your_miss_count + your_goal_count)
-your_shot_share = 1 - my_shot_share
+if (our_shot_count) > 0:
+    my_shot_share = my_shot_count / our_shot_count
+    your_shot_share = your_shot_count / our_shot_count
+else:
+    my_miss_share = 0
+    your_miss_share = 0
 ax6.barh(5, my_shot_share, color=my_color)
 ax6.barh(5, your_shot_share, left=my_shot_share, color=your_color)
 
 # GOAL/SHOT RATIO
-my_gs_ratio_share = my_goalshot_ratio / (my_goalshot_ratio + your_goalshot_ratio)
-your_gs_ratio_share = 1 - my_gs_ratio_share
+if our_gs_ratio > 0:
+    my_gs_ratio_share = my_gs_ratio / (my_gs_ratio+your_gs_ratio)
+    your_gs_ratio_share = your_gs_ratio / (my_gs_ratio+your_gs_ratio)
+else:
+    my_gs_ratio_share = 0
+    your_gs_ratio_share = 0
 ax6.barh(6, my_gs_ratio_share, color=my_color)
 ax6.barh(6, your_gs_ratio_share, left=my_gs_ratio_share, color=your_color)
 
 # TOUCHES
-my_touch_share = my_touches_count / (my_touches_count + your_touches_count)
-your_touch_share = 1 - my_touch_share
+if our_touches_count > 0:
+    my_touch_share = my_touches_count / our_touches_count
+    your_touch_share = your_touches_count / our_touches_count
+else:
+    my_touch_share = 0
+    your_touch_share = 0
 ax6.barh(7, my_touch_share, color=my_color)
 ax6.barh(7, your_touch_share, left=my_touch_share, color=your_color)
 
 # DEMOS
-my_demo_share = my_demos_count / (my_demos_count + your_demos_count)
-your_demo_share = 1 - my_demo_share
+if our_demos_count > 0:
+    my_demo_share = my_demos_count / our_demos_count
+    your_demo_share = your_demos_count / our_demos_count
+else:
+    my_demo_share = 0
+    your_demo_share = 0
 ax6.barh(8, my_demo_share, color=my_color)
 ax6.barh(8, your_demo_share, left=my_demo_share, color=your_color)
 
 # GOT DEMOED
-my_demoed_share = my_demos_conceded_count / (my_demos_conceded_count + your_demos_conceded_count)
-your_demoed_share = 1 - my_demoed_share
+if our_demos_conceded_count > 0:
+    my_demoed_share = my_demos_conceded_count / our_demos_conceded_count
+    your_demoed_share = your_demos_conceded_count / our_demos_conceded_count
+else:
+    my_demoed_share = 0
+    your_demoed_share = 0
 ax6.barh(9, my_demoed_share, color=my_color)
 ax6.barh(9, your_demoed_share, left=my_demoed_share, color=your_color)
 
 # PASSES
-my_passes_share = my_passes_count / our_passes_count
-your_passes_share = 1 - my_passes_share
+if our_passes_count > 0:
+    my_passes_share = my_passes_count / our_passes_count
+    your_passes_share = your_passes_count / our_passes_count
+else:
+    my_passes_share = 0
+    your_passes_share = 0
 ax6.barh(10, my_passes_share, color=my_color)
 ax6.barh(10, your_passes_share, left=my_passes_share, color=your_color)
 
 # CLEARS
-my_clears_share = my_clears_count / our_clears_count
-your_clears_share = 1 - my_clears_share
+if our_clears_count > 0:
+    my_clears_share = my_clears_count / our_clears_count
+    your_clears_share = your_clears_count / our_clears_count
+else:
+    my_clears_share = 0
+    your_clears_share = 0
 ax6.barh(11, my_clears_share, color=my_color)
 ax6.barh(11, your_clears_share, left=my_clears_share, color=your_color)
 
 # SCORES
-my_score_share = my_score_count / our_score_count
-your_score_share = 1 - my_score_share
+if our_score_count > 0:
+    my_score_share = my_score_count / our_score_count
+    your_score_share = your_score_count / our_score_count
+else:
+    my_score_share = 0
+    your_score_share = 0
 ax6.barh(12, my_score_share, color=my_color)
 ax6.barh(12, your_score_share, left=my_score_share, color=your_color)
 
 # TURNOVERS (LOST BALL)
-my_turnover_share = my_turnovers_count / our_turnovers_count
-your_turnover_share = 1 - my_turnover_share
+if our_turnovers_count > 0:
+    my_turnover_share = my_turnovers_count / our_turnovers_count
+    your_turnover_share = your_turnovers_count / our_turnovers_count
+else:
+    my_turnover_share = 0
+    your_turnover_share = 0
 ax6.barh(13, my_turnover_share, color=my_color)
 ax6.barh(13, your_turnover_share, left=my_turnover_share, color=your_color)
 
 # TURNOVERS WON (WON BALL)
-my_turnover_won_share = my_turnovers_won_count / our_turnovers_won_count
-your_turnover_won_share = 1 - my_turnover_won_share
-ax6.barh(14, my_turnover_won_share, color=my_color)
-ax6.barh(14, your_turnover_won_share, left=my_turnover_won_share, color=your_color)
-
+if our_turnovers_won_count > 0:
+    my_turnovers_won_share = my_turnovers_won_count / our_turnovers_won_count
+    your_turnovers_won_share = your_turnovers_won_count / our_turnovers_won_count
+else:
+    my_turnovers_won_share = 0
+    your_turnovers_won_share = 0
+ax6.barh(14, my_turnovers_won_share, color=my_color)
+ax6.barh(14, your_turnovers_won_share, left=my_turnovers_won_share, color=your_color)
 
 label_count = 0
 for c in ax6.containers:
     # customize the label to account for cases when there might not be a bar section
     labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
 
+    labels[0] = ""
+
     # assists
-    if label_count == 0:
+    if label_count == 0 and my_assist_count_per_game > 0:
         labels[0] = "%.2f" % my_assist_count_per_game
-    if label_count == 1:
+    if label_count == 1 and your_assist_count_per_game > 0:
         labels[0] = "%.2f" % your_assist_count_per_game
 
     # saves
-    if label_count == 2:
+    if label_count == 2 and my_save_count_per_game > 0:
         labels[0] = "%.2f" % my_save_count_per_game
-    if label_count == 3:
+    if label_count == 3 and your_save_count_per_game > 0:
         labels[0] = "%.2f" % your_save_count_per_game
 
     # goals
-    if label_count == 4:
+    if label_count == 4 and my_goal_count_per_game > 0:
         labels[0] = "%.2f" % my_goal_count_per_game
-    if label_count == 5:
+    if label_count == 5 and your_goal_count_per_game > 0:
         labels[0] = "%.2f" % your_goal_count_per_game
 
     # misses
-    if label_count == 6:
+    if label_count == 6 and my_miss_count_per_game > 0:
         labels[0] = "%.2f" % my_miss_count_per_game
-    if label_count == 7:
+    if label_count == 7 and your_miss_count_per_game > 0:
         labels[0] = "%.2f" % your_miss_count_per_game
 
     # shots
-    if label_count == 8:
+    if label_count == 8 and my_shot_count_per_game > 0:
         labels[0] = "%.2f" % my_shot_count_per_game
-    if label_count == 9:
+    if label_count == 9 and your_shot_count_per_game > 0:
         labels[0] = "%.2f" % your_shot_count_per_game
 
     # goal / shot ratio
-    if label_count == 10:
-        labels[0] = "%.2f" % my_goalshot_ratio
-    if label_count == 11:
-        labels[0] = "%.2f" % your_goalshot_ratio
+    if label_count == 10 and my_gs_ratio > 0:
+        labels[0] = "%.2f" % my_gs_ratio
+    if label_count == 11 and your_gs_ratio > 0:
+        labels[0] = "%.2f" % your_gs_ratio
 
     # touches
-    if label_count == 12:
+    if label_count == 12 and my_touches_per_game > 0:
         labels[0] = "%.2f" % my_touches_per_game
-    if label_count == 13:
+    if label_count == 13 and your_touches_per_game > 0:
         labels[0] = "%.2f" % your_touches_per_game
 
     # demos
-    if label_count == 14:
+    if label_count == 14 and my_demos_per_game > 0:
         labels[0] = "%.2f" % my_demos_per_game
-    if label_count == 15:
+    if label_count == 15 and your_demos_per_game > 0:
         labels[0] = "%.2f" % your_demos_per_game
 
     # demos conceded
-    if label_count == 16:
+    if label_count == 16 and my_demos_conceded_per_game > 0:
         labels[0] = "%.2f" % my_demos_conceded_per_game
-    if label_count == 17:
+    if label_count == 17 and your_demos_conceded_per_game > 0:
         labels[0] = "%.2f" % your_demos_conceded_per_game
 
     # passes
-    if label_count == 18:
+    if label_count == 18 and my_passes_per_game > 0:
         labels[0] = "%.2f" % my_passes_per_game
-    if label_count == 19:
+    if label_count == 19 and your_passes_per_game > 0:
         labels[0] = "%.2f" % your_passes_per_game
 
     # clears
-    if label_count == 20:
+    if label_count == 20 and my_clears_per_game > 0:
         labels[0] = "%.2f" % my_clears_per_game
-    if label_count == 21:
+    if label_count == 21 and your_clears_per_game > 0:
         labels[0] = "%.2f" % your_clears_per_game
 
     # scores
-    if label_count == 22:
+    if label_count == 22 and my_score_per_game > 0:
         labels[0] = "%.0f" % my_score_per_game
-    if label_count == 23:
+    if label_count == 23 and your_score_per_game > 0:
         labels[0] = "%.0f" % your_score_per_game
-        
+
     # lost ball
-    if label_count == 24:
+    if label_count == 24 and my_turnovers_per_game > 0:
         labels[0] = "%.2f" % my_turnovers_per_game
-    if label_count == 25:
+    if label_count == 25 and your_turnovers_per_game > 0:
         labels[0] = "%.2f" % your_turnovers_per_game
-        
+
     # won ball
-    if label_count == 26:
+    if label_count == 26 and my_turnovers_won_per_game > 0:
         labels[0] = "%.2f" % my_turnovers_won_per_game
-    if label_count == 27:
+    if label_count == 27 and your_turnovers_won_per_game > 0:
         labels[0] = "%.2f" % your_turnovers_won_per_game
 
     # set the bar label
     ax6.bar_label(c, labels=labels, label_type='center', color="white")
     label_count += 1
-plt.axvline(x=0.5, color='white', linestyle='-',alpha=0.5,linewidth=1)
+plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
 ax6.set_title(my_alias + " - " + your_alias + " (per Game)")
 
 ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
@@ -1376,82 +1483,139 @@ ax7.tick_params(bottom=False)  # remove the ticks
 
 ax7.set_xlim(0, 1)
 
+# cumulative stats
+total_assists_count = our_assists_count + their_assists_count
+total_saves_count = our_saves_count + their_saves_count
+total_goals_count = our_goal_count + their_goal_count
+total_misses_count = our_miss_count + their_miss_count
+total_shots_count = our_shot_count + their_shot_count
+total_gs_ratio = our_gs_ratio + their_gs_ratio
+total_touches_count = our_touches_count + their_touches_count
+total_demos_count = our_demos_count + their_demos_count
+total_passes_count = our_passes_count + their_passes_count
+total_clears_count = our_clears_count + their_clears_count
+total_score_count = our_score_count + their_score_count
+total_turnovers_won_count = our_turnovers_won_count + their_turnovers_won_count
 
 # ASSISTS
-our_assist_share = (my_assists_count + your_assists_count) / (
-        my_assists_count + your_assists_count + their_assists_count)
-opp_assist_share = 1 - our_assist_share
+if total_assists_count > 0:
+    our_assist_share = our_assists_count / total_assists_count
+    their_assist_share = their_assists_count / total_assists_count
+else:
+    our_assist_share = 0
+    their_assist_share = 0
 ax7.barh(1, our_assist_share, color=our_color)
-ax7.barh(1, opp_assist_share, left=our_assist_share, color=opp_color)
+ax7.barh(1, their_assist_share, left=our_assist_share, color=their_color)
 
 # SAVES
-our_save_share = (my_saves_count + your_saves_count) / (my_saves_count + your_saves_count + their_saves_count)
-opp_save_share = 1 - our_save_share
+if total_saves_count > 0:
+    our_save_share = our_saves_count / total_saves_count
+    their_save_share = their_saves_count / total_saves_count
+else:
+    our_save_share = 0
+    their_save_share = 0
 ax7.barh(2, our_save_share, color=our_color)
-ax7.barh(2, opp_save_share, left=our_save_share, color=opp_color)
+ax7.barh(2, their_save_share, left=our_save_share, color=their_color)
 
 # GOALS
-our_goal_share = (my_goal_count + your_goal_count) / (my_goal_count + your_goal_count + their_goal_count)
-opp_goal_share = 1 - our_goal_share
+if total_goals_count > 0:
+    our_goal_share = our_goal_count / total_goals_count
+    their_goal_share = their_goal_count / total_goals_count
+else:
+    our_goal_share = 0
+    their_goal_share = 0
 ax7.barh(3, our_goal_share, color=our_color)
-ax7.barh(3, opp_goal_share, left=our_goal_share, color=opp_color)
+ax7.barh(3, their_goal_share, left=our_goal_share, color=their_color)
 
 # MISSES
-our_miss_share = (my_miss_count + your_miss_count) / (my_miss_count + your_miss_count + their_miss_count)
-opp_miss_share = 1 - our_miss_share
+if total_misses_count > 0:
+    our_miss_share = our_miss_count / total_misses_count
+    their_miss_share = their_miss_count / total_misses_count
+else:
+    our_miss_share = 0
+    their_miss_share = 0
 ax7.barh(4, our_miss_share, color=our_color)
-ax7.barh(4, opp_miss_share, left=our_miss_share, color=opp_color)
+ax7.barh(4, their_miss_share, left=our_miss_share, color=their_color)
 
 # SHOTS
-our_shot_share = (my_miss_count + my_goal_count + your_miss_count + your_goal_count) / (
-        my_miss_count + my_goal_count + your_miss_count + your_goal_count + their_goal_count + their_miss_count)
-opp_shot_share = 1 - our_shot_share
+if total_shots_count > 0:
+    our_shot_share = our_shot_count / total_shots_count
+    their_shot_share = their_shot_count / total_shots_count
+else:
+    our_shot_share = 0
+    their_shot_share = 0
 ax7.barh(5, our_shot_share, color=our_color)
-ax7.barh(5, opp_shot_share, left=our_shot_share, color=opp_color)
+ax7.barh(5, their_shot_share, left=our_shot_share, color=their_color)
 
 # GOAL/SHOT RATIO
-our_gs_ratio_share = (my_goalshot_ratio + your_goalshot_ratio) / (
-        my_goalshot_ratio + your_goalshot_ratio + their_gs_ratio * 2)
-opp_gs_ratio_share = 1 - our_gs_ratio_share
+if total_gs_ratio > 0:
+    our_gs_ratio_share = our_gs_ratio / total_gs_ratio
+    their_gs_ratio_share = their_gs_ratio / total_gs_ratio
+else:
+    our_gs_ratio_share = 0
+    their_gs_ratio_share = 0
 ax7.barh(6, our_gs_ratio_share, color=our_color)
-ax7.barh(6, opp_gs_ratio_share, left=our_gs_ratio_share, color=opp_color)
+ax7.barh(6, their_gs_ratio_share, left=our_gs_ratio_share, color=their_color)
 
 # TOUCHES
-our_touch_share = (my_touches_count + your_touches_count) / (
-        my_touches_count + your_touches_count + their_touches_count)
-opp_touch_share = 1 - our_touch_share
+if total_touches_count > 0:
+    our_touch_share = our_touches_count / total_touches_count
+    their_touch_share = their_touches_count / total_touches_count
+else:
+    our_touch_share = 0
+    their_touch_share = 0
 ax7.barh(7, our_touch_share, color=our_color)
-ax7.barh(7, opp_touch_share, left=our_touch_share, color=opp_color)
+ax7.barh(7, their_touch_share, left=our_touch_share, color=their_color)
 
 # DEMOS
-our_demo_share = (my_demos_count + your_demos_count) / (my_demos_count + your_demos_count + their_demos_count)
-opp_demo_share = 1 - our_demo_share
+if total_demos_count > 0:
+    our_demo_share = our_demos_count / total_demos_count
+    their_demo_share = their_demos_count / total_demos_count
+else:
+    our_demo_share = 0
+    their_demo_share = 0
 ax7.barh(8, our_demo_share, color=our_color)
-ax7.barh(8, opp_demo_share, left=our_demo_share, color=opp_color)
+ax7.barh(8, their_demo_share, left=our_demo_share, color=their_color)
 
 # PASSES
-our_passes_share = our_passes_count / (our_passes_count + their_passes_count)
-their_passes_share = 1 - our_passes_share
-ax7.barh(9, our_passes_share, color=our_color)
-ax7.barh(9, their_passes_share, left=our_passes_share, color=opp_color)
+if total_passes_count > 0:
+    our_pass_share = our_passes_count / total_passes_count
+    their_pass_share = their_passes_count / total_passes_count
+else:
+    our_pass_share = 0
+    their_pass_share = 0
+ax7.barh(9, our_pass_share, color=our_color)
+ax7.barh(9, their_pass_share, left=our_pass_share, color=their_color)
 
 # CLEARS
-our_clears_share = our_clears_count / (our_clears_count + their_clears_count)
-their_clears_share = 1 - our_clears_share
-ax7.barh(10, our_clears_share, color=our_color)
-ax7.barh(10, their_clears_share, left=our_clears_share, color=opp_color)
+if total_clears_count > 0:
+    our_clear_share = our_clears_count / total_clears_count
+    their_clear_share = their_clears_count / total_clears_count
+else:
+    our_clear_share = 0
+    their_clear_share = 0
+ax7.barh(10, our_clear_share, color=our_color)
+ax7.barh(10, their_clear_share, left=our_clear_share, color=their_color)
 
 # SCORES
-our_score_share = our_score_count / (our_score_count + their_score_count)
-their_score_share = 1 - our_score_share
+if total_score_count > 0:
+    our_score_share = our_score_count / total_score_count
+    their_score_share = their_score_count / total_score_count
+else:
+    our_score_share = 0
+    their_score_share = 0
 ax7.barh(11, our_score_share, color=our_color)
-ax7.barh(11, their_score_share, left=our_score_share, color=opp_color)
+ax7.barh(11, their_score_share, left=our_score_share, color=their_color)
 
 # TURNOVERS WON (WON BALL)
-our_turnover_won_share = our_turnovers_won_count / (our_turnovers_won_count + their_turnovers_won_count)
-their_turnover_won_share = 1 - our_turnover_won_share
-ax7.barh(12, our_turnover_won_share, color=our_color)
-ax7.barh(12, their_turnover_won_share, left=our_turnover_won_share, color=opp_color)
+if total_turnovers_won_count > 0:
+    our_turnovers_won_share = our_turnovers_won_count / total_turnovers_won_count
+    their_turnovers_won_share = their_turnovers_won_count / total_turnovers_won_count
+else:
+    our_turnovers_won_share = 0
+    their_turnovers_won_share = 0
+ax7.barh(12, our_turnovers_won_share, color=our_color)
+ax7.barh(12, their_turnovers_won_share, left=our_turnovers_won_share, color=their_color)
 
 label_count = 0
 for c in ax7.containers:
@@ -1459,82 +1623,82 @@ for c in ax7.containers:
     labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
 
     # assists
-    if label_count == 0:
+    if label_count == 0 and our_assist_count_per_game > 0:
         labels[0] = "%.2f" % our_assist_count_per_game
-    if label_count == 1:
-        labels[0] = "%.2f" % opp_assist_count_per_game
+    if label_count == 1 and their_assist_count_per_game > 0:
+        labels[0] = "%.2f" % their_assist_count_per_game
 
     # saves
-    if label_count == 2:
+    if label_count == 2 and our_save_count_per_game > 0:
         labels[0] = "%.2f" % our_save_count_per_game
-    if label_count == 3:
-        labels[0] = "%.2f" % opp_save_count_per_game
+    if label_count == 3 and their_save_count_per_game > 0:
+        labels[0] = "%.2f" % their_save_count_per_game
 
     # goals
-    if label_count == 4:
+    if label_count == 4 and our_goal_count_per_game > 0:
         labels[0] = "%.2f" % our_goal_count_per_game
-    if label_count == 5:
-        labels[0] = "%.2f" % opp_goal_count_per_game
+    if label_count == 5 and their_goal_count_per_game > 0:
+        labels[0] = "%.2f" % their_goal_count_per_game
 
     # misses
-    if label_count == 6:
+    if label_count == 6 and our_miss_count_per_game > 0:
         labels[0] = "%.2f" % our_miss_count_per_game
-    if label_count == 7:
-        labels[0] = "%.2f" % opp_miss_count_per_game
+    if label_count == 7 and their_miss_count_per_game > 0:
+        labels[0] = "%.2f" % their_miss_count_per_game
 
     # shots
-    if label_count == 8:
+    if label_count == 8 and our_shot_count_per_game > 0:
         labels[0] = "%.2f" % our_shot_count_per_game
-    if label_count == 9:
-        labels[0] = "%.2f" % opp_shot_count_per_game
+    if label_count == 9 and their_shot_count_per_game > 0:
+        labels[0] = "%.2f" % their_shot_count_per_game
 
     # goal / shot ratio
-    if label_count == 10:
-        labels[0] = "%.2f" % our_goalshot_ratio
-    if label_count == 11:
+    if label_count == 10 and our_gs_ratio > 0:
+        labels[0] = "%.2f" % our_gs_ratio
+    if label_count == 11 and their_gs_ratio > 0:
         labels[0] = "%.2f" % their_gs_ratio
 
     # touches
-    if label_count == 12:
+    if label_count == 12 and our_touches_per_game > 0:
         labels[0] = "%.2f" % our_touches_per_game
-    if label_count == 13:
+    if label_count == 13 and their_touches_per_game > 0:
         labels[0] = "%.2f" % their_touches_per_game
 
     # demos
-    if label_count == 14:
+    if label_count == 14 and our_demos_per_game > 0:
         labels[0] = "%.2f" % our_demos_per_game
-    if label_count == 15:
+    if label_count == 15 and their_demos_per_game > 0:
         labels[0] = "%.2f" % their_demos_per_game
 
     # passes
-    if label_count == 16:
+    if label_count == 16 and our_passes_per_game > 0:
         labels[0] = "%.2f" % our_passes_per_game
-    if label_count == 17:
+    if label_count == 17 and their_passes_per_game > 0:
         labels[0] = "%.2f" % their_passes_per_game
 
     # clears
-    if label_count == 18:
+    if label_count == 18 and our_clears_per_game > 0:
         labels[0] = "%.2f" % our_clears_per_game
-    if label_count == 19:
+    if label_count == 19 and their_clears_per_game > 0:
         labels[0] = "%.2f" % their_clears_per_game
 
     # scores
-    if label_count == 20:
+    if label_count == 20 and our_score_per_game > 0:
         labels[0] = "%.0f" % our_score_per_game
-    if label_count == 21:
+    if label_count == 21 and their_score_per_game > 0:
         labels[0] = "%.0f" % their_score_per_game
 
     # won ball
-    if label_count == 22:
+    if label_count == 22 and our_turnovers_won_per_game > 0:
         labels[0] = "%.2f" % our_turnovers_won_per_game
-    if label_count == 23:
+    if label_count == 23 and their_turnovers_won_per_game > 0:
         labels[0] = "%.2f" % their_turnovers_won_per_game
 
     # set the bar label
     ax7.bar_label(c, labels=labels, label_type='center', color="white")
     label_count += 1
 
-plt.axvline(x=0.5, color='white', linestyle='-',alpha=0.5,linewidth=1)
+plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
 ax7.set_title("Us - Opponents (per Game)")
 
 new_result_array_num_up = []
@@ -1567,7 +1731,7 @@ ax8.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, w
 
 ax8.bar(range(1, games_nr + 1), my_goals_over_time, color=my_color, width=1, ec="black")
 ax8.bar(range(1, games_nr + 1), your_goals_over_time, color=your_color, bottom=my_goals_over_time, width=1, ec="black")
-ax8.bar(range(1, games_nr + 1), their_goals_over_time, color=opp_color, width=1, ec="black")
+ax8.bar(range(1, games_nr + 1), their_goals_over_time, color=their_color, width=1, ec="black")
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
 ax8.set_ylabel("GOALS", rotation="horizontal", ha="center", va="center", labelpad=35)
@@ -1592,7 +1756,7 @@ ax9.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, w
 
 ax9.bar(range(1, games_nr + 1), my_shots_over_time, color=my_color, width=1, ec="black")
 ax9.bar(range(1, games_nr + 1), your_shots_over_time, color=your_color, bottom=my_shots_over_time, width=1, ec="black")
-ax9.bar(range(1, games_nr + 1), their_shots_over_time, color=opp_color, width=1, ec="black")
+ax9.bar(range(1, games_nr + 1), their_shots_over_time, color=their_color, width=1, ec="black")
 ax9.set_xticklabels("")
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
@@ -1618,7 +1782,7 @@ ax10.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, 
 ax10.set_ylim(-limit, limit)
 ax10.bar(range(1, games_nr + 1), my_saves_over_time, color=my_color, width=1, ec="black")
 ax10.bar(range(1, games_nr + 1), your_saves_over_time, color=your_color, bottom=my_saves_over_time, width=1, ec="black")
-ax10.bar(range(1, games_nr + 1), their_saves_over_time, color=opp_color, width=1, ec="black")
+ax10.bar(range(1, games_nr + 1), their_saves_over_time, color=their_color, width=1, ec="black")
 ax10.set_xticklabels("")
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
@@ -1643,8 +1807,9 @@ ax11.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, wi
 ax11.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25, ec="grey")
 
 ax11.bar(range(1, games_nr + 1), my_assists_over_time, color=my_color, width=1, ec="black")
-ax11.bar(range(1, games_nr + 1), your_assists_over_time, color=your_color, bottom=my_assists_over_time, width=1, ec="black")
-ax11.bar(range(1, games_nr + 1), their_assists_over_time, color=opp_color, width=1, ec="black")
+ax11.bar(range(1, games_nr + 1), your_assists_over_time, color=your_color, bottom=my_assists_over_time, width=1,
+         ec="black")
+ax11.bar(range(1, games_nr + 1), their_assists_over_time, color=their_color, width=1, ec="black")
 ax11.set_xticklabels("")
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
@@ -1683,7 +1848,7 @@ ax15.set_title("Our Shot & Goal Heatmap")
 ax16 = fig.add_subplot(spec[4, 0])  # Heatmap of opponent's goals
 ax16.hist2d(their_shots_x + [pitch_min_x] + [pitch_max_x], their_shots_y + [pitch_min_y] + [pitch_max_y], bins=8,
             cmap="Greys", alpha=0.25)
-ax16.scatter(their_goals_x, their_goals_y, alpha=0.7, color=opp_color, s=10)
+ax16.scatter(their_goals_x, their_goals_y, alpha=0.7, color=their_color, s=10)
 ax16.set_xlim(pitch_min_x, pitch_max_x)
 ax16.set_ylim(pitch_min_y, pitch_max_y)
 ax16.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
@@ -1691,36 +1856,32 @@ ax16.axis("off")
 ax16.set_title("Opponent's Shot & Goal Heatmap")
 
 ax17 = fig.add_subplot(spec[2, 0])  # Overtime Results
-our_OT_win_ratio = overtime_wins_count / overtime_games_count
-our_OT_loss_ratio = 1 - our_OT_win_ratio
 sizes = [our_OT_win_ratio, our_OT_loss_ratio]
 labels = "Win %", "Loss %"
-ax17.pie(sizes, colors=[our_color, opp_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
-        textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
-                   })
-ax17.set_title(str(overtime_losses_count+overtime_wins_count)+" Overtime")
-#TODO: handle FFs
+ax17.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
+         normalize=False,
+         textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
+                    })
+ax17.set_title(str(overtime_losses_count + overtime_wins_count) + " Overtime")
+# TODO: handle FFs
 
 ax18 = fig.add_subplot(spec[2, 0])  # Overtime Results
 
-our_NT_win_ratio = normaltime_wins_count / normaltime_games_count
-our_NT_loss_ratio = 1 - our_NT_win_ratio
 sizes = [our_NT_win_ratio, our_NT_loss_ratio]
 labels = "Win %", "Loss %"
-ax18.pie(sizes, colors=[our_color, opp_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
-        textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
-                   })
-ax18.set_title(str(normaltime_games_count)+" Normaltime")
-#TODO: handle FFs
-
-
-
+ax18.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
+         normalize=False,
+         textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
+                    })
+ax18.set_title(str(normaltime_games_count) + " Normaltime")
+# TODO: handle FFs
 
 
 ax19 = fig.add_subplot(spec[2, 0])  # Goal Difference Distribution
 gd_counter = Counter(normaltime_gd_array)
 gd_counter_keys = list(gd_counter.keys())
 gd_counter_values = list(gd_counter.values())
+
 
 neg_gd = []
 pos_gd = []
@@ -1730,38 +1891,43 @@ pos_val = []
 sorted_gd_counter_values = [x for _, x in sorted(zip(gd_counter_keys, gd_counter_values))]
 counter_col = []
 
-min_gd = min(gd_counter_keys)
-max_gd = max(gd_counter_keys)
+if len(gd_counter_keys) > 0:
+    min_gd = min(gd_counter_keys)
+    max_gd = max(gd_counter_keys)
+
+else:
+    min_gd = 0
+    max_gd = 0
 
 new_min_gd = min_gd
 new_max_gd = max_gd
 
-if abs(min_gd) > abs(max_gd):
-    new_min_gd = min_gd
-    new_max_gd = min_gd * -1
+if abs(min_gd) != abs(max_gd):
+    if abs(min_gd) > abs(max_gd):
+        new_min_gd = min_gd
+        new_max_gd = min_gd * -1
 
-elif abs(max_gd) > abs(min_gd):
-    new_min_gd = max_gd * -1
-    new_max_gd = max_gd
+    elif abs(max_gd) > abs(min_gd):
+        new_min_gd = max_gd * -1
+        new_max_gd = max_gd
 
 new_gd_counter_keys = []
 new_gd_counter_values = []
-for gd in range(new_min_gd,new_max_gd+1):
+for gd in range(new_min_gd, new_max_gd + 1):
     new_gd_counter_keys.append(gd)
     new_gd_counter_values.append(0)
 
-for gd in range(0,len(gd_counter_keys)):
+for gd in range(0, len(gd_counter_keys)):
     if gd_counter_keys[gd] in new_gd_counter_keys:
-        for new_gd in range(0,len(new_gd_counter_keys)):
+        for new_gd in range(0, len(new_gd_counter_keys)):
             if new_gd_counter_keys[new_gd] == gd_counter_keys[gd]:
                 new_gd_counter_values[new_gd] = gd_counter_values[gd]
-
 
 sorted_gd_counter_values = [x for _, x in sorted(zip(new_gd_counter_keys, new_gd_counter_values))]
 
 for gd in new_gd_counter_keys:
     if gd < 0:
-        counter_col.append(opp_color)
+        counter_col.append(their_color)
     if gd == 0:
         counter_col.append("black")
     if gd > 0:
@@ -1769,7 +1935,7 @@ for gd in new_gd_counter_keys:
 
 sorted_gd_counter_pct = []
 for gd in sorted_gd_counter_values:
-    sorted_gd_counter_pct.append(gd/games_nr)
+    sorted_gd_counter_pct.append(gd / games_nr)
 
 overtime_pcts = []
 for gd in new_gd_counter_keys:
@@ -1777,14 +1943,15 @@ for gd in new_gd_counter_keys:
         overtime_pcts.append(0)
     else:
         if gd == 1:
-            overtime_pcts.append(overtime_wins_count/games_nr)
+            overtime_pcts.append(overtime_wins_count / games_nr)
 
         if gd == -1:
-            overtime_pcts.append(overtime_losses_count/games_nr)
+            overtime_pcts.append(overtime_losses_count / games_nr)
 
 overall_pcts = []
-for pct in range(0,len(overtime_pcts)):
-    overall_pcts.append(overtime_pcts[pct]+sorted_gd_counter_pct[pct])
+for pct in range(0, len(overtime_pcts)):
+    overall_pcts.append(overtime_pcts[pct] + sorted_gd_counter_pct[pct])
+
 
 # Round the max y limit of the bar chart to the next multiple of 0.05 (5%)
 max_y_lim = max(overall_pcts) + (0.05 - max(overall_pcts)) % 0.05
@@ -1792,21 +1959,31 @@ if max_y_lim > 1:
     max_y_lim = 1
 
 for gd in new_gd_counter_keys:
-    if gd < 0:
-        neg_gd.append(gd)
-        neg_val.append(new_gd_counter_values[gd])
-    if gd > 0:
-        pos_gd.append(gd)
-        pos_val.append(new_gd_counter_values[gd])
+    if len(new_gd_counter_keys) > 1:
+        if gd < 0:
+            neg_gd.append(gd)
+            neg_val.append(new_gd_counter_values[gd])
+        if gd > 0:
+            pos_gd.append(gd)
+            pos_val.append(new_gd_counter_values[gd])
+    else:
+        if gd < 0:
+            neg_gd.append(gd)
+            neg_val.append(new_gd_counter_values[0])
+        if gd > 0:
+            pos_gd.append(gd)
+            pos_val.append(new_gd_counter_values[0])
 
-ax19.set_xlim(min(new_gd_counter_keys)-0.5,max(new_gd_counter_keys)+0.5)
+ax19.set_xlim(min(new_gd_counter_keys) - 0.5, max(new_gd_counter_keys) + 0.5)
 ax19.set_xticks(ticks=new_gd_counter_keys)
 ax19.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1, decimals=0, symbol='%', is_latex=False))
-ax19.set_ylim(0,max_y_lim)
-ax19.bar(neg_gd,max_y_lim,color=opp_color,width=1,alpha=0.25)
-ax19.bar(pos_gd,max_y_lim,color=our_color,width=1,alpha=0.25)
-ax19.bar(new_gd_counter_keys,sorted_gd_counter_pct,width=1,ec="black",color=counter_col)
-ax19.bar(new_gd_counter_keys,overtime_pcts,width=1,ec="black",color="grey", bottom=sorted_gd_counter_pct)
+ax19.set_ylim(0, max_y_lim)
+
+ax19.bar(neg_gd, max_y_lim, color=their_color, width=1, alpha=0.25)
+ax19.bar(pos_gd, max_y_lim, color=our_color, width=1, alpha=0.25)
+
+ax19.bar(new_gd_counter_keys, sorted_gd_counter_pct, width=1, ec="black", color=counter_col)
+ax19.bar(new_gd_counter_keys, overtime_pcts, width=1, ec="black", color="grey", bottom=sorted_gd_counter_pct)
 
 ax19.set_xlabel("Goal Difference")
 ax19.set_ylabel("Games")
@@ -1817,79 +1994,62 @@ ax19.set_title("Goal Difference Distribution")
 #########
 
 ax20 = fig.add_subplot(spec[2, 0])  # Goals Scored Distribution
+ax21 = fig.add_subplot(spec[2, 0])  # Goals Conceded Distribution
+
 gs_counter = Counter(gs_array)
 gs_counter_keys = list(gs_counter.keys())
 gs_counter_values = list(gs_counter.values())
 
-gs_counter_pct = []
-for gs in gs_counter_values:
-    gs_counter_pct.append((gs/games_nr))
-
-ax20.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1, decimals=0, symbol='%', is_latex=False))
-
-# Round the max y limit of the bar chart to the next multiple of 0.05 (5%)
-max_y_lim = max(overall_pcts) + (0.05 - max(overall_pcts)) % 0.05
-if max_y_lim > 1:
-    max_y_lim = 1
-ax20.set_ylim(0,max_y_lim)
-
-#########
-
-ax21 = fig.add_subplot(spec[2, 0])  # Goals Conceded Distribution
 gc_counter = Counter(gc_array)
 gc_counter_keys = list(gc_counter.keys())
 gc_counter_values = list(gc_counter.values())
-ax21.set_xticks(range(min(gc_counter_keys),max(gc_counter_keys)+1))
+
+gs_counter_pct = []
+for gs in gs_counter_values:
+    gs_counter_pct.append((gs / games_nr))
 
 gc_counter_pct = []
 for gc in gc_counter_values:
-    gc_counter_pct.append((gc/games_nr))
+    gc_counter_pct.append((gc / games_nr))
 
-ax20.set_xlim(min(gc_counter_keys+gs_counter_keys)-0.5,max(gc_counter_keys+gs_counter_keys)+0.5)
-ax21.set_xlim(min(gc_counter_keys+gs_counter_keys)-0.5,max(gc_counter_keys+gs_counter_keys)+0.5)
+ax20.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1, decimals=0, symbol='%', is_latex=False))
+ax20.set_xlim(min(gc_counter_keys + gs_counter_keys) - 0.5, max(gc_counter_keys + gs_counter_keys) + 0.5)
+ax21.set_xlim(min(gc_counter_keys + gs_counter_keys) - 0.5, max(gc_counter_keys + gs_counter_keys) + 0.5)
 ax21.yaxis.set_major_formatter(mtick.PercentFormatter(xmax=1, decimals=0, symbol='%', is_latex=False))
 
 # Round the max y limit of the bar chart to the next multiple of 0.05 (5%)
-max_y_lim = max(overall_pcts) + (0.05 - max(overall_pcts)) % 0.05
+gs_gc_max_pct = max(max(gs_counter_pct), max(gc_counter_pct))
+max_y_lim = gs_gc_max_pct + ((0.05 - gs_gc_max_pct) % 0.05)
 if max_y_lim > 1:
     max_y_lim = 1
-ax21.set_ylim(0,max_y_lim)
+ax20.set_ylim(0, max_y_lim)
+ax21.set_ylim(0, max_y_lim)
 
 # reverse y-axis of goals conceded
 ax21 = plt.gca()
 ax21.set_ylim(ax21.get_ylim()[::-1])
 
-initial_keys_to_use = gs_counter_keys + gc_counter_keys
 keys_to_use = []
-[keys_to_use.append(x) for x in initial_keys_to_use if x not in keys_to_use]
 
-ax20.bar(keys_to_use,max_y_lim,color=our_color,width=1,alpha=0.25)
-ax20.bar(gs_counter_keys,gs_counter_pct,width=1,ec="black",color=our_color)
+min_gc_or_gs_keys = min(min(gc_counter_keys), min(gs_counter_keys))
+max_gc_or_gs_keys = max(max(gc_counter_keys), max(gs_counter_keys))
 
-ax21.bar(keys_to_use,max_y_lim,color=opp_color,width=1,alpha=0.25)
-ax21.bar(gc_counter_keys,gc_counter_pct,width=1,ec="black",color=opp_color)
+for x in range(min_gc_or_gs_keys, max_gc_or_gs_keys + 1):
+    keys_to_use.append(x)
 
 ax20.set_xticks(keys_to_use)
+ax21.set_xticks(keys_to_use)
+
+ax20.bar(keys_to_use, max_y_lim, color=our_color, width=1, alpha=0.25)
+ax20.bar(gs_counter_keys, gs_counter_pct, width=1, ec="black", color=our_color)
+
+ax21.bar(keys_to_use, max_y_lim, color=their_color, width=1, alpha=0.25)
+ax21.bar(gc_counter_keys, gc_counter_pct, width=1, ec="black", color=their_color)
+
 ax20.set_ylabel("Games")
 ax21.set_ylabel("Games")
 ax21.tick_params(axis="x", bottom=False, top=True, labelbottom=False, labeltop=False)
 ax20.set_title("Goals Scored & Conceded Distribution")
-
-
-
-"""
-# TESTING FOR PITCH COORDINATES
-
-print("EXTREME TOUCH COORDINATES (X):")
-print("Me:", "%.2f" % max(my_touches_x))
-print("You:", "%.2f" % max(your_touches_x))
-print("Opp:", "%.2f" % min(their_touches_x))
-
-print("EXTREME TOUCH COORDINATES (Y):")
-print("Me:", "%.2f" % max(my_touches_y))
-print("You:", "%.2f" % max(your_touches_y))
-print("Opp:", "%.2f" % min(their_touches_y))
-"""
 
 ax1.set_position([0, 0.88, 1, 0.1])
 ax2.set_position([0.1, 0.1, 1, 0.65])  # 3D Scatterplot
@@ -1914,10 +2074,10 @@ ax15.set_position([0.03, 0.1, 0.08, 0.32])  # Our shot & goal heatmap
 ax7.set_position([0.15, 0.1, 0.1, 0.32])  # Horizontal Bar Chart (Us vs Opponent)
 ax16.set_position([0.28, 0.1, 0.08, 0.32])  # Opponent's shot & goal heatmap
 
-ax8.set_position([0.75, 0.05, 0.2, 0.1])  # Goals over time
-ax9.set_position([0.75, 0.155, 0.2, 0.1])  # Shots over time
-ax10.set_position([0.75, 0.26, 0.2, 0.1])  # Saves over time
-ax11.set_position([0.75, 0.365, 0.2, 0.1])  # Assists over time
+ax8.set_position([0.75, 0.05, 0.21, 0.1])  # Goals over time
+ax9.set_position([0.75, 0.155, 0.21, 0.1])  # Shots over time
+ax10.set_position([0.75, 0.26, 0.21, 0.1])  # Saves over time
+ax11.set_position([0.75, 0.365, 0.21, 0.1])  # Assists over time
 
 executionTime = (time.time() - startTime)
 print('\n\nExecution time in seconds: ', "%.2f" % executionTime)
