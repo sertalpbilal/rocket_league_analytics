@@ -1,5 +1,10 @@
+# TODO: More accurate rounding (use round, not int)
+
 import csv
 import os
+import time
+
+startTime = time.time()
 
 # Names in Rocket League
 my_name = "games5425898691"
@@ -9,6 +14,9 @@ path_to_csv = 'data/dataframe/'
 path_to_trimmed = 'data/dataframe-trimmed/'
 
 csv_files = [pos_csv for pos_csv in os.listdir(path_to_csv) if pos_csv.endswith('.csv')]
+
+print(csv_files)
+frames_to_skip = 20
 
 for file in csv_files:
     with open(path_to_csv + file) as f:
@@ -58,13 +66,24 @@ for file in csv_files:
         reader = csv.reader(f)
 
         with open(path_to_trimmed + file, 'w') as f:
+            row_num = 0
             write = csv.writer(f)
             write.writerow(overTime)
             for r in reader:
-                write.writerow((r[my_x_colNum], r[my_y_colNum], r[my_z_colNum],
-                                r[your_x_colNum], r[your_y_colNum], r[your_z_colNum],
-                                r[ball_x_colNum], r[ball_y_colNum], r[ball_z_colNum]))
+                if row_num < 2:
+                    write.writerow((r[my_x_colNum], r[my_y_colNum], r[my_z_colNum],
+                                    r[your_x_colNum], r[your_y_colNum], r[your_z_colNum],
+                                    r[ball_x_colNum], r[ball_y_colNum], r[ball_z_colNum]))
+                else:
+                    if row_num % frames_to_skip == 0:
+                        if not (r[my_x_colNum] == "" or r[my_y_colNum] == "" or r[my_z_colNum] == "" or r[your_x_colNum] == "" or r[your_y_colNum] == "" or r[your_z_colNum] == "" or r[ball_x_colNum] == "" or r[ball_y_colNum] == "" or r[ball_z_colNum] == ""):
+                            write.writerow((int(float(r[my_x_colNum])), int(float(r[my_y_colNum])), int(float(r[my_z_colNum])),
+                                            int(float(r[your_x_colNum])), int(float(r[your_y_colNum])), int(float(r[your_z_colNum])),
+                                            int(float(r[ball_x_colNum])), int(float(r[ball_y_colNum])), int(float(r[ball_z_colNum]))))
+
+                row_num+=1
 
 
 print("Done trimming")
-
+executionTime = (time.time() - startTime)
+print('\n\nExecution time in seconds: ', "%.2f" % executionTime)
