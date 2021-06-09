@@ -1354,7 +1354,7 @@ for c in ax6.containers:
     # set the bar label
     ax6.bar_label(c, labels=labels, label_type='center', color="white")
     label_count += 1
-
+plt.axvline(x=0.5, color='white', linestyle='-',alpha=0.5,linewidth=1)
 ax6.set_title(my_alias + " - " + your_alias + " (per Game)")
 
 ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
@@ -1534,6 +1534,7 @@ for c in ax7.containers:
     ax7.bar_label(c, labels=labels, label_type='center', color="white")
     label_count += 1
 
+plt.axvline(x=0.5, color='white', linestyle='-',alpha=0.5,linewidth=1)
 ax7.set_title("Us - Opponents (per Game)")
 
 new_result_array_num_up = []
@@ -1793,10 +1794,10 @@ if max_y_lim > 1:
 for gd in new_gd_counter_keys:
     if gd < 0:
         neg_gd.append(gd)
-        neg_val.append(gd_counter_values[gd])
+        neg_val.append(new_gd_counter_values[gd])
     if gd > 0:
         pos_gd.append(gd)
-        pos_val.append(gd_counter_values[gd])
+        pos_val.append(new_gd_counter_values[gd])
 
 ax19.set_xlim(min(new_gd_counter_keys)-0.5,max(new_gd_counter_keys)+0.5)
 ax19.set_xticks(ticks=new_gd_counter_keys)
@@ -1858,9 +1859,9 @@ ax21.set_ylim(0,max_y_lim)
 ax21 = plt.gca()
 ax21.set_ylim(ax21.get_ylim()[::-1])
 
-keys_to_use = gs_counter_keys
-if len(gc_counter_keys) > len(gs_counter_keys):
-    keys_to_use = gc_counter_keys
+initial_keys_to_use = gs_counter_keys + gc_counter_keys
+keys_to_use = []
+[keys_to_use.append(x) for x in initial_keys_to_use if x not in keys_to_use]
 
 ax20.bar(keys_to_use,max_y_lim,color=our_color,width=1,alpha=0.25)
 ax20.bar(gs_counter_keys,gs_counter_pct,width=1,ec="black",color=our_color)
