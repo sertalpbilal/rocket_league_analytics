@@ -2,46 +2,46 @@
 Fun with Rocket League tracking data
 
 ## Screenshots:
-![preview3.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/preview3.png)
+![preview4.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/preview4.png)
 
 ## Output:
 ```
 STATS            Allan    Sertalp
 -------------  -------  ---------
-Goals              201        192
-Misses             191        212
-G/Shot            0.51       0.48
-Assists             75         88
-Saves              233        181
-Demos              181         95
-Demoed              66         62
-Score            62457      57548
-Passes             590        627
-Clears             492        458
-Touches           4214       4159
-Goal Distance     2653       2671
-Miss Distance     3720       3567
-Shot Distance     3212       3171
-Won Ball           958        920
-Lost Ball          999        980
+Goals              222        198
+Misses             206        228
+G/Shot            0.52       0.46
+Assists             97        106
+Saves              250        196
+Demos              201         99
+Demoed              73         74
+Score            67545      61509
+Passes             629        672
+Clears             534        503
+Touches           4580       4492
+Goal Distance     2691       2657
+Miss Distance     3753       3598
+Shot Distance     3238       3192
+Won Ball          1047        993
+Lost Ball         1076       1050
 
 
 STATS              Us    Them
 -------------  ------  ------
-Goals             393     387
-Misses            403     593
+Goals             420     404
+Misses            434     632
 G/Shot           0.49    0.39
-Assists           163     166
-Saves             414     326
-Demos             276     128
-Score          120005  117733
-Passes           1217    1301
-Clears            950     962
-Touches          8373    9727
-Goal Distance    2662    2627
-Miss Distance    3640    3532
-Shot Distance    3191    3206
-Won Ball         1878    1979
+Assists           203     187
+Saves             446     349
+Demos             300     147
+Score          129054  124637
+Passes           1301    1389
+Clears           1037    1057
+Touches          9072   10431
+Goal Distance    2675    2611
+Miss Distance    3672    3567
+Shot Distance    3215    3226
+Won Ball         2040    2126
 
 
 Win %    Results                              Games    Wins    Losses    Allan Goals/G    Sertalp Goals/G    Our Goals/G    Their Goals/G    Goal Diff./G
@@ -58,18 +58,19 @@ Win %    Results                              Games    Wins    Losses    Allan G
 38%      L L W W L L L W W L L L L W L W         16       6        10              1.4                1.2            2.6              2.9            -0.3
 20%      L L W L L                                5       1         4                2                  1              3              3.4            -0.4
 44%      W L W W L L L W L                        9       4         5              1.6                1.7            3.2              3.2               0
+70%      L W W L L W W W W W                     10       7         3              2.1                0.6            2.7              1.7               1
 
 
 STATS      Overall    Normaltime    Overtime
 -------  ---------  ------------  ----------
-Games          122           104          18
-Win %        45.08         48.08       27.78
-Loss %       54.92         51.92       72.22
-Wins            55            50           5
-Losses          67            54          13
+Games          132           114          18
+Win %        46.97            50       27.78
+Loss %       53.03            50       72.22
+Wins            62            57           5
+Losses          70            57          13
 
 
-Execution time in seconds:  2.77
+Execution time in seconds:  2.49
 ```
 
 NOTE: Execution time also includes the time taken to plot the dashboard.
