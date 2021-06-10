@@ -7,6 +7,8 @@ RUN pip install carball
 RUN pip install requests
 RUN pip install python-dotenv
 RUN pip install ipykernel
+RUN pip install xgboost
+RUN pip install scikit-learn
 
 WORKDIR /src
 
