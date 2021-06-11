@@ -133,5 +133,5 @@ if __name__ == "__main__":
     from dotenv import dotenv_values
     config = dotenv_values("../.env")
     token = config.get('TOKEN', os.environ.get('TOKEN', None))
-    rg = RocketLeagueGame(token=token, game_id="4ec9f568-c1f9-4c59-8d4d-70716dde5b0c")
+    rg = RocketLeagueGame(token=token, game_id="0ee15f33-6475-4d09-b56c-a69811d6b21a")
     # print('x')
