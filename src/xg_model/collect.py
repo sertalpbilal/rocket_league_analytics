@@ -1,4 +1,4 @@
-# This method collects random games from ballchasing in order to prepare input for xG model
+# This class collects random games from ballchasing in order to prepare input for xG model
 import requests
 import functools
 import warnings
@@ -81,7 +81,7 @@ class GameCollector:
                             stop = True
                             print("Terminating downloads, hit the API limit")
                             break
-                    time.sleep(0.5)
+                    time.sleep(5)
                 else:
                     print(f"Replay file {game['id']} exists!")
 
