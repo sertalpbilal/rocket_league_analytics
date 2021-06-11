@@ -5,8 +5,9 @@
 # TODO: add colormap to heatmaps like in this example: https://www.dreamteamfc.com/c/wp-content/uploads/sites/4/2018/05/mesut-ozil-final.jpg?strip=all&w=742&quality=100
 # TODO: fix issues with GD chart when there is only 1 game and it's an overtime game
 # TODO: fix axes on charts which show game numbers to only show ints and not floats
-# TODO: handle own-goals
+# TODO: handle own-goals (add stats for own goals scored)
 # TODO: decide whether to plot "non-shot" goals in the 4 goal heatmaps
+# TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 
 import csv
 import json
@@ -17,6 +18,7 @@ from statistics import mean
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+import pandas as pd
 from tabulate import tabulate
 
 startTime = time.time()
@@ -45,9 +47,86 @@ if check_new:
 else:
     path_to_json = 'data/json/'
 
+path_to_untrimmed_csv = 'data/dataframe/'
 path_to_csv = 'data/dataframe-trimmed/'
+
+# Trim CSVs if there are CSVs to trim
+if len(os.listdir(path_to_untrimmed_csv)) > 0:
+    csv_files = [pos_csv for pos_csv in os.listdir(path_to_untrimmed_csv) if pos_csv.endswith('.csv')]
+
+    print("Trimming", len(csv_files), "CSV files...")
+    frames_to_skip = 20
+
+    for file in csv_files:
+        with open(path_to_untrimmed_csv + file) as f:
+            reader = csv.reader(f)
+            my_list = list(reader)
+
+        nrows = len(my_list)
+        ncols = len(my_list[0])
+
+        my_x_arr = []
+        my_y_arr = []
+        my_z_arr = []
+        your_x_arr = []
+        your_y_arr = []
+        your_z_arr = []
+        ball_x_arr = []
+        ball_y_arr = []
+        ball_z_arr = []
+        time_status = "NT"
+
+        for col in range(ncols):
+            for row in range(3, nrows, frames_to_skip):
+                if my_list[row][col] != "":
+                    if my_list[0][col] == my_name:
+                        if my_list[1][col] == "pos_x":
+                            my_x_arr.append(round(float(my_list[row][col])))
+                        elif my_list[1][col] == "pos_y":
+                            my_y_arr.append(round(float(my_list[row][col])))
+                        elif my_list[1][col] == "pos_z":
+                            my_z_arr.append(round(float(my_list[row][col])))
+
+                    elif my_list[0][col] == your_name:
+                        if my_list[1][col] == "pos_x":
+                            your_x_arr.append(round(float(my_list[row][col])))
+                        elif my_list[1][col] == "pos_y":
+                            your_y_arr.append(round(float(my_list[row][col])))
+                        elif my_list[1][col] == "pos_z":
+                            your_z_arr.append(round(float(my_list[row][col])))
+
+                    elif my_list[0][col] == "ball":
+                        if my_list[1][col] == "pos_x":
+                            ball_x_arr.append(round(float(my_list[row][col])))
+                        elif my_list[1][col] == "pos_y":
+                            ball_y_arr.append(round(float(my_list[row][col])))
+                        elif my_list[1][col] == "pos_z":
+                            ball_z_arr.append(round(float(my_list[row][col])))
+
+                    elif my_list[0][col] == "game":
+                        if my_list[1][col] == "is_overtime":
+                            time_status = "OT"
+
+        dfObj = pd.DataFrame(
+            [my_x_arr, my_y_arr, my_z_arr, your_x_arr, your_y_arr, your_z_arr, ball_x_arr, ball_y_arr, ball_z_arr]).T
+        if time_status == "OT":
+            dfObj.columns = [my_name + "_pos_x", my_name + "_pos_y", my_name + "_pos_z",
+                             your_name + "_pos_x", your_name + "_pos_y", your_name + "_pos_z",
+                             "ball_pos_x", "ball_pos_y", "ball_pos_z-GAME-WENT-OT"]
+        else:
+            dfObj.columns = [my_name + "_pos_x", my_name + "_pos_y", my_name + "_pos_z",
+                             your_name + "_pos_x", your_name + "_pos_y", your_name + "_pos_z",
+                             "ball_pos_x", "ball_pos_y", "ball_pos_z"]
+
+        # dfObj.dropna(axis=0, how='any', thresh=None, subset=None, inplace=True)
+
+        dfObj.to_csv(index=False, path_or_buf=path_to_csv + file, float_format='{:.0f}'.format)
+        os.remove(path_to_untrimmed_csv + file)
+
+    trimexecutionTime = (time.time() - startTime)
+    print('Trimming completed in ', "%.2f" % trimexecutionTime, 'seconds\n\n')
+
 json_files = [pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
-csv_files = [pos_csv for pos_csv in os.listdir(path_to_csv) if pos_csv.endswith('.csv')]
 
 json_files_2v2 = []
 file_counter = 0
@@ -78,6 +157,7 @@ for file in json_files_2v2:
         local_time += i
 
     file_time.append(local_time)
+
 
 file_counter = 0
 new_json_files = [x for _, x in sorted(zip(file_time, json_files_2v2))]
@@ -291,10 +371,6 @@ for file in new_json_files:
         local_your_assists = 0
         local_their_assists = 0
 
-
-
-
-
         # Link our names to IDs
         for i in data['players']:
             if i["name"] == my_name:
@@ -304,6 +380,19 @@ for file in new_json_files:
             elif i["name"] == your_name:
                 your_id = i["id"]["id"]
 
+        for i in data['players']:
+            if i["id"]["id"] == my_id:
+                if "assists" in i:
+                    local_my_assists += i["assists"]
+                    my_assists_count += i["assists"]
+            elif i["id"]["id"] == your_id:
+                if "assists" in i:
+                    local_your_assists += i["assists"]
+                    your_assists_count += i["assists"]
+            else:
+                if "assists" in i:
+                    local_their_assists += i["assists"]
+                    their_assists_count += i["assists"]
 
         for i in data["gameMetadata"]["goals"]:
             if i["playerId"]["id"] == my_id:
@@ -388,7 +477,6 @@ for file in new_json_files:
 
 
         for i in data['gameStats']['hits']:
-
             if i["playerId"]["id"] == my_id:
                 my_touches_count += 1
                 if local_color == "orange":
@@ -429,17 +517,6 @@ for file in new_json_files:
                 else:
                     their_saves_count += 1
                     local_their_saves += 1
-
-            if "assist" in i:
-                if i["playerId"]["id"] == my_id:
-                    my_assists_count += 1
-                    local_my_assists += 1
-                elif i["playerId"]["id"] == your_id:
-                    your_assists_count += 1
-                    local_your_assists += 1
-                else:
-                    their_assists_count += 1
-                    local_their_assists += 1
 
             if "shot" in i:
                 if i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id:
@@ -661,7 +738,7 @@ for file in new_json_files:
             with open(path_to_csv + csv_file, newline='') as f:
                 reader = csv.reader(f)
                 row1 = next(reader)
-            if "T" in row1:
+            if "ball_pos_z-GAME-WENT-OT" in row1:
                 local_wentOvertime = True
                 if local_GS > local_GC:
                     overtime_wins_count += 1
@@ -954,8 +1031,37 @@ print(tabulate(streak_data,
                         "Our Goals/G", "Their Goals/G", "Goal Diff./G"], numalign="right"))
 print("\n")
 
-############
 games_nr = len(new_json_files)
+
+"""
+scorelines_array = []
+for g in range(0,len(gs_array)):
+    scoreline_str = str(gs_array[g]) + "-" + str(gc_array[g])
+    scorelines_array.append(scoreline_str)
+
+scoreline_counter = Counter(scorelines_array)
+scoreline_counter_keys = list(scoreline_counter.keys())
+scoreline_counter_values = list(scoreline_counter.values())
+
+scoreline_and_pct = []
+
+for score in range(0,len(scoreline_counter_keys)):
+    gs_and_gc = scoreline_counter_keys[score].split('-')
+    result_type = "W"
+    if gs_and_gc[0] < gs_and_gc[1]:
+        result_type = "L"
+    goal_diff_for_score = int(gs_and_gc[0]) - int(gs_and_gc[1])
+    score_pct = round(((scoreline_counter_values[score] / games_nr) * 100),1)
+    scoreline_and_pct.append([result_type,scoreline_counter_keys[score],score_pct,scoreline_counter_values[score],goal_diff_for_score])
+
+scoreline_and_pct = sorted(scoreline_and_pct, key=lambda x: -x[2])
+
+print(tabulate(scoreline_and_pct,
+               headers=["Result", "Scoreline", "Occurrence %", "Occurrence", "Goal Diff."], numalign="right"))
+print("\n")
+"""
+
+############
 
 our_win_ratio = win_count / games_nr
 our_loss_ratio = 1 - our_win_ratio
@@ -1022,7 +1128,6 @@ for game in range(0, games_nr):
     else:
         game_print_list.append(game)
 
-
 for file in new_csv_files:
     if file_counter in game_print_list:
         with open(path_to_csv + file) as f:
@@ -1030,34 +1135,49 @@ for file in new_csv_files:
             my_list = list(reader)
 
         nrows = len(my_list)
+        ncols = len(my_list[0])
 
         multiplier = 1
-        if our_team_color[file_counter - 1] == "O":
+        if our_team_color[file_counter] == "O":
             multiplier = -1
 
-        for col in range(9):
+        for col in range(ncols):
             for row in range(3, nrows):
-                if col == 0:
-                    my_x_coords.append(float(my_list[row][col]) * multiplier)
-                if col == 1:
-                    my_y_coords.append(float(my_list[row][col]) * multiplier)
-                if col == 2:
-                    my_z_coords.append(float(my_list[row][col]))
 
-                if col == 3:
-                    your_x_coords.append(float(my_list[row][col]) * multiplier)
-                if col == 4:
-                    your_y_coords.append(float(my_list[row][col]) * multiplier)
-                if col == 5:
-                    your_z_coords.append(float(my_list[row][col]))
+                if my_list[row][col] != "":
+                    if my_list[0][col] == my_name+"_pos_x":
+                        my_x_c = int(my_list[row][col]) * multiplier
+                        my_x_coords.append(my_x_c)
+                    elif my_list[0][col] == my_name+"_pos_y":
+                        my_y_c = int(my_list[row][col]) * multiplier
+                        my_y_coords.append(my_y_c)
+                    elif my_list[0][col] == my_name + "_pos_z":
+                        my_z_c = int(my_list[row][col])
+                        my_z_coords.append(my_z_c)
 
-                if col == 6:
-                    ball_x_coords.append(float(my_list[row][col]) * multiplier)
-                if col == 7:
-                    ball_y_coords.append(float(my_list[row][col]) * multiplier)
-                if col == 8:
-                    ball_z_coords.append(float(my_list[row][col]))
+                if my_list[row][col] != "":
+                    if my_list[0][col] == your_name + "_pos_x":
+                        your_x_c = int(my_list[row][col]) * multiplier
+                        your_x_coords.append(your_x_c)
+                    elif my_list[0][col] == your_name + "_pos_y":
+                        your_y_c = int(my_list[row][col]) * multiplier
+                        your_y_coords.append(your_y_c)
+                    elif my_list[0][col] == your_name + "_pos_z":
+                        your_z_c = int(my_list[row][col])
+                        your_z_coords.append(your_z_c)
+
+                if my_list[row][col] != "":
+                    if my_list[0][col] == "ball_pos_x":
+                        ball_x_c = int(my_list[row][col]) * multiplier
+                        ball_x_coords.append(ball_x_c)
+                    elif my_list[0][col] == "ball_pos_y":
+                        ball_y_c = int(my_list[row][col]) * multiplier
+                        ball_y_coords.append(ball_y_c)
+                    elif (my_list[0][col] == "ball_pos_z") or (my_list[0][col] == "ball_pos_z-GAME-WENT-OT"):
+                        ball_z_c = int(my_list[row][col])
+                        ball_z_coords.append(ball_z_c)
     file_counter += 1
+
 
 n_plots = 21
 widths = [1]
@@ -1203,7 +1323,6 @@ ax12.set_xlim(pitch_min_x, pitch_max_x)
 ax12.set_ylim(pitch_min_y, pitch_max_y)
 ax12.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
 ax12.axis("off")
-
 ax12.scatter(ball_x_coords, ball_y_coords, alpha=0.1, color="grey", s=10)
 
 ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
@@ -1881,7 +2000,6 @@ ax19 = fig.add_subplot(spec[2, 0])  # Goal Difference Distribution
 gd_counter = Counter(normaltime_gd_array)
 gd_counter_keys = list(gd_counter.keys())
 gd_counter_values = list(gd_counter.values())
-
 
 neg_gd = []
 pos_gd = []
