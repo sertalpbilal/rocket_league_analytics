@@ -5,12 +5,17 @@ from concurrent.futures import ProcessPoolExecutor
 import pathlib
 import glob
 import os
+import pickle
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import accuracy_score, roc_auc_score
+from xgboost import XGBClassifier
+
 
 class RocketLeagueXG:
 
-    def __init__(self, folder='model'):
+    def __init__(self, folder='model', swapping=True):
         self.folder = (pathlib.Path() / f"../../data/{folder}").resolve()
-        print(self.folder)
+        self.swapping = swapping
 
     def prepare_data(self):
         "Reads and prepares raw data for the model, this step might take a while"
@@ -133,7 +138,40 @@ class RocketLeagueXG:
         current_df.to_csv(csv_name)
         return current_df
 
+    def build_model(self):
+        data = pd.read_csv(self.folder / "combined.csv")
+        data = data.rename(columns={'Unnamed: 0': 'idx'})
+        if self.swapping:
+            data_switch = data.copy()
+            opp1_cols = [col for col in data_switch.columns if "opp_1_" in col]
+            opp2_cols = [col for col in data_switch.columns if "opp_2_" in col]
+            temp_cols = ['temp_' + i for i in opp1_cols]
+            data_switch[temp_cols] = data_switch[opp1_cols]
+            data_switch[opp1_cols] = data_switch[opp2_cols]
+            data_switch[opp2_cols] = data_switch[temp_cols]
+            data_switch.drop(columns=temp_cols, inplace=True)
+            data = pd.concat([data, data_switch])
+        col_list = ['idx'] + [col for col in data.columns if ("_pos_" in col or "_vel_" in col or "_rot_" in col) and "team_mate" not in col and "ball" not in col] + ['goal']
+        data_filtered = data[col_list]
+        data_filtered = data_filtered.dropna()
+        X = data_filtered.iloc[:, :-1].values
+        y = data_filtered.iloc[:, -1].astype(int).values
+        from sklearn.model_selection import train_test_split
+        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=0.2)
+        sc = StandardScaler()
+        scaled_X_train = sc.fit_transform(X_train[:,1:])
+        scaled_X_test = sc.transform(X_test[:,1:])
+        reg = XGBClassifier()
+        reg.fit(scaled_X_train, y_train)
+        y_pred = reg.predict(scaled_X_test)
+        print("Test", accuracy_score(y_pred, y_test), "Train", accuracy_score(reg.predict(scaled_X_train), y_train), "ROC AUC Score", roc_auc_score(y_test, y_pred))
+        with open(self.folder / "xg.model", "wb") as f:
+            pickle.dump(reg, f)
+        with open(self.folder / "xg.scaler", "wb") as f:
+            pickle.dump(sc, f)
+
 
 def generate_xg():
     r = RocketLeagueXG('model')
     r.prepare_data()
+    r.build_model()
