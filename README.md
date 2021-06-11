@@ -1,5 +1,26 @@
-# rocket_league_analytics
-Fun with Rocket League tracking data
+# Rocket League Analytics
+Rocket League detailed stat dashboard with expected goals analysis
+
+## Generating xG model and dashboard
+
+The xG model file is under `src/xg_model`.
+The model depends on having a valid key from [ballchasing.com]() API.
+
+Steps:
+1. **Setting up environment**  
+   Add your BallChasing token to `.env.sample` file and rename it to `.env`
+2. **Collecting random game data (optional)**  
+   Navigate to `src/scripts` and run `python collect_model_games.py`  
+   This step will download latest 1000 ranked double games under `data/model` directory.
+3. **Generating xG model (optional)**  
+   Run `python generate_xg.py` to populate xG model.  
+   Note that you might need to run this inside a Docker container if you cannot install `carball` package.  
+   This step will populate two files under `data/model`: `xg.model` (gradient boosting xG model) and `xg.scaler` (feature scaler)
+4. **Download your games**  
+   You can go to `scripts` folder and run `python download_my_games.py`  
+   This step will download your games to `data/replay` and will populate `data/json` and `data/dataframe` directories for future use.
+5. **Generate the dashboard**  
+   Finally you can go to `src` and run `python boxcartest.py` to populate the dashboard.
 
 ## Screenshots:
 ![preview4.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/preview4.png)
