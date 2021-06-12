@@ -197,19 +197,11 @@ your_goals_distancetogoal = []
 their_goals_distancetogoal = []
 
 my_shots_distancetogoal = []
-my_shots_goal_or_miss = []  # goal = 1, miss = 0
-
 your_shots_distancetogoal = []
-your_shots_goal_or_miss = []  # goal = 1, miss = 0
-
 our_shots_distancetogoal = []
-our_shots_goal_or_miss = []  # my goal = 1, my miss = 0, your goal = 2, your miss = 3
 
 my_id = ""
 your_id = ""
-
-our_col = []
-their_col = []
 
 my_shots_x = []
 my_shots_y = []
@@ -250,10 +242,6 @@ my_touches_z = []
 your_touches_x = []
 your_touches_y = []
 your_touches_z = []
-
-their_touches_x = []
-their_touches_y = []
-their_touches_z = []
 
 my_misses_x = []
 my_misses_y = []
@@ -408,11 +396,14 @@ for file in new_json_files:
         local_your_assists = 0
         local_their_assists = 0
 
-        # Link our names to IDs
+        local_multiplier = 1
+
+        # Link our names to IDs and detect our team color
         for i in data['players']:
             if i["name"] == my_name:
                 if i["isOrange"]:
                     local_color = "orange"
+                    local_multiplier = -1
                 my_id = i["id"]["id"]
             elif i["name"] == your_name:
                 your_id = i["id"]["id"]
@@ -512,7 +503,6 @@ for file in new_json_files:
                     if "totalCarryTime" in i["stats"]["ballCarries"]:
                         my_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
 
-
             elif i["id"]["id"] == your_id:
                 if "score" in i:
                     your_score_count += i["score"]
@@ -528,7 +518,7 @@ for file in new_json_files:
                     your_dribbles_count += i["stats"]["hitCounts"]["totalDribbles"]
                 if "totalAerials" in i["stats"]["hitCounts"]:
                     your_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
-                    
+
                 # positional tendencies
                 if "timeOnGround" in i["stats"]["positionalTendencies"]:
                     your_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
@@ -556,7 +546,7 @@ for file in new_json_files:
                     your_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
                 if "timeOnWall" in i["stats"]["positionalTendencies"]:
                     your_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
-                    
+
                 if "timeFullBoost" in i["stats"]["boost"]:
                     your_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
                 if "timeLowBoost" in i["stats"]["boost"]:
@@ -581,7 +571,6 @@ for file in new_json_files:
                 if "ballCarries" in i["stats"]:
                     if "totalCarryTime" in i["stats"]["ballCarries"]:
                         your_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
-
             else:
                 if "score" in i:
                     their_score_count += i["score"]
@@ -597,8 +586,6 @@ for file in new_json_files:
                     their_dribbles_count += i["stats"]["hitCounts"]["totalDribbles"]
                 if "totalAerials" in i["stats"]["hitCounts"]:
                     their_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
-
-
 
         if "demos" in data["gameMetadata"]:
             for i in data["gameMetadata"]["demos"]:
@@ -635,31 +622,16 @@ for file in new_json_files:
         for i in data['gameStats']['hits']:
             if i["playerId"]["id"] == my_id:
                 my_touches_count += 1
-                if local_color == "orange":
-                    my_touches_x.append(i["ballData"]["posX"] * -1)
-                    my_touches_y.append(i["ballData"]["posY"] * -1)
-                else:
-                    my_touches_x.append(i["ballData"]["posX"])
-                    my_touches_y.append(i["ballData"]["posY"])
-                my_touches_z.append(i["ballData"]["posZ"] * -1)
+                my_touches_x.append(i["ballData"]["posX"] * local_multiplier)
+                my_touches_y.append(i["ballData"]["posY"] * local_multiplier)
+                my_touches_z.append(i["ballData"]["posZ"])
             elif i["playerId"]["id"] == your_id:
                 your_touches_count += 1
-                if local_color == "orange":
-                    your_touches_x.append(i["ballData"]["posX"] * -1)
-                    your_touches_y.append(i["ballData"]["posY"] * -1)
-                else:
-                    your_touches_x.append(i["ballData"]["posX"])
-                    your_touches_y.append(i["ballData"]["posY"])
-                your_touches_z.append(i["ballData"]["posZ"] * -1)
+                your_touches_x.append(i["ballData"]["posX"] * local_multiplier)
+                your_touches_y.append(i["ballData"]["posY"] * local_multiplier)
+                your_touches_z.append(i["ballData"]["posZ"])
             else:
                 their_touches_count += 1
-                if local_color == "orange":
-                    their_touches_x.append(i["ballData"]["posX"] * -1)
-                    their_touches_y.append(i["ballData"]["posY"] * -1)
-                else:
-                    their_touches_x.append(i["ballData"]["posX"])
-                    their_touches_y.append(i["ballData"]["posY"])
-                their_touches_z.append(i["ballData"]["posZ"] * -1)
 
             if "save" in i:
                 if i["playerId"]["id"] == my_id:
@@ -677,191 +649,71 @@ for file in new_json_files:
             if "shot" in i:
                 if i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id:
                     local_our_shots += 1
-                    if local_color == "orange":
-                        all_shots_x.append(i["ballData"]["posX"] * -1)
-                        all_shots_y.append(i["ballData"]["posY"] * -1)
-                    else:
-                        all_shots_x.append(i["ballData"]["posX"])
-                        all_shots_y.append(i["ballData"]["posY"])
-                    all_shots_z.append(i["ballData"]["posZ"])
 
                     if "goal" in i:
                         if i["playerId"]["id"] == my_id:
-                            if local_color == "orange":
-                                my_goals_x.append(i["ballData"]["posX"] * -1)
-                                my_goals_y.append(i["ballData"]["posY"] * -1)
-                            else:
-                                my_goals_x.append(i["ballData"]["posX"])
-                                my_goals_y.append(i["ballData"]["posY"])
+                            my_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                            my_goals_y.append(i["ballData"]["posY"] * local_multiplier)
                             my_goals_z.append(i["ballData"]["posZ"])
                             local_my_shots += 1
                         else:
-                            if local_color == "orange":
-                                your_goals_x.append(i["ballData"]["posX"] * -1)
-                                your_goals_y.append(i["ballData"]["posY"] * -1)
-                            else:
-                                your_goals_x.append(i["ballData"]["posX"])
-                                your_goals_y.append(i["ballData"]["posY"])
+                            your_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                            your_goals_y.append(i["ballData"]["posY"] * local_multiplier)
                             your_goals_z.append(i["ballData"]["posZ"])
                             local_your_shots += 1
 
                     else:
                         if i["playerId"]["id"] == my_id:
-                            if local_color == "orange":
-                                my_misses_x.append(i["ballData"]["posX"] * -1)
-                                my_misses_y.append(i["ballData"]["posY"] * -1)
-                            else:
-                                my_misses_x.append(i["ballData"]["posX"])
-                                my_misses_y.append(i["ballData"]["posY"])
+                            my_misses_x.append(i["ballData"]["posX"] * local_multiplier)
+                            my_misses_y.append(i["ballData"]["posY"] * local_multiplier)
                             my_misses_z.append(i["ballData"]["posZ"])
                             local_my_shots += 1
                         else:
-                            if local_color == "orange":
-                                your_misses_x.append(i["ballData"]["posX"] * -1)
-                                your_misses_y.append(i["ballData"]["posY"] * -1)
-                            else:
-                                your_misses_x.append(i["ballData"]["posX"])
-                                your_misses_y.append(i["ballData"]["posY"])
+                            your_misses_x.append(i["ballData"]["posX"] * local_multiplier)
+                            your_misses_y.append(i["ballData"]["posY"] * local_multiplier)
                             your_misses_z.append(i["ballData"]["posZ"])
                             local_your_shots += 1
 
                 else:
                     local_their_shots += 1
-                    if local_color == "orange":
-                        all_shots_x.append(i["ballData"]["posX"] * -1)
-                        all_shots_y.append(i["ballData"]["posY"] * -1)
-                    else:
-                        all_shots_x.append(i["ballData"]["posX"])
-                        all_shots_y.append(i["ballData"]["posY"])
-                    all_shots_z.append(i["ballData"]["posZ"])
 
                     if "goal" in i:
-                        if local_color == "orange":
-                            their_goals_x.append(i["ballData"]["posX"] * -1)
-                            their_goals_y.append(i["ballData"]["posY"] * -1)
-                        else:
-                            their_goals_x.append(i["ballData"]["posX"])
-                            their_goals_y.append(i["ballData"]["posY"])
+                        their_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                        their_goals_y.append(i["ballData"]["posY"] * local_multiplier)
                         their_goals_z.append(i["ballData"]["posZ"])
                         their_goals_distancetogoal.append(i["distanceToGoal"])
 
                     else:
-                        if local_color == "orange":
-                            their_misses_x.append(i["ballData"]["posX"] * -1)
-                            their_misses_y.append(i["ballData"]["posY"] * -1)
-                        else:
-                            their_misses_x.append(i["ballData"]["posX"])
-                            their_misses_y.append(i["ballData"]["posY"])
+                        their_misses_x.append(i["ballData"]["posX"] * local_multiplier)
+                        their_misses_y.append(i["ballData"]["posY"] * local_multiplier)
                         their_misses_z.append(i["ballData"]["posZ"])
                         their_misses_distancetogoal.append(i["distanceToGoal"])
 
-            if (i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id) and "shot" in i:
-                if i["playerId"]["id"] == my_id and "goal" in i:
-                    our_shots_distancetogoal.append(i["distanceToGoal"])
-                    # local_my_goals += 1
-
-                    if local_color == "orange":
-                        our_shots_x.append(i["ballData"]["posX"] * -1)
-                        our_shots_y.append(i["ballData"]["posY"] * -1)
-                    else:
-                        our_shots_x.append(i["ballData"]["posX"])
-                        our_shots_y.append(i["ballData"]["posY"])
-                    our_shots_z.append(i["ballData"]["posZ"])
-
-                    our_col.append("lime")
-                if i["playerId"]["id"] == my_id and "goal" not in i:
-                    our_shots_distancetogoal.append(i["distanceToGoal"])
-
-                    if local_color == "orange":
-                        our_shots_x.append(i["ballData"]["posX"] * -1)
-                        our_shots_y.append(i["ballData"]["posY"] * -1)
-                    else:
-                        our_shots_x.append(i["ballData"]["posX"])
-                        our_shots_y.append(i["ballData"]["posY"])
-                    our_shots_z.append(i["ballData"]["posZ"])
-
-                    our_col.append("red")
-                if i["playerId"]["id"] == your_id and "goal" in i:
-                    # local_your_goals += 1
-                    our_shots_distancetogoal.append(i["distanceToGoal"])
-
-                    if local_color == "orange":
-                        our_shots_x.append(i["ballData"]["posX"] * -1)
-                        our_shots_y.append(i["ballData"]["posY"] * -1)
-                    else:
-                        our_shots_x.append(i["ballData"]["posX"])
-                        our_shots_y.append(i["ballData"]["posY"])
-                    our_shots_z.append(i["ballData"]["posZ"])
-
-                    our_col.append("darkgreen")
-                if i["playerId"]["id"] == your_id and "goal" not in i:
-                    our_shots_distancetogoal.append(i["distanceToGoal"])
-
-                    if local_color == "orange":
-                        our_shots_x.append(i["ballData"]["posX"] * -1)
-                        our_shots_y.append(i["ballData"]["posY"] * -1)
-                    else:
-                        our_shots_x.append(i["ballData"]["posX"])
-                        our_shots_y.append(i["ballData"]["posY"])
-                    our_shots_z.append(i["ballData"]["posZ"])
-
-                    our_col.append("darkred")
-
             if i["playerId"]["id"] == my_id and "shot" in i:
                 my_shots_distancetogoal.append(i["distanceToGoal"])
-
-                if local_color == "orange":
-                    my_shots_x.append(i["ballData"]["posX"] * -1)
-                    my_shots_y.append(i["ballData"]["posY"] * -1)
-                else:
-                    my_shots_x.append(i["ballData"]["posX"])
-                    my_shots_y.append(i["ballData"]["posY"])
+                my_shots_x.append(i["ballData"]["posX"] * local_multiplier)
+                my_shots_y.append(i["ballData"]["posY"] * local_multiplier)
                 my_shots_z.append(i["ballData"]["posZ"])
 
                 if "goal" in i:
-                    my_shots_goal_or_miss.append(1)
                     my_goals_distancetogoal.append(i["distanceToGoal"])
                 else:
-                    my_shots_goal_or_miss.append(0)
                     my_misses_distancetogoal.append(i["distanceToGoal"])
 
             if i["playerId"]["id"] == your_id and "shot" in i:
                 your_shots_distancetogoal.append(i["distanceToGoal"])
-                if local_color == "orange":
-                    your_shots_x.append(i["ballData"]["posX"] * -1)
-                    your_shots_y.append(i["ballData"]["posY"] * -1)
-                else:
-                    your_shots_x.append(i["ballData"]["posX"])
-                    your_shots_y.append(i["ballData"]["posY"])
+                your_shots_x.append(i["ballData"]["posX"] * local_multiplier)
+                your_shots_y.append(i["ballData"]["posY"] * local_multiplier)
                 your_shots_z.append(i["ballData"]["posZ"])
                 if "goal" in i:
-                    your_shots_goal_or_miss.append(1)
                     your_goals_distancetogoal.append(i["distanceToGoal"])
                 else:
-                    your_shots_goal_or_miss.append(0)
                     your_misses_distancetogoal.append(i["distanceToGoal"])
 
             if (i["playerId"]["id"] != my_id and i["playerId"]["id"] != your_id) and "shot" in i:
-                if "goal" in i:
-                    if local_color == "orange":
-                        their_shots_x.append(i["ballData"]["posX"] * -1)
-                        their_shots_y.append(i["ballData"]["posY"] * -1)
-                    else:
-                        their_shots_x.append(i["ballData"]["posX"])
-                        their_shots_y.append(i["ballData"]["posY"])
-                    their_shots_z.append(i["ballData"]["posZ"])
-
-                    their_col.append("green")
-                else:
-                    if local_color == "orange":
-                        their_shots_x.append(i["ballData"]["posX"] * -1)
-                        their_shots_y.append(i["ballData"]["posY"] * -1)
-                    else:
-                        their_shots_x.append(i["ballData"]["posX"])
-                        their_shots_y.append(i["ballData"]["posY"])
-                    their_shots_z.append(i["ballData"]["posZ"])
-
-                    their_col.append("red")
+                their_shots_x.append(i["ballData"]["posX"] * local_multiplier)
+                their_shots_y.append(i["ballData"]["posY"] * local_multiplier)
+                their_shots_z.append(i["ballData"]["posZ"])
 
         # print(file, local_GS, local_GC, local_our_shots, local_their_shots)
 
@@ -927,57 +779,34 @@ for file in new_json_files:
             result_color.append(their_color)
             normaltime_gd_array.append(local_GS - local_GC)
 
-        # TODO: Handle FFs
-
-my_col = []
-your_col = []
-
-for val in my_shots_goal_or_miss:
-    if val == 1:
-        my_col.append('green')
-    else:
-        my_col.append('red')
-
-for val in your_shots_goal_or_miss:
-    if val == 1:
-        your_col.append('green')
-    else:
-        your_col.append('red')
-
-fig = plt.figure(figsize=(40, 20))
-
-your_miss_count = 0
-for shot in range(0, len(your_shots_goal_or_miss)):
-    if your_shots_goal_or_miss[shot] == 0:
-        your_miss_count += 1
-
-my_miss_count = 0
-for shot in range(0, len(my_shots_goal_or_miss)):
-    if my_shots_goal_or_miss[shot] == 0:
-        my_miss_count += 1
-
+your_miss_count = len(your_misses_distancetogoal)
+my_miss_count = len(my_misses_distancetogoal)
 their_miss_count = len(their_misses_distancetogoal)
-
-if (their_goal_count + their_miss_count) > 0:
-    their_gs_ratio = their_goal_count / (their_goal_count + their_miss_count)
-else:
-    their_gs_ratio = 0
-
-if (my_goal_count + my_miss_count) > 0:
-    my_gs_ratio = my_goal_count / (my_goal_count + my_miss_count)
-else:
-    my_gs_ratio = 0
-
-if (your_goal_count + your_miss_count) > 0:
-    your_gs_ratio = your_goal_count / (your_goal_count + your_miss_count)
-else:
-    your_gs_ratio = 0
-
 our_goal_count = my_goal_count + your_goal_count
 our_miss_count = my_miss_count + your_miss_count
 
-if (our_goal_count + our_miss_count) > 0:
-    our_gs_ratio = our_goal_count / (our_goal_count + our_miss_count)
+my_shot_count = (my_goal_count + my_miss_count)
+your_shot_count = (your_goal_count + your_miss_count)
+our_shot_count = (our_goal_count + our_miss_count)
+their_shot_count = (their_goal_count + their_miss_count)
+
+if their_shot_count > 0:
+    their_gs_ratio = their_goal_count / their_shot_count
+else:
+    their_gs_ratio = 0
+
+if my_shot_count > 0:
+    my_gs_ratio = my_goal_count / my_shot_count
+else:
+    my_gs_ratio = 0
+
+if your_shot_count > 0:
+    your_gs_ratio = your_goal_count / your_shot_count
+else:
+    your_gs_ratio = 0
+
+if our_shot_count > 0:
+    our_gs_ratio = our_goal_count / our_shot_count
 else:
     our_gs_ratio = 0
 
@@ -993,7 +822,6 @@ our_turnovers_count = my_turnovers_count + your_turnovers_count
 our_turnovers_won_count = my_turnovers_won_count + your_turnovers_won_count
 our_dribbles_count = my_dribbles_count + your_dribbles_count
 our_aerials_count = my_aerials_count + your_aerials_count
-
 
 if my_goal_count > 0:
     my_avg_goal_distance = "%.0f" % mean(my_goals_distancetogoal)
@@ -1043,13 +871,13 @@ if my_miss_count == 0 and your_miss_count == 0:
 if my_miss_count > 0 and your_miss_count > 0:
     our_avg_miss_distance = "%.0f" % mean(my_misses_distancetogoal + your_misses_distancetogoal)
 
-if (my_miss_count + my_goal_count) > 0 and (your_miss_count + your_goal_count) == 0:
+if my_shot_count > 0 and your_shot_count == 0:
     our_avg_shot_distance = my_avg_shot_distance
-if (my_miss_count + my_goal_count) == 0 and (your_miss_count + your_goal_count) > 0:
+if my_shot_count == 0 and your_shot_count > 0:
     our_avg_shot_distance = your_avg_shot_distance
-if (my_miss_count + my_goal_count) == 0 and (your_miss_count + your_goal_count) == 0:
+if my_shot_count == 0 and your_shot_count == 0:
     our_avg_shot_distance = 0
-if (my_miss_count + my_goal_count) > 0 and (your_miss_count + your_goal_count) > 0:
+if my_shot_count > 0 and your_shot_count > 0:
     our_avg_shot_distance = "%.0f" % mean(my_shots_distancetogoal + your_shots_distancetogoal)
 
 if their_goal_count > 0:
@@ -1227,7 +1055,7 @@ print("\n")
 ############
 
 our_win_ratio = win_count / games_nr
-our_loss_ratio = 1 - our_win_ratio
+our_loss_ratio = loss_count / games_nr
 overtime_games_count = overtime_wins_count + overtime_losses_count
 normaltime_wins_count = win_count - overtime_wins_count
 normaltime_losses_count = loss_count - overtime_losses_count
@@ -1267,7 +1095,7 @@ result_data = [["Games", games_nr, normaltime_games_count, overtime_games_count]
 print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime"], numalign="right"))
 
 ###########
-
+fig = plt.figure(figsize=(40, 20))
 n_plots = 21
 widths = [1]
 heights = [1] * n_plots
@@ -1310,11 +1138,6 @@ ax2.set_title("3D Shot Heatmap of Misses (X) & Goals (O)")
 
 if side_view_3d_scatter:
     ax2.view_init(0, 180)
-
-my_shot_count = (my_goal_count + my_miss_count)
-your_shot_count = (your_goal_count + your_miss_count)
-our_shot_count = (our_goal_count + our_miss_count)
-their_shot_count = (their_goal_count + their_miss_count)
 
 ax3 = fig.add_subplot(spec[2, 0])  # Results
 
@@ -1376,7 +1199,8 @@ ax22 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
 dic = {1: "Ground", 2: "Low Air", 3: "High Air", 4: "Def 1/2", 5: "Att 1/2", 6: "Def 1/3", 7: "Mid 1/3",
        8: "Att 1/3", 9: "Behind Ball", 10: "In Front of Ball", 11: "Near Wall", 12: "In Corner", 13: "On Wall",
-       14: "Full Boost", 15: "Low Boost", 16: "No Boost", 17: "Closest to Ball", 18: "Close to Ball", 19: "Furthest from Ball",
+       14: "Full Boost", 15: "Low Boost", 16: "No Boost", 17: "Closest to Ball", 18: "Close to Ball",
+       19: "Furthest from Ball",
        20: "Slow Speed", 21: "Boost Speed", 22: "Supersonic", 23: "Carrying Ball"}
 
 ticks = []
@@ -1394,18 +1218,17 @@ ax22.tick_params(bottom=False)  # remove the ticks
 
 ax22.set_xlim(0, 1)
 
-for stat in range(0,len(my_pos_tendencies)):
-    if (my_pos_tendencies[stat]+your_pos_tendencies[stat]) > 0:
-        our_local_total_tendency = my_pos_tendencies[stat]+your_pos_tendencies[stat]
+for stat in range(0, len(my_pos_tendencies)):
+    if (my_pos_tendencies[stat] + your_pos_tendencies[stat]) > 0:
+        our_local_total_tendency = my_pos_tendencies[stat] + your_pos_tendencies[stat]
         my_local_stat_share = my_pos_tendencies[stat] / our_local_total_tendency
         your_local_stat_share = your_pos_tendencies[stat] / our_local_total_tendency
     else:
         my_local_stat_share = 0
         your_local_stat_share = 0
 
-    ax22.barh(stat+1, my_local_stat_share, color=my_color)
-    ax22.barh(stat+1, your_local_stat_share, left=my_local_stat_share, color=your_color)
-
+    ax22.barh(stat + 1, my_local_stat_share, color=my_color)
+    ax22.barh(stat + 1, your_local_stat_share, left=my_local_stat_share, color=your_color)
 
 label_count = 0
 for c in ax22.containers:
@@ -1415,17 +1238,17 @@ for c in ax22.containers:
     labels[0] = ""
 
     for stat in range(len(my_pos_tendencies)):
-        if label_count == stat*2 and (my_pos_tendencies[stat] / games_nr) > 0:
+        if label_count == stat * 2 and (my_pos_tendencies[stat] / games_nr) > 0:
             if (my_pos_tendencies[stat] / games_nr) < 1:
                 initialMS = (my_pos_tendencies[stat] / games_nr) * 1000
-                labels[0] = str("%.0f"%initialMS) + "ms"
+                labels[0] = str("%.0f" % initialMS) + "ms"
             else:
                 minutes_to_show, seconds_to_show = divmod((my_pos_tendencies[stat] / games_nr), 60)
                 labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
-        if label_count == ((stat*2)+1) and (your_pos_tendencies[stat] / games_nr) > 0:
+        if label_count == ((stat * 2) + 1) and (your_pos_tendencies[stat] / games_nr) > 0:
             if (your_pos_tendencies[stat] / games_nr) < 1:
                 initialMS = (your_pos_tendencies[stat] / games_nr) * 1000
-                labels[0] = str("%.0f"%initialMS) + "ms"
+                labels[0] = str("%.0f" % initialMS) + "ms"
             else:
                 minutes_to_show, seconds_to_show = divmod((your_pos_tendencies[stat] / games_nr), 60)
                 labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
@@ -1437,17 +1260,19 @@ for c in ax22.containers:
 plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
 ax22.set_title("Positional Tendencies (per game)\nMinutes:Seconds")
 
-
 ###########################
 
-my_stats = [my_assists_count,my_saves_count,my_goal_count,my_miss_count,my_shot_count,my_gs_ratio*games_nr,my_touches_count,
-            my_demos_count,my_demos_conceded_count,my_passes_count,my_clears_count,my_score_count,my_turnovers_count,my_turnovers_won_count,
-            my_dribbles_count,my_aerials_count]
+my_stats = [my_assists_count, my_saves_count, my_goal_count, my_miss_count, my_shot_count, my_gs_ratio * games_nr,
+            my_touches_count,
+            my_demos_count, my_demos_conceded_count, my_passes_count, my_clears_count, my_score_count,
+            my_turnovers_count, my_turnovers_won_count,
+            my_dribbles_count, my_aerials_count]
 
-your_stats = [your_assists_count,your_saves_count,your_goal_count,your_miss_count,your_shot_count,your_gs_ratio*games_nr,your_touches_count,
-            your_demos_count,your_demos_conceded_count,your_passes_count,your_clears_count,your_score_count,your_turnovers_count,your_turnovers_won_count,
-            your_dribbles_count,your_aerials_count]
-
+your_stats = [your_assists_count, your_saves_count, your_goal_count, your_miss_count, your_shot_count,
+              your_gs_ratio * games_nr, your_touches_count,
+              your_demos_count, your_demos_conceded_count, your_passes_count, your_clears_count, your_score_count,
+              your_turnovers_count, your_turnovers_won_count,
+              your_dribbles_count, your_aerials_count]
 
 ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
@@ -1471,16 +1296,16 @@ ax6.tick_params(bottom=False)  # remove the ticks
 ax6.set_xlim(0, 1)
 
 for stat in range(len(my_stats)):
-    if (my_stats[stat]+your_stats[stat]) > 0:
-        our_local_total_stat = my_stats[stat]+your_stats[stat]
+    if (my_stats[stat] + your_stats[stat]) > 0:
+        our_local_total_stat = my_stats[stat] + your_stats[stat]
         my_local_stat_share = my_stats[stat] / our_local_total_stat
         your_local_stat_share = your_stats[stat] / our_local_total_stat
     else:
         my_local_stat_share = 0
         your_local_stat_share = 0
 
-    ax6.barh(stat+1, my_local_stat_share, color=my_color)
-    ax6.barh(stat+1, your_local_stat_share, left=my_local_stat_share, color=your_color)
+    ax6.barh(stat + 1, my_local_stat_share, color=my_color)
+    ax6.barh(stat + 1, your_local_stat_share, left=my_local_stat_share, color=your_color)
 
 label_count = 0
 for c in ax6.containers:
@@ -1510,12 +1335,14 @@ for stat in range(len(my_stats)):
     if stat != 8 and stat != 12:
         # gs ratio requires division by 2
         if stat == 5:
-            our_stats.append((my_stats[stat] + your_stats[stat])/2)
+            our_stats.append((my_stats[stat] + your_stats[stat]) / 2)
         else:
             our_stats.append(my_stats[stat] + your_stats[stat])
 
-their_stats = [their_assists_count,their_saves_count,their_goal_count,their_miss_count,their_shot_count,their_gs_ratio*games_nr,their_touches_count,
-            their_demos_count,their_passes_count,their_clears_count,their_score_count,their_turnovers_won_count,their_dribbles_count,their_aerials_count]
+their_stats = [their_assists_count, their_saves_count, their_goal_count, their_miss_count, their_shot_count,
+               their_gs_ratio * games_nr, their_touches_count,
+               their_demos_count, their_passes_count, their_clears_count, their_score_count, their_turnovers_won_count,
+               their_dribbles_count, their_aerials_count]
 
 ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
 
@@ -1537,16 +1364,16 @@ ax7.tick_params(bottom=False)  # remove the ticks
 ax7.set_xlim(0, 1)
 
 for stat in range(len(our_stats)):
-    if (our_stats[stat]+their_stats[stat]) > 0:
-        all_local_total_stat = our_stats[stat]+their_stats[stat]
+    if (our_stats[stat] + their_stats[stat]) > 0:
+        all_local_total_stat = our_stats[stat] + their_stats[stat]
         our_local_stat_share = our_stats[stat] / all_local_total_stat
         their_local_stat_share = their_stats[stat] / all_local_total_stat
     else:
         our_local_stat_share = 0
         their_local_stat_share = 0
 
-    ax7.barh(stat+1, our_local_stat_share, color=our_color)
-    ax7.barh(stat+1, their_local_stat_share, left=our_local_stat_share, color=their_color)
+    ax7.barh(stat + 1, our_local_stat_share, color=our_color)
+    ax7.barh(stat + 1, their_local_stat_share, left=our_local_stat_share, color=their_color)
 
 label_count = 0
 for c in ax7.containers:
@@ -1744,19 +1571,15 @@ ax17.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%
          textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
                     })
 ax17.set_title(str(overtime_losses_count + overtime_wins_count) + " Overtime")
-# TODO: handle FFs
 
 ax18 = fig.add_subplot(spec[2, 0])  # Overtime Results
 
 sizes = [our_NT_win_ratio, our_NT_loss_ratio]
-labels = "Win %", "Loss %"
 ax18.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
          normalize=False,
          textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
                     })
 ax18.set_title(str(normaltime_games_count) + " Normaltime")
-# TODO: handle FFs
-
 
 ax19 = fig.add_subplot(spec[2, 0])  # Goal Difference Distribution
 gd_counter = Counter(normaltime_gd_array)
