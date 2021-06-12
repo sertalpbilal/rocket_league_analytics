@@ -1,14 +1,13 @@
 # TODO: split ground and aerial heatmap based on z values
 # TODO: calculate how long the ball is in our half vs. the opponent's half
-# TODO: show touches in each half or third of the pitch
 # TODO: detect forfeits
-# TODO: add colormap to heatmaps like in this example: https://www.dreamteamfc.com/c/wp-content/uploads/sites/4/2018/05/mesut-ozil-final.jpg?strip=all&w=742&quality=100
+# TODO: detect overtime without having to load CSVs (CSVs aren't being used for anything else other than that right now)
 # TODO: fix issues with GD chart when there is only 1 game and it's an overtime game
 # TODO: fix axes on charts which show game numbers to only show ints and not floats
 # TODO: handle own-goals (add stats for own goals scored)
 # TODO: decide whether to plot "non-shot" goals in the 4 goal heatmaps
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
-# TODO: simplify stat count in charts by adding lists & loops (like with positional tendencies)
+# TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
 
 import csv
 import json
@@ -356,12 +355,12 @@ your_goal_count = 0
 their_goal_count = 0
 
 # positional tendencies
-my_pos_tendencies = [0] * 13
-your_pos_tendencies = [0] * 13
-# columns: time on...
+my_pos_tendencies = [0] * 23
+your_pos_tendencies = [0] * 23
+# columns: time stats...
 # 0 - ground
 # 1 - low in air
-# 2 - high in air,
+# 2 - high in air
 # 3 - defending half
 # 4 - attacking half
 # 5 - defending third
@@ -372,6 +371,16 @@ your_pos_tendencies = [0] * 13
 # 10 - near wall
 # 11 - in corner
 # 12 - on wall
+# 13 - full boost
+# 14 - low boost
+# 15 - no boost
+# 16 - closest to ball
+# 17 - close to ball
+# 18 - furthest from ball
+# 19 - slow speed
+# 20 - boost speed
+# 21 - supersonic
+# 22 - carrying ball
 
 for file in new_json_files:
     file_counter += 1
@@ -478,6 +487,32 @@ for file in new_json_files:
                 if "timeOnWall" in i["stats"]["positionalTendencies"]:
                     my_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
 
+                if "timeFullBoost" in i["stats"]["boost"]:
+                    my_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
+                if "timeLowBoost" in i["stats"]["boost"]:
+                    my_pos_tendencies[14] += i["stats"]["boost"]["timeLowBoost"]
+                if "timeNoBoost" in i["stats"]["boost"]:
+                    my_pos_tendencies[15] += i["stats"]["boost"]["timeNoBoost"]
+
+                if "timeClosestToBall" in i["stats"]["distance"]:
+                    my_pos_tendencies[16] += i["stats"]["distance"]["timeClosestToBall"]
+                if "timeCloseToBall" in i["stats"]["distance"]:
+                    my_pos_tendencies[17] += i["stats"]["distance"]["timeCloseToBall"]
+                if "timeFurthestFromBall" in i["stats"]["distance"]:
+                    my_pos_tendencies[18] += i["stats"]["distance"]["timeFurthestFromBall"]
+
+                if "timeAtSlowSpeed" in i["stats"]["speed"]:
+                    my_pos_tendencies[19] += i["stats"]["speed"]["timeAtSlowSpeed"]
+                if "timeAtBoostSpeed" in i["stats"]["speed"]:
+                    my_pos_tendencies[20] += i["stats"]["speed"]["timeAtBoostSpeed"]
+                if "timeAtSuperSonic" in i["stats"]["speed"]:
+                    my_pos_tendencies[21] += i["stats"]["speed"]["timeAtSuperSonic"]
+
+                if "ballCarries" in i["stats"]:
+                    if "totalCarryTime" in i["stats"]["ballCarries"]:
+                        my_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
+
+
             elif i["id"]["id"] == your_id:
                 if "score" in i:
                     your_score_count += i["score"]
@@ -521,6 +556,31 @@ for file in new_json_files:
                     your_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
                 if "timeOnWall" in i["stats"]["positionalTendencies"]:
                     your_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
+                    
+                if "timeFullBoost" in i["stats"]["boost"]:
+                    your_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
+                if "timeLowBoost" in i["stats"]["boost"]:
+                    your_pos_tendencies[14] += i["stats"]["boost"]["timeLowBoost"]
+                if "timeNoBoost" in i["stats"]["boost"]:
+                    your_pos_tendencies[15] += i["stats"]["boost"]["timeNoBoost"]
+
+                if "timeClosestToBall" in i["stats"]["distance"]:
+                    your_pos_tendencies[16] += i["stats"]["distance"]["timeClosestToBall"]
+                if "timeCloseToBall" in i["stats"]["distance"]:
+                    your_pos_tendencies[17] += i["stats"]["distance"]["timeCloseToBall"]
+                if "timeFurthestFromBall" in i["stats"]["distance"]:
+                    your_pos_tendencies[18] += i["stats"]["distance"]["timeFurthestFromBall"]
+
+                if "timeAtSlowSpeed" in i["stats"]["speed"]:
+                    your_pos_tendencies[19] += i["stats"]["speed"]["timeAtSlowSpeed"]
+                if "timeAtBoostSpeed" in i["stats"]["speed"]:
+                    your_pos_tendencies[20] += i["stats"]["speed"]["timeAtBoostSpeed"]
+                if "timeAtSuperSonic" in i["stats"]["speed"]:
+                    your_pos_tendencies[21] += i["stats"]["speed"]["timeAtSuperSonic"]
+
+                if "ballCarries" in i["stats"]:
+                    if "totalCarryTime" in i["stats"]["ballCarries"]:
+                        your_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
 
             else:
                 if "score" in i:
@@ -1401,7 +1461,9 @@ ax5.axis("off")
 ax22 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
 dic = {1: "Ground", 2: "Low Air", 3: "High Air", 4: "Def 1/2", 5: "Att 1/2", 6: "Def 1/3", 7: "Mid 1/3",
-       8: "Att 1/3", 9: "Behind Ball", 10: "In Front of Ball", 11: "Near Wall", 12: "In Corner", 13: "On Wall"}
+       8: "Att 1/3", 9: "Behind Ball", 10: "In Front of Ball", 11: "Near Wall", 12: "In Corner", 13: "On Wall",
+       14: "Full Boost", 15: "Low Boost", 16: "No Boost", 17: "Closest to Ball", 18: "Close to Ball", 19: "Furthest from Ball",
+       20: "Slow Speed", 21: "Boost Speed", 22: "Supersonic", 23: "Carrying Ball"}
 
 ticks = []
 
@@ -1440,11 +1502,19 @@ for c in ax22.containers:
 
     for stat in range(len(my_pos_tendencies)):
         if label_count == stat*2 and (my_pos_tendencies[stat] / games_nr) > 0:
-            minutes_to_show, seconds_to_show = divmod((my_pos_tendencies[stat] / games_nr), 60)
-            labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
+            if (my_pos_tendencies[stat] / games_nr) < 1:
+                initialMS = (my_pos_tendencies[stat] / games_nr) * 1000
+                labels[0] = str("%.0f"%initialMS) + "ms"
+            else:
+                minutes_to_show, seconds_to_show = divmod((my_pos_tendencies[stat] / games_nr), 60)
+                labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
         if label_count == ((stat*2)+1) and (your_pos_tendencies[stat] / games_nr) > 0:
-            minutes_to_show, seconds_to_show = divmod((your_pos_tendencies[stat] / games_nr), 60)
-            labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
+            if (your_pos_tendencies[stat] / games_nr) < 1:
+                initialMS = (your_pos_tendencies[stat] / games_nr) * 1000
+                labels[0] = str("%.0f"%initialMS) + "ms"
+            else:
+                minutes_to_show, seconds_to_show = divmod((your_pos_tendencies[stat] / games_nr), 60)
+                labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
 
     # set the bar label
     ax22.bar_label(c, labels=labels, label_type='center', color="white")
@@ -1456,12 +1526,20 @@ ax22.set_title("Positional Tendencies (per game)\nMinutes:Seconds")
 
 ###########################
 
+my_stats = [my_assists_count,my_saves_count,my_goal_count,my_miss_count,my_shot_count,my_gs_ratio*games_nr,my_touches_count,
+            my_demos_count,my_demos_conceded_count,my_passes_count,my_clears_count,my_score_count,my_turnovers_count,my_turnovers_won_count,
+            my_dribbles_count,my_aerials_count]
+
+your_stats = [your_assists_count,your_saves_count,your_goal_count,your_miss_count,your_shot_count,your_gs_ratio*games_nr,your_touches_count,
+            your_demos_count,your_demos_conceded_count,your_passes_count,your_clears_count,your_score_count,your_turnovers_count,your_turnovers_won_count,
+            your_dribbles_count,your_aerials_count]
+
 
 ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
-dic = {1.0: "Assists", 2.0: "Saves", 3.0: "Goals", 4.0: "Misses", 5.0: "Shots", 6.0: "Goals/Shot", 7.0: "Touches",
-       8.0: "Demos", 9.0: "Demoed", 10.0: "Passes", 11.0: "Clears", 12.0: "Scores", 13.0: "Lost Ball", 14.0: "Won Ball",
-       15.0: "Dribbles", 16.0: "Aerials"}
+dic = {1: "Assists", 2: "Saves", 3: "Goals", 4: "Misses", 5: "Shots", 6: "Goals/Shot", 7: "Touches",
+       8: "Demos", 9: "Demoed", 10: "Passes", 11: "Clears", 12: "Scores", 13: "Lost Ball", 14: "Won Ball",
+       15: "Dribbles", 16: "Aerials"}
 
 ticks = []
 
@@ -1478,166 +1556,17 @@ ax6.tick_params(bottom=False)  # remove the ticks
 
 ax6.set_xlim(0, 1)
 
-# ASSISTS
-if our_assists_count > 0:
-    my_assist_share = my_assists_count / our_assists_count
-    your_assist_share = your_assists_count / our_assists_count
-else:
-    my_assist_share = 0
-    your_assist_share = 0
+for stat in range(len(my_stats)):
+    if (my_stats[stat]+your_stats[stat]) > 0:
+        our_local_total_stat = my_stats[stat]+your_stats[stat]
+        my_local_stat_share = my_stats[stat] / our_local_total_stat
+        your_local_stat_share = your_stats[stat] / our_local_total_stat
+    else:
+        my_local_stat_share = 0
+        your_local_stat_share = 0
 
-ax6.barh(1, my_assist_share, color=my_color)
-ax6.barh(1, your_assist_share, left=my_assist_share, color=your_color)
-
-# SAVES
-if our_saves_count > 0:
-    my_save_share = my_saves_count / our_saves_count
-    your_save_share = your_saves_count / our_saves_count
-else:
-    my_save_share = 0
-    your_save_share = 0
-ax6.barh(2, my_save_share, color=my_color)
-ax6.barh(2, your_save_share, left=my_save_share, color=your_color)
-
-# GOALS
-if our_goal_count > 0:
-    my_goal_share = my_goal_count / our_goal_count
-    your_goal_share = your_goal_count / our_goal_count
-else:
-    my_goal_share = 0
-    your_goal_share = 0
-ax6.barh(3, my_goal_share, color=my_color)
-ax6.barh(3, your_goal_share, left=my_goal_share, color=your_color)
-
-# MISSES
-if our_miss_count > 0:
-    my_miss_share = my_miss_count / our_miss_count
-    your_miss_share = your_miss_count / our_miss_count
-else:
-    my_miss_share = 0
-    your_miss_share = 0
-ax6.barh(4, my_miss_share, color=my_color)
-ax6.barh(4, your_miss_share, left=my_miss_share, color=your_color)
-
-# SHOTS
-if (our_shot_count) > 0:
-    my_shot_share = my_shot_count / our_shot_count
-    your_shot_share = your_shot_count / our_shot_count
-else:
-    my_miss_share = 0
-    your_miss_share = 0
-ax6.barh(5, my_shot_share, color=my_color)
-ax6.barh(5, your_shot_share, left=my_shot_share, color=your_color)
-
-# GOAL/SHOT RATIO
-if our_gs_ratio > 0:
-    my_gs_ratio_share = my_gs_ratio / (my_gs_ratio + your_gs_ratio)
-    your_gs_ratio_share = your_gs_ratio / (my_gs_ratio + your_gs_ratio)
-else:
-    my_gs_ratio_share = 0
-    your_gs_ratio_share = 0
-ax6.barh(6, my_gs_ratio_share, color=my_color)
-ax6.barh(6, your_gs_ratio_share, left=my_gs_ratio_share, color=your_color)
-
-# TOUCHES
-if our_touches_count > 0:
-    my_touch_share = my_touches_count / our_touches_count
-    your_touch_share = your_touches_count / our_touches_count
-else:
-    my_touch_share = 0
-    your_touch_share = 0
-ax6.barh(7, my_touch_share, color=my_color)
-ax6.barh(7, your_touch_share, left=my_touch_share, color=your_color)
-
-# DEMOS
-if our_demos_count > 0:
-    my_demo_share = my_demos_count / our_demos_count
-    your_demo_share = your_demos_count / our_demos_count
-else:
-    my_demo_share = 0
-    your_demo_share = 0
-ax6.barh(8, my_demo_share, color=my_color)
-ax6.barh(8, your_demo_share, left=my_demo_share, color=your_color)
-
-# GOT DEMOED
-if our_demos_conceded_count > 0:
-    my_demoed_share = my_demos_conceded_count / our_demos_conceded_count
-    your_demoed_share = your_demos_conceded_count / our_demos_conceded_count
-else:
-    my_demoed_share = 0
-    your_demoed_share = 0
-ax6.barh(9, my_demoed_share, color=my_color)
-ax6.barh(9, your_demoed_share, left=my_demoed_share, color=your_color)
-
-# PASSES
-if our_passes_count > 0:
-    my_passes_share = my_passes_count / our_passes_count
-    your_passes_share = your_passes_count / our_passes_count
-else:
-    my_passes_share = 0
-    your_passes_share = 0
-ax6.barh(10, my_passes_share, color=my_color)
-ax6.barh(10, your_passes_share, left=my_passes_share, color=your_color)
-
-# CLEARS
-if our_clears_count > 0:
-    my_clears_share = my_clears_count / our_clears_count
-    your_clears_share = your_clears_count / our_clears_count
-else:
-    my_clears_share = 0
-    your_clears_share = 0
-ax6.barh(11, my_clears_share, color=my_color)
-ax6.barh(11, your_clears_share, left=my_clears_share, color=your_color)
-
-# SCORES
-if our_score_count > 0:
-    my_score_share = my_score_count / our_score_count
-    your_score_share = your_score_count / our_score_count
-else:
-    my_score_share = 0
-    your_score_share = 0
-ax6.barh(12, my_score_share, color=my_color)
-ax6.barh(12, your_score_share, left=my_score_share, color=your_color)
-
-# TURNOVERS (LOST BALL)
-if our_turnovers_count > 0:
-    my_turnover_share = my_turnovers_count / our_turnovers_count
-    your_turnover_share = your_turnovers_count / our_turnovers_count
-else:
-    my_turnover_share = 0
-    your_turnover_share = 0
-ax6.barh(13, my_turnover_share, color=my_color)
-ax6.barh(13, your_turnover_share, left=my_turnover_share, color=your_color)
-
-# TURNOVERS WON (WON BALL)
-if our_turnovers_won_count > 0:
-    my_turnovers_won_share = my_turnovers_won_count / our_turnovers_won_count
-    your_turnovers_won_share = your_turnovers_won_count / our_turnovers_won_count
-else:
-    my_turnovers_won_share = 0
-    your_turnovers_won_share = 0
-ax6.barh(14, my_turnovers_won_share, color=my_color)
-ax6.barh(14, your_turnovers_won_share, left=my_turnovers_won_share, color=your_color)
-
-# DRIBBLES
-if our_dribbles_count > 0:
-    my_dribbles_share = my_dribbles_count / our_dribbles_count
-    your_dribbles_share = your_dribbles_count / our_dribbles_count
-else:
-    my_dribbles_won_share = 0
-    your_dribbles_won_share = 0
-ax6.barh(15, my_dribbles_share, color=my_color)
-ax6.barh(15, your_dribbles_share, left=my_dribbles_share, color=your_color)
-
-# AERIALS
-if our_aerials_count > 0:
-    my_aerials_share = my_aerials_count / our_aerials_count
-    your_aerials_share = your_aerials_count / our_aerials_count
-else:
-    my_aerials_won_share = 0
-    your_aerials_won_share = 0
-ax6.barh(16, my_aerials_share, color=my_color)
-ax6.barh(16, your_aerials_share, left=my_aerials_share, color=your_color)
+    ax6.barh(stat+1, my_local_stat_share, color=my_color)
+    ax6.barh(stat+1, your_local_stat_share, left=my_local_stat_share, color=your_color)
 
 label_count = 0
 for c in ax6.containers:
@@ -1646,101 +1575,11 @@ for c in ax6.containers:
 
     labels[0] = ""
 
-    # assists
-    if label_count == 0 and my_assist_count_per_game > 0:
-        labels[0] = "%.2f" % my_assist_count_per_game
-    if label_count == 1 and your_assist_count_per_game > 0:
-        labels[0] = "%.2f" % your_assist_count_per_game
-
-    # saves
-    if label_count == 2 and my_save_count_per_game > 0:
-        labels[0] = "%.2f" % my_save_count_per_game
-    if label_count == 3 and your_save_count_per_game > 0:
-        labels[0] = "%.2f" % your_save_count_per_game
-
-    # goals
-    if label_count == 4 and my_goal_count_per_game > 0:
-        labels[0] = "%.2f" % my_goal_count_per_game
-    if label_count == 5 and your_goal_count_per_game > 0:
-        labels[0] = "%.2f" % your_goal_count_per_game
-
-    # misses
-    if label_count == 6 and my_miss_count_per_game > 0:
-        labels[0] = "%.2f" % my_miss_count_per_game
-    if label_count == 7 and your_miss_count_per_game > 0:
-        labels[0] = "%.2f" % your_miss_count_per_game
-
-    # shots
-    if label_count == 8 and my_shot_count_per_game > 0:
-        labels[0] = "%.2f" % my_shot_count_per_game
-    if label_count == 9 and your_shot_count_per_game > 0:
-        labels[0] = "%.2f" % your_shot_count_per_game
-
-    # goal / shot ratio
-    if label_count == 10 and my_gs_ratio > 0:
-        labels[0] = "%.2f" % my_gs_ratio
-    if label_count == 11 and your_gs_ratio > 0:
-        labels[0] = "%.2f" % your_gs_ratio
-
-    # touches
-    if label_count == 12 and my_touches_per_game > 0:
-        labels[0] = "%.2f" % my_touches_per_game
-    if label_count == 13 and your_touches_per_game > 0:
-        labels[0] = "%.2f" % your_touches_per_game
-
-    # demos
-    if label_count == 14 and my_demos_per_game > 0:
-        labels[0] = "%.2f" % my_demos_per_game
-    if label_count == 15 and your_demos_per_game > 0:
-        labels[0] = "%.2f" % your_demos_per_game
-
-    # demos conceded
-    if label_count == 16 and my_demos_conceded_per_game > 0:
-        labels[0] = "%.2f" % my_demos_conceded_per_game
-    if label_count == 17 and your_demos_conceded_per_game > 0:
-        labels[0] = "%.2f" % your_demos_conceded_per_game
-
-    # passes
-    if label_count == 18 and my_passes_per_game > 0:
-        labels[0] = "%.2f" % my_passes_per_game
-    if label_count == 19 and your_passes_per_game > 0:
-        labels[0] = "%.2f" % your_passes_per_game
-
-    # clears
-    if label_count == 20 and my_clears_per_game > 0:
-        labels[0] = "%.2f" % my_clears_per_game
-    if label_count == 21 and your_clears_per_game > 0:
-        labels[0] = "%.2f" % your_clears_per_game
-
-    # scores
-    if label_count == 22 and my_score_per_game > 0:
-        labels[0] = "%.0f" % my_score_per_game
-    if label_count == 23 and your_score_per_game > 0:
-        labels[0] = "%.0f" % your_score_per_game
-
-    # lost ball
-    if label_count == 24 and my_turnovers_per_game > 0:
-        labels[0] = "%.2f" % my_turnovers_per_game
-    if label_count == 25 and your_turnovers_per_game > 0:
-        labels[0] = "%.2f" % your_turnovers_per_game
-
-    # won ball
-    if label_count == 26 and my_turnovers_won_per_game > 0:
-        labels[0] = "%.2f" % my_turnovers_won_per_game
-    if label_count == 27 and your_turnovers_won_per_game > 0:
-        labels[0] = "%.2f" % your_turnovers_won_per_game
-        
-    # dribbles
-    if label_count == 28 and my_dribbles_per_game > 0:
-        labels[0] = "%.2f" % my_dribbles_per_game
-    if label_count == 29 and your_dribbles_per_game > 0:
-        labels[0] = "%.2f" % your_dribbles_per_game
-        
-    # aerials
-    if label_count == 30 and my_aerials_per_game > 0:
-        labels[0] = "%.2f" % my_aerials_per_game
-    if label_count == 31 and your_aerials_per_game > 0:
-        labels[0] = "%.2f" % your_aerials_per_game
+    for stat in range(len(my_stats)):
+        if label_count == stat * 2 and (my_stats[stat] / games_nr) > 0:
+            labels[0] = "%.2f" % (my_stats[stat] / games_nr)
+        if label_count == ((stat * 2) + 1) and (your_stats[stat] / games_nr) > 0:
+            labels[0] = "%.2f" % (your_stats[stat] / games_nr)
 
     # set the bar label
     ax6.bar_label(c, labels=labels, label_type='center', color="white")
@@ -1748,10 +1587,26 @@ for c in ax6.containers:
 plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
 ax6.set_title(my_alias + " - " + your_alias + " (per Game)")
 
+###########################
+
+our_stats = []
+
+for stat in range(len(my_stats)):
+    # exclude: demos_conceded, turnovers
+    if stat != 8 and stat != 12:
+        # gs ratio requires division by 2
+        if stat == 5:
+            our_stats.append((my_stats[stat] + your_stats[stat])/2)
+        else:
+            our_stats.append(my_stats[stat] + your_stats[stat])
+
+their_stats = [their_assists_count,their_saves_count,their_goal_count,their_miss_count,their_shot_count,their_gs_ratio*games_nr,their_touches_count,
+            their_demos_count,their_passes_count,their_clears_count,their_score_count,their_turnovers_won_count,their_dribbles_count,their_aerials_count]
+
 ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
 
-dic = {1.0: "Assists", 2.0: "Saves", 3.0: "Goals", 4.0: "Misses", 5.0: "Shots", 6.0: "Goals/Shot", 7.0: "Touches",
-       8.0: "Demos", 9.0: "Passes", 10.0: "Clears", 11.0: "Scores", 12.0: "Won Ball", 13.0: "Dribbles", 14.0: "Aerials"}
+dic = {1: "Assists", 2: "Saves", 3: "Goals", 4: "Misses", 5: "Shots", 6: "Goals/Shot", 7: "Touches",
+       8: "Demos", 9: "Passes", 10: "Clears", 11: "Scores", 12: "Won Ball", 13: "Dribbles", 14: "Aerials"}
 
 ticks = []
 
@@ -1767,251 +1622,30 @@ ax7.tick_params(bottom=False)  # remove the ticks
 
 ax7.set_xlim(0, 1)
 
-# cumulative stats
-total_assists_count = our_assists_count + their_assists_count
-total_saves_count = our_saves_count + their_saves_count
-total_goals_count = our_goal_count + their_goal_count
-total_misses_count = our_miss_count + their_miss_count
-total_shots_count = our_shot_count + their_shot_count
-total_gs_ratio = our_gs_ratio + their_gs_ratio
-total_touches_count = our_touches_count + their_touches_count
-total_demos_count = our_demos_count + their_demos_count
-total_passes_count = our_passes_count + their_passes_count
-total_clears_count = our_clears_count + their_clears_count
-total_score_count = our_score_count + their_score_count
-total_turnovers_won_count = our_turnovers_won_count + their_turnovers_won_count
-total_dribbles_count = our_dribbles_count + their_dribbles_count
-total_aerials_count = our_aerials_count + their_aerials_count
+for stat in range(len(our_stats)):
+    if (our_stats[stat]+their_stats[stat]) > 0:
+        all_local_total_stat = our_stats[stat]+their_stats[stat]
+        our_local_stat_share = our_stats[stat] / all_local_total_stat
+        their_local_stat_share = their_stats[stat] / all_local_total_stat
+    else:
+        our_local_stat_share = 0
+        their_local_stat_share = 0
 
-
-# ASSISTS
-if total_assists_count > 0:
-    our_assist_share = our_assists_count / total_assists_count
-    their_assist_share = their_assists_count / total_assists_count
-else:
-    our_assist_share = 0
-    their_assist_share = 0
-ax7.barh(1, our_assist_share, color=our_color)
-ax7.barh(1, their_assist_share, left=our_assist_share, color=their_color)
-
-# SAVES
-if total_saves_count > 0:
-    our_save_share = our_saves_count / total_saves_count
-    their_save_share = their_saves_count / total_saves_count
-else:
-    our_save_share = 0
-    their_save_share = 0
-ax7.barh(2, our_save_share, color=our_color)
-ax7.barh(2, their_save_share, left=our_save_share, color=their_color)
-
-# GOALS
-if total_goals_count > 0:
-    our_goal_share = our_goal_count / total_goals_count
-    their_goal_share = their_goal_count / total_goals_count
-else:
-    our_goal_share = 0
-    their_goal_share = 0
-ax7.barh(3, our_goal_share, color=our_color)
-ax7.barh(3, their_goal_share, left=our_goal_share, color=their_color)
-
-# MISSES
-if total_misses_count > 0:
-    our_miss_share = our_miss_count / total_misses_count
-    their_miss_share = their_miss_count / total_misses_count
-else:
-    our_miss_share = 0
-    their_miss_share = 0
-ax7.barh(4, our_miss_share, color=our_color)
-ax7.barh(4, their_miss_share, left=our_miss_share, color=their_color)
-
-# SHOTS
-if total_shots_count > 0:
-    our_shot_share = our_shot_count / total_shots_count
-    their_shot_share = their_shot_count / total_shots_count
-else:
-    our_shot_share = 0
-    their_shot_share = 0
-ax7.barh(5, our_shot_share, color=our_color)
-ax7.barh(5, their_shot_share, left=our_shot_share, color=their_color)
-
-# GOAL/SHOT RATIO
-if total_gs_ratio > 0:
-    our_gs_ratio_share = our_gs_ratio / total_gs_ratio
-    their_gs_ratio_share = their_gs_ratio / total_gs_ratio
-else:
-    our_gs_ratio_share = 0
-    their_gs_ratio_share = 0
-ax7.barh(6, our_gs_ratio_share, color=our_color)
-ax7.barh(6, their_gs_ratio_share, left=our_gs_ratio_share, color=their_color)
-
-# TOUCHES
-if total_touches_count > 0:
-    our_touch_share = our_touches_count / total_touches_count
-    their_touch_share = their_touches_count / total_touches_count
-else:
-    our_touch_share = 0
-    their_touch_share = 0
-ax7.barh(7, our_touch_share, color=our_color)
-ax7.barh(7, their_touch_share, left=our_touch_share, color=their_color)
-
-# DEMOS
-if total_demos_count > 0:
-    our_demo_share = our_demos_count / total_demos_count
-    their_demo_share = their_demos_count / total_demos_count
-else:
-    our_demo_share = 0
-    their_demo_share = 0
-ax7.barh(8, our_demo_share, color=our_color)
-ax7.barh(8, their_demo_share, left=our_demo_share, color=their_color)
-
-# PASSES
-if total_passes_count > 0:
-    our_pass_share = our_passes_count / total_passes_count
-    their_pass_share = their_passes_count / total_passes_count
-else:
-    our_pass_share = 0
-    their_pass_share = 0
-ax7.barh(9, our_pass_share, color=our_color)
-ax7.barh(9, their_pass_share, left=our_pass_share, color=their_color)
-
-# CLEARS
-if total_clears_count > 0:
-    our_clear_share = our_clears_count / total_clears_count
-    their_clear_share = their_clears_count / total_clears_count
-else:
-    our_clear_share = 0
-    their_clear_share = 0
-ax7.barh(10, our_clear_share, color=our_color)
-ax7.barh(10, their_clear_share, left=our_clear_share, color=their_color)
-
-# SCORES
-if total_score_count > 0:
-    our_score_share = our_score_count / total_score_count
-    their_score_share = their_score_count / total_score_count
-else:
-    our_score_share = 0
-    their_score_share = 0
-ax7.barh(11, our_score_share, color=our_color)
-ax7.barh(11, their_score_share, left=our_score_share, color=their_color)
-
-# TURNOVERS WON (WON BALL)
-if total_turnovers_won_count > 0:
-    our_turnovers_won_share = our_turnovers_won_count / total_turnovers_won_count
-    their_turnovers_won_share = their_turnovers_won_count / total_turnovers_won_count
-else:
-    our_turnovers_won_share = 0
-    their_turnovers_won_share = 0
-ax7.barh(12, our_turnovers_won_share, color=our_color)
-ax7.barh(12, their_turnovers_won_share, left=our_turnovers_won_share, color=their_color)
-
-# DRIBBLES
-if our_dribbles_count > 0:
-    our_dribbles_share = our_dribbles_count / total_dribbles_count
-    their_dribbles_share = their_dribbles_count / total_dribbles_count
-else:
-    our_dribbles_won_share = 0
-    their_dribbles_won_share = 0
-ax7.barh(13, our_dribbles_share, color=our_color)
-ax7.barh(13, their_dribbles_share, left=our_dribbles_share, color=their_color)
-
-# AERIALS
-if our_aerials_count > 0:
-    our_aerials_share = our_aerials_count / total_aerials_count
-    their_aerials_share = their_aerials_count / total_aerials_count
-else:
-    our_aerials_won_share = 0
-    their_aerials_won_share = 0
-ax7.barh(14, our_aerials_share, color=our_color)
-ax7.barh(14, their_aerials_share, left=our_aerials_share, color=their_color)
+    ax7.barh(stat+1, our_local_stat_share, color=our_color)
+    ax7.barh(stat+1, their_local_stat_share, left=our_local_stat_share, color=their_color)
 
 label_count = 0
 for c in ax7.containers:
     # customize the label to account for cases when there might not be a bar section
     labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
 
-    # assists
-    if label_count == 0 and our_assist_count_per_game > 0:
-        labels[0] = "%.2f" % our_assist_count_per_game
-    if label_count == 1 and their_assist_count_per_game > 0:
-        labels[0] = "%.2f" % their_assist_count_per_game
+    labels[0] = ""
 
-    # saves
-    if label_count == 2 and our_save_count_per_game > 0:
-        labels[0] = "%.2f" % our_save_count_per_game
-    if label_count == 3 and their_save_count_per_game > 0:
-        labels[0] = "%.2f" % their_save_count_per_game
-
-    # goals
-    if label_count == 4 and our_goal_count_per_game > 0:
-        labels[0] = "%.2f" % our_goal_count_per_game
-    if label_count == 5 and their_goal_count_per_game > 0:
-        labels[0] = "%.2f" % their_goal_count_per_game
-
-    # misses
-    if label_count == 6 and our_miss_count_per_game > 0:
-        labels[0] = "%.2f" % our_miss_count_per_game
-    if label_count == 7 and their_miss_count_per_game > 0:
-        labels[0] = "%.2f" % their_miss_count_per_game
-
-    # shots
-    if label_count == 8 and our_shot_count_per_game > 0:
-        labels[0] = "%.2f" % our_shot_count_per_game
-    if label_count == 9 and their_shot_count_per_game > 0:
-        labels[0] = "%.2f" % their_shot_count_per_game
-
-    # goal / shot ratio
-    if label_count == 10 and our_gs_ratio > 0:
-        labels[0] = "%.2f" % our_gs_ratio
-    if label_count == 11 and their_gs_ratio > 0:
-        labels[0] = "%.2f" % their_gs_ratio
-
-    # touches
-    if label_count == 12 and our_touches_per_game > 0:
-        labels[0] = "%.2f" % our_touches_per_game
-    if label_count == 13 and their_touches_per_game > 0:
-        labels[0] = "%.2f" % their_touches_per_game
-
-    # demos
-    if label_count == 14 and our_demos_per_game > 0:
-        labels[0] = "%.2f" % our_demos_per_game
-    if label_count == 15 and their_demos_per_game > 0:
-        labels[0] = "%.2f" % their_demos_per_game
-
-    # passes
-    if label_count == 16 and our_passes_per_game > 0:
-        labels[0] = "%.2f" % our_passes_per_game
-    if label_count == 17 and their_passes_per_game > 0:
-        labels[0] = "%.2f" % their_passes_per_game
-
-    # clears
-    if label_count == 18 and our_clears_per_game > 0:
-        labels[0] = "%.2f" % our_clears_per_game
-    if label_count == 19 and their_clears_per_game > 0:
-        labels[0] = "%.2f" % their_clears_per_game
-
-    # scores
-    if label_count == 20 and our_score_per_game > 0:
-        labels[0] = "%.0f" % our_score_per_game
-    if label_count == 21 and their_score_per_game > 0:
-        labels[0] = "%.0f" % their_score_per_game
-
-    # won ball
-    if label_count == 22 and our_turnovers_won_per_game > 0:
-        labels[0] = "%.2f" % our_turnovers_won_per_game
-    if label_count == 23 and their_turnovers_won_per_game > 0:
-        labels[0] = "%.2f" % their_turnovers_won_per_game
-
-    # dribbles
-    if label_count == 24 and our_dribbles_per_game > 0:
-        labels[0] = "%.2f" % our_dribbles_per_game
-    if label_count == 25 and their_dribbles_per_game > 0:
-        labels[0] = "%.2f" % their_dribbles_per_game
-
-    # aerials
-    if label_count == 26 and our_aerials_per_game > 0:
-        labels[0] = "%.2f" % our_aerials_per_game
-    if label_count == 27 and their_aerials_per_game > 0:
-        labels[0] = "%.2f" % their_aerials_per_game
+    for stat in range(len(our_stats)):
+        if label_count == stat * 2 and (our_stats[stat] / games_nr) > 0:
+            labels[0] = "%.2f" % (our_stats[stat] / games_nr)
+        if label_count == ((stat * 2) + 1) and (their_stats[stat] / games_nr) > 0:
+            labels[0] = "%.2f" % (their_stats[stat] / games_nr)
 
     # set the bar label
     ax7.bar_label(c, labels=labels, label_type='center', color="white")
@@ -2019,6 +1653,8 @@ for c in ax7.containers:
 
 plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
 ax7.set_title("Us - Opponents (per Game)")
+
+###########################
 
 new_result_array_num_up = []
 new_result_array_num_down = []
