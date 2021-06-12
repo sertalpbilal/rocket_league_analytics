@@ -23,7 +23,7 @@ Steps:
    Finally you can go to `src` and run `python boxcartest.py` to populate the dashboard.
 
 ## Screenshots:
-![preview5.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/preview5.png)
+![preview6.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/preview5.png)
 
 ## Output:
 ```
@@ -97,7 +97,7 @@ Wins            70            63           7
 Losses          79            65          14
 
 
-Execution time in seconds:  2.59
+Execution time in seconds:  2.95
 ```
 
 NOTE: Execution time also includes the time taken to display the dashboard. However it may then take another second or so to populate the plots in the dashboard.
