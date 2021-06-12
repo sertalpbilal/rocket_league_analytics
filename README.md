@@ -100,4 +100,4 @@ Losses          79            65          14
 Execution time in seconds:  2.59
 ```
 
-NOTE: Execution time also includes the time taken to plot the dashboard.
+NOTE: Execution time also includes the time taken to display the dashboard. However it may then take another second or so to populate the plots in the dashboard.
