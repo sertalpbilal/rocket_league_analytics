@@ -1268,17 +1268,6 @@ print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime
 
 ###########
 
-file_counter = 0
-
-# Only consider at most the last 10 games for positional heatmaps
-game_print_list = []
-for game in range(0, games_nr):
-    if games_nr > 9:
-        if game > (games_nr - 11):
-            game_print_list.append(game)
-    else:
-        game_print_list.append(game)
-
 n_plots = 21
 widths = [1]
 heights = [1] * n_plots
