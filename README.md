@@ -23,46 +23,50 @@ Steps:
    Finally you can go to `src` and run `python boxcartest.py` to populate the dashboard.
 
 ## Screenshots:
-![preview4.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/preview4.png)
+![preview5.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/preview5.png)
 
 ## Output:
 ```
 STATS            Allan    Sertalp
 -------------  -------  ---------
-Goals              222        198
-Misses             206        228
-G/Shot            0.52       0.46
-Assists             97        106
-Saves              250        196
-Demos              201         99
-Demoed              73         74
-Score            67545      61509
-Passes             629        672
-Clears             534        503
-Touches           4580       4492
-Goal Distance     2691       2657
-Miss Distance     3753       3598
-Shot Distance     3238       3192
-Won Ball          1047        993
-Lost Ball         1076       1050
+Goals              248        218
+Misses             234        260
+G/Shot            0.51       0.46
+Assists            105        112
+Saves              285        233
+Demos              216        113
+Demoed              85         86
+Score            76526      68681
+Passes             686        748
+Clears             626        576
+Touches           5183       5052
+Goal Distance     2718       2654
+Miss Distance     3764       3521
+Shot Distance     3267       3155
+Won Ball          1172       1131
+Lost Ball         1245       1189
+Dribbles          1079       1007
+Aerials            956        426
 
 
 STATS              Us    Them
 -------------  ------  ------
-Goals             420     404
-Misses            434     632
-G/Shot           0.49    0.39
-Assists           203     187
-Saves             446     349
-Demos             300     147
-Score          129054  124637
-Passes           1301    1389
-Clears           1037    1057
-Touches          9072   10431
-Goal Distance    2675    2611
-Miss Distance    3672    3567
-Shot Distance    3215    3226
-Won Ball         2040    2126
+Goals             466     455
+Misses            494     729
+G/Shot           0.49    0.38
+Assists           217     214
+Saves             518     394
+Demos             329     171
+Score          145207  141898
+Passes           1434    1587
+Clears           1202    1197
+Touches         10235   11911
+Goal Distance    2688    2586
+Miss Distance    3636    3557
+Shot Distance    3211    3214
+Won Ball         2303    2434
+Dribbles         2086    2813
+Aerials          1382    1872
 
 
 Win %    Results                              Games    Wins    Losses    Allan Goals/G    Sertalp Goals/G    Our Goals/G    Their Goals/G    Goal Diff./G
@@ -80,18 +84,20 @@ Win %    Results                              Games    Wins    Losses    Allan G
 20%      L L W L L                                5       1         4                2                  1              3              3.4            -0.4
 44%      W L W W L L L W L                        9       4         5              1.6                1.7            3.2              3.2               0
 70%      L W W L L W W W W W                     10       7         3              2.1                0.6            2.7              1.7               1
+75%      W L W W                                  4       3         1              2.5                  1            3.5              2.2             1.2
+38%      L W W L W W L W L L L L L               13       5         8              1.2                1.2            2.5              3.2            -0.8
 
 
 STATS      Overall    Normaltime    Overtime
 -------  ---------  ------------  ----------
-Games          132           114          18
-Win %        46.97            50       27.78
-Loss %       53.03            50       72.22
-Wins            62            57           5
-Losses          70            57          13
+Games          149           128          21
+Win %        46.98         49.22       33.33
+Loss %       53.02         50.78       66.67
+Wins            70            63           7
+Losses          79            65          14
 
 
-Execution time in seconds:  2.49
+Execution time in seconds:  2.59
 ```
 
 NOTE: Execution time also includes the time taken to plot the dashboard.
