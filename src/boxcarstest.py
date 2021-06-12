@@ -8,6 +8,7 @@
 # TODO: handle own-goals (add stats for own goals scored)
 # TODO: decide whether to plot "non-shot" goals in the 4 goal heatmaps
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
+# TODO: simplify stat count in charts by adding lists & loops (like with positional tendencies)
 
 import csv
 import json
@@ -15,11 +16,13 @@ import os
 import time
 from collections import Counter
 from statistics import mean
-
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+import numpy as np
 import pandas as pd
 from tabulate import tabulate
+from astropy.convolution.kernels import Gaussian2DKernel
+from astropy.convolution import convolve
 
 startTime = time.time()
 
@@ -157,7 +160,6 @@ for file in json_files_2v2:
         local_time += i
 
     file_time.append(local_time)
-
 
 file_counter = 0
 new_json_files = [x for _, x in sorted(zip(file_time, json_files_2v2))]
@@ -321,6 +323,14 @@ my_passes_count = 0
 your_passes_count = 0
 their_passes_count = 0
 
+my_dribbles_count = 0
+your_dribbles_count = 0
+their_dribbles_count = 0
+
+my_aerials_count = 0
+your_aerials_count = 0
+their_aerials_count = 0
+
 my_score_count = 0
 your_score_count = 0
 their_score_count = 0
@@ -344,6 +354,24 @@ overtime_losses_count = 0
 my_goal_count = 0
 your_goal_count = 0
 their_goal_count = 0
+
+# positional tendencies
+my_pos_tendencies = [0] * 13
+your_pos_tendencies = [0] * 13
+# columns: time on...
+# 0 - ground
+# 1 - low in air
+# 2 - high in air,
+# 3 - defending half
+# 4 - attacking half
+# 5 - defending third
+# 6 - neutral third
+# 7 - attacking third
+# 8 - behind ball
+# 9 - in front of ball
+# 10 - near wall
+# 11 - in corner
+# 12 - on wall
 
 for file in new_json_files:
     file_counter += 1
@@ -405,7 +433,6 @@ for file in new_json_files:
                 local_their_goals += 1
                 their_goal_count += 1
 
-        # TODO: totalAerials, totalDribbles
         for i in data["players"]:
             if i["id"]["id"] == my_id:
                 if "score" in i:
@@ -418,6 +445,38 @@ for file in new_json_files:
                     my_turnovers_count += i["stats"]["possession"]["turnovers"]
                 if "wonTurnovers" in i["stats"]["possession"]:
                     my_turnovers_won_count += i["stats"]["possession"]["wonTurnovers"]
+                if "totalDribbles" in i["stats"]["hitCounts"]:
+                    my_dribbles_count += i["stats"]["hitCounts"]["totalDribbles"]
+                if "totalAerials" in i["stats"]["hitCounts"]:
+                    my_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
+
+                # positional tendencies
+                if "timeOnGround" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
+                if "timeLowInAir" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[1] += i["stats"]["positionalTendencies"]["timeLowInAir"]
+                if "timeHighInAir" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[2] += i["stats"]["positionalTendencies"]["timeHighInAir"]
+                if "timeInDefendingHalf" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[3] += i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
+                if "timeInAttackingHalf" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[4] += i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
+                if "timeInDefendingThird" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[5] += i["stats"]["positionalTendencies"]["timeInDefendingThird"]
+                if "timeInNeutralThird" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[6] += i["stats"]["positionalTendencies"]["timeInNeutralThird"]
+                if "timeInAttackingThird" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[7] += i["stats"]["positionalTendencies"]["timeInAttackingThird"]
+                if "timeBehindBall" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[8] += i["stats"]["positionalTendencies"]["timeBehindBall"]
+                if "timeInFrontBall" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[9] += i["stats"]["positionalTendencies"]["timeInFrontBall"]
+                if "timeNearWall" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[10] += i["stats"]["positionalTendencies"]["timeNearWall"]
+                if "timeInCorner" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
+                if "timeOnWall" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
 
             elif i["id"]["id"] == your_id:
                 if "score" in i:
@@ -430,6 +489,38 @@ for file in new_json_files:
                     your_turnovers_count += i["stats"]["possession"]["turnovers"]
                 if "wonTurnovers" in i["stats"]["possession"]:
                     your_turnovers_won_count += i["stats"]["possession"]["wonTurnovers"]
+                if "totalDribbles" in i["stats"]["hitCounts"]:
+                    your_dribbles_count += i["stats"]["hitCounts"]["totalDribbles"]
+                if "totalAerials" in i["stats"]["hitCounts"]:
+                    your_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
+                    
+                # positional tendencies
+                if "timeOnGround" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
+                if "timeLowInAir" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[1] += i["stats"]["positionalTendencies"]["timeLowInAir"]
+                if "timeHighInAir" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[2] += i["stats"]["positionalTendencies"]["timeHighInAir"]
+                if "timeInDefendingHalf" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[3] += i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
+                if "timeInAttackingHalf" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[4] += i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
+                if "timeInDefendingThird" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[5] += i["stats"]["positionalTendencies"]["timeInDefendingThird"]
+                if "timeInNeutralThird" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[6] += i["stats"]["positionalTendencies"]["timeInNeutralThird"]
+                if "timeInAttackingThird" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[7] += i["stats"]["positionalTendencies"]["timeInAttackingThird"]
+                if "timeBehindBall" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[8] += i["stats"]["positionalTendencies"]["timeBehindBall"]
+                if "timeInFrontBall" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[9] += i["stats"]["positionalTendencies"]["timeInFrontBall"]
+                if "timeNearWall" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[10] += i["stats"]["positionalTendencies"]["timeNearWall"]
+                if "timeInCorner" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
+                if "timeOnWall" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
 
             else:
                 if "score" in i:
@@ -442,6 +533,12 @@ for file in new_json_files:
                     their_turnovers_count += i["stats"]["possession"]["turnovers"]
                 if "wonTurnovers" in i["stats"]["possession"]:
                     their_turnovers_won_count += i["stats"]["possession"]["wonTurnovers"]
+                if "totalDribbles" in i["stats"]["hitCounts"]:
+                    their_dribbles_count += i["stats"]["hitCounts"]["totalDribbles"]
+                if "totalAerials" in i["stats"]["hitCounts"]:
+                    their_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
+
+
 
         if "demos" in data["gameMetadata"]:
             for i in data["gameMetadata"]["demos"]:
@@ -474,7 +571,6 @@ for file in new_json_files:
             elif data["teams"][1]["isOrange"]:
                 local_GS = data["teams"][0]["score"]
                 local_GC = data["teams"][1]["score"]
-
 
         for i in data['gameStats']['hits']:
             if i["playerId"]["id"] == my_id:
@@ -602,7 +698,7 @@ for file in new_json_files:
             if (i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id) and "shot" in i:
                 if i["playerId"]["id"] == my_id and "goal" in i:
                     our_shots_distancetogoal.append(i["distanceToGoal"])
-                    #local_my_goals += 1
+                    # local_my_goals += 1
 
                     if local_color == "orange":
                         our_shots_x.append(i["ballData"]["posX"] * -1)
@@ -626,7 +722,7 @@ for file in new_json_files:
 
                     our_col.append("red")
                 if i["playerId"]["id"] == your_id and "goal" in i:
-                    #local_your_goals += 1
+                    # local_your_goals += 1
                     our_shots_distancetogoal.append(i["distanceToGoal"])
 
                     if local_color == "orange":
@@ -835,6 +931,9 @@ our_clears_count = my_clears_count + your_clears_count
 our_touches_count = my_touches_count + your_touches_count
 our_turnovers_count = my_turnovers_count + your_turnovers_count
 our_turnovers_won_count = my_turnovers_won_count + your_turnovers_won_count
+our_dribbles_count = my_dribbles_count + your_dribbles_count
+our_aerials_count = my_aerials_count + your_aerials_count
+
 
 if my_goal_count > 0:
     my_avg_goal_distance = "%.0f" % mean(my_goals_distancetogoal)
@@ -923,7 +1022,9 @@ individual_data = [["Goals", my_goal_count, your_goal_count],
                    ["Miss Distance", my_avg_miss_distance, your_avg_miss_distance],
                    ["Shot Distance", my_avg_shot_distance, your_avg_shot_distance],
                    ["Won Ball", my_turnovers_won_count, your_turnovers_won_count],
-                   ["Lost Ball", my_turnovers_count, your_turnovers_count]
+                   ["Lost Ball", my_turnovers_count, your_turnovers_count],
+                   ["Dribbles", my_dribbles_count, your_dribbles_count],
+                   ["Aerials", my_aerials_count, your_aerials_count]
                    ]
 
 team_data = [["Goals", our_goal_count, their_goal_count],
@@ -940,6 +1041,8 @@ team_data = [["Goals", our_goal_count, their_goal_count],
              ["Miss Distance", our_avg_miss_distance, their_avg_miss_distance],
              ["Shot Distance", our_avg_shot_distance, their_avg_shot_distance],
              ["Won Ball", our_turnovers_won_count, their_turnovers_won_count],
+             ["Dribbles", our_dribbles_count, their_dribbles_count],
+             ["Aerials", our_aerials_count, their_aerials_count]
              ]
 
 print(tabulate(individual_data, headers=["STATS", my_alias, your_alias], numalign="right"))
@@ -1105,18 +1208,6 @@ print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime
 
 ###########
 
-my_x_coords = []
-my_y_coords = []
-my_z_coords = []
-
-your_x_coords = []
-your_y_coords = []
-your_z_coords = []
-
-ball_x_coords = []
-ball_y_coords = []
-ball_z_coords = []
-
 file_counter = 0
 
 # Only consider at most the last 10 games for positional heatmaps
@@ -1127,57 +1218,6 @@ for game in range(0, games_nr):
             game_print_list.append(game)
     else:
         game_print_list.append(game)
-
-for file in new_csv_files:
-    if file_counter in game_print_list:
-        with open(path_to_csv + file) as f:
-            reader = csv.reader(f)
-            my_list = list(reader)
-
-        nrows = len(my_list)
-        ncols = len(my_list[0])
-
-        multiplier = 1
-        if our_team_color[file_counter] == "O":
-            multiplier = -1
-
-        for col in range(ncols):
-            for row in range(3, nrows):
-
-                if my_list[row][col] != "":
-                    if my_list[0][col] == my_name+"_pos_x":
-                        my_x_c = int(my_list[row][col]) * multiplier
-                        my_x_coords.append(my_x_c)
-                    elif my_list[0][col] == my_name+"_pos_y":
-                        my_y_c = int(my_list[row][col]) * multiplier
-                        my_y_coords.append(my_y_c)
-                    elif my_list[0][col] == my_name + "_pos_z":
-                        my_z_c = int(my_list[row][col])
-                        my_z_coords.append(my_z_c)
-
-                if my_list[row][col] != "":
-                    if my_list[0][col] == your_name + "_pos_x":
-                        your_x_c = int(my_list[row][col]) * multiplier
-                        your_x_coords.append(your_x_c)
-                    elif my_list[0][col] == your_name + "_pos_y":
-                        your_y_c = int(my_list[row][col]) * multiplier
-                        your_y_coords.append(your_y_c)
-                    elif my_list[0][col] == your_name + "_pos_z":
-                        your_z_c = int(my_list[row][col])
-                        your_z_coords.append(your_z_c)
-
-                if my_list[row][col] != "":
-                    if my_list[0][col] == "ball_pos_x":
-                        ball_x_c = int(my_list[row][col]) * multiplier
-                        ball_x_coords.append(ball_x_c)
-                    elif my_list[0][col] == "ball_pos_y":
-                        ball_y_c = int(my_list[row][col]) * multiplier
-                        ball_y_coords.append(ball_y_c)
-                    elif (my_list[0][col] == "ball_pos_z") or (my_list[0][col] == "ball_pos_z-GAME-WENT-OT"):
-                        ball_z_c = int(my_list[row][col])
-                        ball_z_coords.append(ball_z_c)
-    file_counter += 1
-
 
 n_plots = 21
 widths = [1]
@@ -1217,7 +1257,7 @@ ax2.scatter(their_goals_x, their_goals_y, their_goals_z, color=their_color, alph
 ax2.scatter(my_misses_x, my_misses_y, my_misses_z, color=my_color, alpha=0.25, s=30, marker="x")
 ax2.scatter(your_misses_x, your_misses_y, your_misses_z, color=your_color, alpha=0.25, s=30, marker="x")
 ax2.scatter(their_misses_x, their_misses_y, their_misses_z, color=their_color, alpha=0.25, s=30, marker="x")
-
+ax2.set_title("3D Shot Heatmap of Misses (X) & Goals (O)")
 
 if side_view_3d_scatter:
     ax2.view_init(0, 180)
@@ -1272,6 +1312,16 @@ your_passes_per_game = your_passes_count / games_nr
 their_passes_per_game = their_passes_count / games_nr
 our_passes_per_game = our_passes_count / games_nr
 
+my_dribbles_per_game = my_dribbles_count / games_nr
+your_dribbles_per_game = your_dribbles_count / games_nr
+their_dribbles_per_game = their_dribbles_count / games_nr
+our_dribbles_per_game = our_dribbles_count / games_nr
+
+my_aerials_per_game = my_aerials_count / games_nr
+your_aerials_per_game = your_aerials_count / games_nr
+their_aerials_per_game = their_aerials_count / games_nr
+our_aerials_per_game = our_aerials_count / games_nr
+
 my_clears_per_game = my_clears_count / games_nr
 your_clears_per_game = your_clears_count / games_nr
 their_clears_per_game = their_clears_count / games_nr
@@ -1302,33 +1352,116 @@ ax3.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%'
 ax3.set_title(str(games_nr) + " Games:")
 
 ax4 = fig.add_subplot(spec[3, 0])  # My heatmap
-ax4.set_title(my_alias + "'s Positional Heatmap\n(Last " + str(len(game_print_list)) + " games)")
+ax4.set_title(my_alias + "'s Touches")
 ax4.set_xlim(pitch_min_x, pitch_max_x)
 ax4.set_ylim(pitch_min_y, pitch_max_y)
-ax4.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
-ax4.axis("off")
-ax4.scatter(my_x_coords, my_y_coords, alpha=0.1, color=my_color, s=10)
+ax4.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+# remove touches near kick off
+new_my_touches_x = []
+new_my_touches_y = []
+for touch in range(0, len(my_touches_y)):
+    if not ((-350 < int(my_touches_x[touch]) < 350) and (my_touches_y[touch]) > -370 and int(
+            my_touches_y[touch]) < 240):
+        new_my_touches_x.append(my_touches_x[touch])
+        new_my_touches_y.append(my_touches_y[touch])
 
-ax5 = fig.add_subplot(spec[4, 0])  # Your heatmap
-ax5.set_title(your_alias + "'s Positional Heatmap\n(Last " + str(len(game_print_list)) + " games)")
+ax4.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+heatmap, xedges, yedges = np.histogram2d(new_my_touches_y + [pitch_min_y, pitch_max_y],
+                                         new_my_touches_x + [pitch_min_x, pitch_max_x], bins=80)
+im = ax4.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=1, y_stddev=1)),
+                extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.75)
+im.set_cmap('gist_gray_r')
+ax4.axis("off")
+
+ax5 = fig.add_subplot(spec[3, 0])  # My heatmap
+ax5.set_title(your_alias + "'s Touches")
 ax5.set_xlim(pitch_min_x, pitch_max_x)
 ax5.set_ylim(pitch_min_y, pitch_max_y)
-ax5.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
-ax5.axis("off")
-ax5.scatter(your_x_coords, your_y_coords, alpha=0.1, color=your_color, s=10)
+ax5.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+# remove touches near kick off
+new_your_touches_x = []
+new_your_touches_y = []
+for touch in range(0, len(your_touches_y)):
+    if not ((-350 < int(your_touches_x[touch]) < 350) and (your_touches_y[touch]) > -370 and int(
+            your_touches_y[touch]) < 240):
+        new_your_touches_x.append(your_touches_x[touch])
+        new_your_touches_y.append(your_touches_y[touch])
 
-ax12 = fig.add_subplot(spec[4, 0])  # Heatmap of the ball
-ax12.set_title("Ball heatmap\n(Last " + str(len(game_print_list)) + " games)")
-ax12.set_xlim(pitch_min_x, pitch_max_x)
-ax12.set_ylim(pitch_min_y, pitch_max_y)
-ax12.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
-ax12.axis("off")
-ax12.scatter(ball_x_coords, ball_y_coords, alpha=0.1, color="grey", s=10)
+ax5.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+heatmap, xedges, yedges = np.histogram2d(new_your_touches_y + [pitch_min_y, pitch_max_y],
+                                         new_your_touches_x + [pitch_min_x, pitch_max_x], bins=80)
+im = ax5.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=1, y_stddev=1)),
+                extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.75)
+im.set_cmap('gist_gray_r')
+ax5.axis("off")
+
+########## 
+# positional tendencies chart
+
+ax22 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
+
+dic = {1: "Ground", 2: "Low Air", 3: "High Air", 4: "Def 1/2", 5: "Att 1/2", 6: "Def 1/3", 7: "Mid 1/3",
+       8: "Att 1/3", 9: "Behind Ball", 10: "In Front of Ball", 11: "Near Wall", 12: "In Corner", 13: "On Wall"}
+
+ticks = []
+
+for num in dic:
+    ticks.append(num)
+
+ax22.set_yticks(ticks)
+
+labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
+
+ax22.set_yticklabels(labels)
+ax22.set_xticklabels("")
+ax22.tick_params(bottom=False)  # remove the ticks
+
+ax22.set_xlim(0, 1)
+
+for stat in range(0,len(my_pos_tendencies)):
+    if (my_pos_tendencies[stat]+your_pos_tendencies[stat]) > 0:
+        our_local_total_tendency = my_pos_tendencies[stat]+your_pos_tendencies[stat]
+        my_local_stat_share = my_pos_tendencies[stat] / our_local_total_tendency
+        your_local_stat_share = your_pos_tendencies[stat] / our_local_total_tendency
+    else:
+        my_local_stat_share = 0
+        your_local_stat_share = 0
+
+    ax22.barh(stat+1, my_local_stat_share, color=my_color)
+    ax22.barh(stat+1, your_local_stat_share, left=my_local_stat_share, color=your_color)
+
+
+label_count = 0
+for c in ax22.containers:
+    # customize the label to account for cases when there might not be a bar section
+    labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
+
+    labels[0] = ""
+
+    for stat in range(len(my_pos_tendencies)):
+        if label_count == stat*2 and (my_pos_tendencies[stat] / games_nr) > 0:
+            minutes_to_show, seconds_to_show = divmod((my_pos_tendencies[stat] / games_nr), 60)
+            labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
+        if label_count == ((stat*2)+1) and (your_pos_tendencies[stat] / games_nr) > 0:
+            minutes_to_show, seconds_to_show = divmod((your_pos_tendencies[stat] / games_nr), 60)
+            labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
+
+    # set the bar label
+    ax22.bar_label(c, labels=labels, label_type='center', color="white")
+    label_count += 1
+
+plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
+ax22.set_title("Positional Tendencies (per game)\nMinutes:Seconds")
+
+
+###########################
+
 
 ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
 dic = {1.0: "Assists", 2.0: "Saves", 3.0: "Goals", 4.0: "Misses", 5.0: "Shots", 6.0: "Goals/Shot", 7.0: "Touches",
-       8.0: "Demos", 9.0: "Demoed", 10.0: "Passes", 11.0: "Clears", 12.0: "Scores", 13.0: "Lost Ball", 14.0: "Won Ball"}
+       8.0: "Demos", 9.0: "Demoed", 10.0: "Passes", 11.0: "Clears", 12.0: "Scores", 13.0: "Lost Ball", 14.0: "Won Ball",
+       15.0: "Dribbles", 16.0: "Aerials"}
 
 ticks = []
 
@@ -1398,8 +1531,8 @@ ax6.barh(5, your_shot_share, left=my_shot_share, color=your_color)
 
 # GOAL/SHOT RATIO
 if our_gs_ratio > 0:
-    my_gs_ratio_share = my_gs_ratio / (my_gs_ratio+your_gs_ratio)
-    your_gs_ratio_share = your_gs_ratio / (my_gs_ratio+your_gs_ratio)
+    my_gs_ratio_share = my_gs_ratio / (my_gs_ratio + your_gs_ratio)
+    your_gs_ratio_share = your_gs_ratio / (my_gs_ratio + your_gs_ratio)
 else:
     my_gs_ratio_share = 0
     your_gs_ratio_share = 0
@@ -1485,6 +1618,26 @@ else:
     your_turnovers_won_share = 0
 ax6.barh(14, my_turnovers_won_share, color=my_color)
 ax6.barh(14, your_turnovers_won_share, left=my_turnovers_won_share, color=your_color)
+
+# DRIBBLES
+if our_dribbles_count > 0:
+    my_dribbles_share = my_dribbles_count / our_dribbles_count
+    your_dribbles_share = your_dribbles_count / our_dribbles_count
+else:
+    my_dribbles_won_share = 0
+    your_dribbles_won_share = 0
+ax6.barh(15, my_dribbles_share, color=my_color)
+ax6.barh(15, your_dribbles_share, left=my_dribbles_share, color=your_color)
+
+# AERIALS
+if our_aerials_count > 0:
+    my_aerials_share = my_aerials_count / our_aerials_count
+    your_aerials_share = your_aerials_count / our_aerials_count
+else:
+    my_aerials_won_share = 0
+    your_aerials_won_share = 0
+ax6.barh(16, my_aerials_share, color=my_color)
+ax6.barh(16, your_aerials_share, left=my_aerials_share, color=your_color)
 
 label_count = 0
 for c in ax6.containers:
@@ -1576,6 +1729,18 @@ for c in ax6.containers:
         labels[0] = "%.2f" % my_turnovers_won_per_game
     if label_count == 27 and your_turnovers_won_per_game > 0:
         labels[0] = "%.2f" % your_turnovers_won_per_game
+        
+    # dribbles
+    if label_count == 28 and my_dribbles_per_game > 0:
+        labels[0] = "%.2f" % my_dribbles_per_game
+    if label_count == 29 and your_dribbles_per_game > 0:
+        labels[0] = "%.2f" % your_dribbles_per_game
+        
+    # aerials
+    if label_count == 30 and my_aerials_per_game > 0:
+        labels[0] = "%.2f" % my_aerials_per_game
+    if label_count == 31 and your_aerials_per_game > 0:
+        labels[0] = "%.2f" % your_aerials_per_game
 
     # set the bar label
     ax6.bar_label(c, labels=labels, label_type='center', color="white")
@@ -1586,7 +1751,7 @@ ax6.set_title(my_alias + " - " + your_alias + " (per Game)")
 ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
 
 dic = {1.0: "Assists", 2.0: "Saves", 3.0: "Goals", 4.0: "Misses", 5.0: "Shots", 6.0: "Goals/Shot", 7.0: "Touches",
-       8.0: "Demos", 9.0: "Passes", 10.0: "Clears", 11.0: "Scores", 12.0: "Won Ball"}
+       8.0: "Demos", 9.0: "Passes", 10.0: "Clears", 11.0: "Scores", 12.0: "Won Ball", 13.0: "Dribbles", 14.0: "Aerials"}
 
 ticks = []
 
@@ -1615,6 +1780,9 @@ total_passes_count = our_passes_count + their_passes_count
 total_clears_count = our_clears_count + their_clears_count
 total_score_count = our_score_count + their_score_count
 total_turnovers_won_count = our_turnovers_won_count + their_turnovers_won_count
+total_dribbles_count = our_dribbles_count + their_dribbles_count
+total_aerials_count = our_aerials_count + their_aerials_count
+
 
 # ASSISTS
 if total_assists_count > 0:
@@ -1736,6 +1904,26 @@ else:
 ax7.barh(12, our_turnovers_won_share, color=our_color)
 ax7.barh(12, their_turnovers_won_share, left=our_turnovers_won_share, color=their_color)
 
+# DRIBBLES
+if our_dribbles_count > 0:
+    our_dribbles_share = our_dribbles_count / total_dribbles_count
+    their_dribbles_share = their_dribbles_count / total_dribbles_count
+else:
+    our_dribbles_won_share = 0
+    their_dribbles_won_share = 0
+ax7.barh(13, our_dribbles_share, color=our_color)
+ax7.barh(13, their_dribbles_share, left=our_dribbles_share, color=their_color)
+
+# AERIALS
+if our_aerials_count > 0:
+    our_aerials_share = our_aerials_count / total_aerials_count
+    their_aerials_share = their_aerials_count / total_aerials_count
+else:
+    our_aerials_won_share = 0
+    their_aerials_won_share = 0
+ax7.barh(14, our_aerials_share, color=our_color)
+ax7.barh(14, their_aerials_share, left=our_aerials_share, color=their_color)
+
 label_count = 0
 for c in ax7.containers:
     # customize the label to account for cases when there might not be a bar section
@@ -1812,6 +2000,18 @@ for c in ax7.containers:
         labels[0] = "%.2f" % our_turnovers_won_per_game
     if label_count == 23 and their_turnovers_won_per_game > 0:
         labels[0] = "%.2f" % their_turnovers_won_per_game
+
+    # dribbles
+    if label_count == 24 and our_dribbles_per_game > 0:
+        labels[0] = "%.2f" % our_dribbles_per_game
+    if label_count == 25 and their_dribbles_per_game > 0:
+        labels[0] = "%.2f" % their_dribbles_per_game
+
+    # aerials
+    if label_count == 26 and our_aerials_per_game > 0:
+        labels[0] = "%.2f" % our_aerials_per_game
+    if label_count == 27 and their_aerials_per_game > 0:
+        labels[0] = "%.2f" % their_aerials_per_game
 
     # set the bar label
     ax7.bar_label(c, labels=labels, label_type='center', color="white")
@@ -1935,42 +2135,54 @@ for streak_game_num in streak_start_games:
 ax11.set_ylabel("ASSISTS", rotation="horizontal", ha="center", va="center", labelpad=35)
 
 ax13 = fig.add_subplot(spec[4, 0])  # Heatmap of Allan's goals
-ax13.hist2d(my_shots_x + [pitch_min_x] + [pitch_max_x], my_shots_y + [pitch_min_y] + [pitch_max_y], bins=8,
-            cmap="Greys", alpha=0.25)
-ax13.scatter(my_goals_x, my_goals_y, alpha=0.7, color=my_color, s=10)
+heatmap, xedges, yedges = np.histogram2d(my_shots_y + [pitch_min_y] + [pitch_max_y],
+                                         my_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
+ax13.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+im = ax13.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
+                 extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
+im.set_cmap('gist_gray_r')
+ax13.scatter(my_goals_x, my_goals_y, alpha=0.9, color=my_color, s=5)
 ax13.set_xlim(pitch_min_x, pitch_max_x)
 ax13.set_ylim(pitch_min_y, pitch_max_y)
-ax13.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
 ax13.axis("off")
 ax13.set_title(my_alias + "'s Shot & Goal Heatmap")
 
 ax14 = fig.add_subplot(spec[4, 0])  # Heatmap of Sertalp's goals
-ax14.hist2d(your_shots_x + [pitch_min_x] + [pitch_max_x], your_shots_y + [pitch_min_y] + [pitch_max_y], bins=8,
-            cmap="Greys", alpha=0.25)
-ax14.scatter(your_goals_x, your_goals_y, alpha=0.7, color=your_color, s=10)
+heatmap, xedges, yedges = np.histogram2d(your_shots_y + [pitch_min_y] + [pitch_max_y],
+                                         your_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
+ax14.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+im = ax14.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
+                 extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
+im.set_cmap('gist_gray_r')
+ax14.scatter(your_goals_x, your_goals_y, alpha=0.9, color=your_color, s=5)
 ax14.set_xlim(pitch_min_x, pitch_max_x)
 ax14.set_ylim(pitch_min_y, pitch_max_y)
-ax14.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
 ax14.axis("off")
 ax14.set_title(your_alias + "'s Shot & Goal Heatmap")
 
 ax15 = fig.add_subplot(spec[4, 0])  # Heatmap of our team's goals
-ax15.hist2d(your_shots_x + [pitch_min_x] + [pitch_max_x] + my_shots_x,
-            your_shots_y + [pitch_min_y] + [pitch_max_y] + my_shots_y, bins=8, cmap="Greys", alpha=0.25)
-ax15.scatter(your_goals_x + my_goals_x, your_goals_y + my_goals_y, alpha=0.7, color=our_color, s=10)
+heatmap, xedges, yedges = np.histogram2d(my_shots_y + your_shots_y + [pitch_min_y] + [pitch_max_y],
+                                         my_shots_x + your_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
+ax15.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+im = ax15.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
+                 extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
+im.set_cmap('gist_gray_r')
+ax15.scatter(my_goals_x + your_goals_x, my_goals_y + your_goals_y, alpha=0.9, color=our_color, s=5)
 ax15.set_xlim(pitch_min_x, pitch_max_x)
 ax15.set_ylim(pitch_min_y, pitch_max_y)
-ax15.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
 ax15.axis("off")
 ax15.set_title("Our Shot & Goal Heatmap")
 
-ax16 = fig.add_subplot(spec[4, 0])  # Heatmap of opponent's goals
-ax16.hist2d(their_shots_x + [pitch_min_x] + [pitch_max_x], their_shots_y + [pitch_min_y] + [pitch_max_y], bins=8,
-            cmap="Greys", alpha=0.25)
-ax16.scatter(their_goals_x, their_goals_y, alpha=0.7, color=their_color, s=10)
+ax16 = fig.add_subplot(spec[4, 0])  # Heatmap of Sertalp's goals
+heatmap, xedges, yedges = np.histogram2d(their_shots_y + [pitch_min_y] + [pitch_max_y],
+                                         their_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
+ax16.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+im = ax16.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
+                 extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
+im.set_cmap('gist_gray_r')
+ax16.scatter(their_goals_x, their_goals_y, alpha=0.9, color=their_color, s=5)
 ax16.set_xlim(pitch_min_x, pitch_max_x)
 ax16.set_ylim(pitch_min_y, pitch_max_y)
-ax16.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=0.5)
 ax16.axis("off")
 ax16.set_title("Opponent's Shot & Goal Heatmap")
 
@@ -2069,7 +2281,6 @@ for gd in new_gd_counter_keys:
 overall_pcts = []
 for pct in range(0, len(overtime_pcts)):
     overall_pcts.append(overtime_pcts[pct] + sorted_gd_counter_pct[pct])
-
 
 # Round the max y limit of the bar chart to the next multiple of 0.05 (5%)
 max_y_lim = max(overall_pcts) + (0.05 - max(overall_pcts)) % 0.05
@@ -2172,19 +2383,18 @@ ax20.set_title("Goals Scored & Conceded Distribution")
 ax1.set_position([0, 0.88, 1, 0.1])
 ax2.set_position([0.1, 0.1, 1, 0.65])  # 3D Scatterplot
 
-ax3.set_position([0.53, 0.75, 0.075, 0.075])  # Results pie chart
-ax17.set_position([0.57, 0.75, 0.075, 0.075])  # OT Results pie chart
-ax18.set_position([0.61, 0.75, 0.075, 0.075])  # NT Results pie chart
-
 ax19.set_position([0.39, 0.5, 0.09, 0.325])  # Goal Difference Distribution chart
 ax20.set_position([0.39, 0.275, 0.09, 0.15])  # Goals Scored Distribution chart
 ax21.set_position([0.39, 0.1, 0.09, 0.15])  # Goals Conceded Distribution chart
 
-ax4.set_position([0.75, 0.55, 0.06, 0.24])  # Allan's positional heatmap
-ax12.set_position([0.825, 0.55, 0.06, 0.24])  # Heatmap of the ball
-ax5.set_position([0.9, 0.55, 0.06, 0.24])  # Sertalp's positional heatmap
-ax13.set_position([0.03, 0.5, 0.08, 0.32])  # Allan's shot & goal heatmap
+ax3.set_position([0.85, 0.75, 0.075, 0.075])  # Results pie chart
+ax17.set_position([0.89, 0.75, 0.075, 0.075])  # OT Results pie chart
+ax18.set_position([0.93, 0.75, 0.075, 0.075])  # NT Results pie chart
+ax22.set_position([0.75, 0.5, 0.1, 0.32])  # Positional tendencies chart (Allan vs Sertalp)
+ax4.set_position([0.87, 0.5, 0.05, 0.2])  # Allan's touch heatmap
+ax5.set_position([0.93, 0.5, 0.05, 0.2])  # Sertalp's touch heatmap
 
+ax13.set_position([0.03, 0.5, 0.08, 0.32])  # Allan's shot & goal heatmap
 ax6.set_position([0.15, 0.5, 0.1, 0.32])  # Horizontal Bar Chart (Allan vs Sertalp)
 ax14.set_position([0.28, 0.5, 0.08, 0.32])  # Sertalp's shot & goal heatmap
 
@@ -2192,10 +2402,10 @@ ax15.set_position([0.03, 0.1, 0.08, 0.32])  # Our shot & goal heatmap
 ax7.set_position([0.15, 0.1, 0.1, 0.32])  # Horizontal Bar Chart (Us vs Opponent)
 ax16.set_position([0.28, 0.1, 0.08, 0.32])  # Opponent's shot & goal heatmap
 
-ax8.set_position([0.75, 0.05, 0.21, 0.1])  # Goals over time
-ax9.set_position([0.75, 0.155, 0.21, 0.1])  # Shots over time
-ax10.set_position([0.75, 0.26, 0.21, 0.1])  # Saves over time
-ax11.set_position([0.75, 0.365, 0.21, 0.1])  # Assists over time
+ax8.set_position([0.75, 0.05, 0.227, 0.1])  # Goals over time
+ax9.set_position([0.75, 0.155, 0.227, 0.1])  # Shots over time
+ax10.set_position([0.75, 0.26, 0.227, 0.1])  # Saves over time
+ax11.set_position([0.75, 0.365, 0.227, 0.1])  # Assists over time
 
 executionTime = (time.time() - startTime)
 print('\n\nExecution time in seconds: ', "%.2f" % executionTime)
