@@ -1311,85 +1311,10 @@ ax2.set_title("3D Shot Heatmap of Misses (X) & Goals (O)")
 if side_view_3d_scatter:
     ax2.view_init(0, 180)
 
-my_goal_count_per_game = my_goal_count / games_nr
-your_goal_count_per_game = your_goal_count / games_nr
-our_goal_count_per_game = our_goal_count / games_nr
-their_goal_count_per_game = their_goal_count / games_nr
-
 my_shot_count = (my_goal_count + my_miss_count)
 your_shot_count = (your_goal_count + your_miss_count)
 our_shot_count = (our_goal_count + our_miss_count)
 their_shot_count = (their_goal_count + their_miss_count)
-
-my_shot_count_per_game = (my_goal_count + my_miss_count) / games_nr
-your_shot_count_per_game = (your_goal_count + your_miss_count) / games_nr
-our_shot_count_per_game = (our_goal_count + our_miss_count) / games_nr
-their_shot_count_per_game = (their_goal_count + their_miss_count) / games_nr
-
-my_assist_count_per_game = my_assists_count / games_nr
-your_assist_count_per_game = your_assists_count / games_nr
-our_assist_count_per_game = our_assists_count / games_nr
-their_assist_count_per_game = their_assists_count / games_nr
-
-my_save_count_per_game = my_saves_count / games_nr
-your_save_count_per_game = your_saves_count / games_nr
-our_save_count_per_game = our_saves_count / games_nr
-their_save_count_per_game = their_saves_count / games_nr
-
-my_miss_count_per_game = my_miss_count / games_nr
-your_miss_count_per_game = your_miss_count / games_nr
-our_miss_count_per_game = our_miss_count / games_nr
-their_miss_count_per_game = their_miss_count / games_nr
-
-my_touches_per_game = my_touches_count / games_nr
-your_touches_per_game = your_touches_count / games_nr
-their_touches_per_game = their_touches_count / games_nr
-our_touches_per_game = our_touches_count / games_nr
-
-my_demos_per_game = my_demos_count / games_nr
-your_demos_per_game = your_demos_count / games_nr
-their_demos_per_game = their_demos_count / games_nr
-our_demos_per_game = our_demos_count / games_nr
-
-my_demos_conceded_per_game = my_demos_conceded_count / games_nr
-your_demos_conceded_per_game = your_demos_conceded_count / games_nr
-their_demos_conceded_per_game = their_demos_conceded_count / games_nr
-our_demos_conceded_per_game = our_demos_conceded_count / games_nr
-
-my_passes_per_game = my_passes_count / games_nr
-your_passes_per_game = your_passes_count / games_nr
-their_passes_per_game = their_passes_count / games_nr
-our_passes_per_game = our_passes_count / games_nr
-
-my_dribbles_per_game = my_dribbles_count / games_nr
-your_dribbles_per_game = your_dribbles_count / games_nr
-their_dribbles_per_game = their_dribbles_count / games_nr
-our_dribbles_per_game = our_dribbles_count / games_nr
-
-my_aerials_per_game = my_aerials_count / games_nr
-your_aerials_per_game = your_aerials_count / games_nr
-their_aerials_per_game = their_aerials_count / games_nr
-our_aerials_per_game = our_aerials_count / games_nr
-
-my_clears_per_game = my_clears_count / games_nr
-your_clears_per_game = your_clears_count / games_nr
-their_clears_per_game = their_clears_count / games_nr
-our_clears_per_game = our_clears_count / games_nr
-
-my_score_per_game = my_score_count / games_nr
-your_score_per_game = your_score_count / games_nr
-their_score_per_game = their_score_count / games_nr
-our_score_per_game = our_score_count / games_nr
-
-my_turnovers_per_game = my_turnovers_count / games_nr
-your_turnovers_per_game = your_turnovers_count / games_nr
-their_turnovers_per_game = their_turnovers_count / games_nr
-our_turnovers_per_game = our_turnovers_count / games_nr
-
-my_turnovers_won_per_game = my_turnovers_won_count / games_nr
-your_turnovers_won_per_game = your_turnovers_won_count / games_nr
-their_turnovers_won_per_game = their_turnovers_won_count / games_nr
-our_turnovers_won_per_game = our_turnovers_won_count / games_nr
 
 ax3 = fig.add_subplot(spec[2, 0])  # Results
 
