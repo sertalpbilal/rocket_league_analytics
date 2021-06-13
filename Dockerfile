@@ -12,7 +12,7 @@ RUN pip install scikit-learn
 
 WORKDIR /src
 
-CMD python3 convert.py && cd xg_model && python3 -c "from score import convert_all; convert_all()"
+CMD python3 replay.py && python3 convert.py && cd xg_model && python3 -c "from score import convert_all; convert_all()"
 # && python3 boxcars_dev.py
 # CMD python3 replay.py && python3 convert.py
 

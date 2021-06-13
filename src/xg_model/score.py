@@ -93,5 +93,5 @@ def convert_all():
 
 if __name__ == "__main__":
     s = RocketLeagueXGScorer('model')
-    s.score_game("e7569a76-f2b3-48ac-b6c7-ac3a77d6c138")
+    s.score_game("d3c7f166-6b2f-48dd-962a-9aaf53a6b327")
     

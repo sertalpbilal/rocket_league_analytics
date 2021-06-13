@@ -67,15 +67,15 @@ class ReplayManager:
                 else:
                     print(f"Replay file {game['id']} exists!")
 
-                if not os.path.exists(json_tracking_file_name):
-                    parent = pathlib.Path() / ".."
+                # if not os.path.exists(json_tracking_file_name):
+                #     parent = pathlib.Path() / ".."
 
-                    if platform.system() == 'Windows':
-                        subprocess.Popen((f"{parent / 'bin/rattletrap.exe'} -i {replay_file_name} -o {json_tracking_file_name}").split())
-                    elif platform.system() == 'Linux':
-                        subprocess.Popen((f"{parent / 'bin/rattletrap'} -i {replay_file_name} -o {json_tracking_file_name}").split())
-                else:
-                    print(f"JSON file exists {json_tracking_file_name}")
+                #     if platform.system() == 'Windows':
+                #         subprocess.Popen((f"{parent / 'bin/rattletrap.exe'} -i {replay_file_name} -o {json_tracking_file_name}").split())
+                #     elif platform.system() == 'Linux':
+                #         subprocess.Popen((f"{parent / 'bin/rattletrap'} -i {replay_file_name} -o {json_tracking_file_name}").split())
+                # else:
+                #     print(f"JSON file exists {json_tracking_file_name}")
 
 
             except Exception as e:
