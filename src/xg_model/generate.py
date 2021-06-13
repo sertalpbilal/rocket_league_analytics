@@ -29,7 +29,11 @@ class RocketLeagueXG:
         else:
             dfs = []
             for f in all_replay_files:
-                dfs.append(self.read_single_game(f))
+                try:
+                    dfs.append(self.read_single_game(f))
+                except:
+                    print("Game cannot be read properly by carball, deleting the replay")
+                    os.unlink(f)
 
         all_df = pd.concat(dfs)
         print(all_df.head())
