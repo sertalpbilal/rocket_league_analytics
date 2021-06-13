@@ -39,6 +39,7 @@ def get_shots_from_aux(tracking_data, json_data, shots_file):
             shot_taker_name = players[hf['playerId']['id']]['name']
             goal = hf.get('goal', False)
             tracking_frame = tracking_data.loc[frame_number]
+            print(tracking_frame)
             is_overtime = tracking_frame['game'].to_dict().get('is_overtime')
             game_time = 300-tracking_frame['game', 'seconds_remaining'] if not is_overtime else 300+tracking_frame['game', 'seconds_remaining']
             single_shot = {

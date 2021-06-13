@@ -63,12 +63,14 @@ class RocketLeagueXGScorer:
         replay_file = self.parent / f"replay/{game_id}.replay"
         json_file = self.parent / f"json/{game_id}.json"
         csv_file = self.parent / f"dataframe/{game_id}.csv"
-        if os.path.exists(replay_file) and os.path.exists(json_file) and os.path_exists(csv_file):
+        if False and (os.path.exists(replay_file) and os.path.exists(json_file) and os.path.exists(csv_file)):
             print(f"Using existing data for {game_id}")
             with open(json_file) as f:
                 json_data = json.loads(f.read())
             csv_data = pd.read_csv(csv_file)
-            return get_shots_from_aux(csv_data, json_data)
+            print(csv_data.columns)
+            shots_file = self.parent / f"shots/{game_id}.csv"
+            return get_shots_from_aux(csv_data, json_data, shots_file)
         else:
             print(f"Download game {game_id}")
             replay_file = self.parent / f"replay/{game_id}.replay"
@@ -91,5 +93,5 @@ def convert_all():
 
 if __name__ == "__main__":
     s = RocketLeagueXGScorer('model')
-    s.score_game("c9c07a26-c230-4e07-bc27-f94ae6d12e1d")
+    s.score_game("e7569a76-f2b3-48ac-b6c7-ac3a77d6c138")
     
