@@ -22,11 +22,11 @@ import pandas as pd
 from tabulate import tabulate
 from astropy.convolution.kernels import Gaussian2DKernel
 from astropy.convolution import convolve
+from numpy.lib.stride_tricks import sliding_window_view
 
 startTime = time.time()
 
 check_new = False  # Only processes new files (in separate directory)
-side_view_3d_scatter = False  # Show 3D scatterplot from the side by rotating it 180 degrees
 
 # Names in Rocket League
 my_name = "games5425898691"
@@ -51,6 +51,7 @@ else:
 
 path_to_untrimmed_csv = 'data/dataframe/'
 path_to_csv = 'data/dataframe-trimmed/'
+path_to_xg = 'data/xg-out/'
 
 # Trim CSVs if there are CSVs to trim
 if len(os.listdir(path_to_untrimmed_csv)) > 0:
@@ -370,12 +371,85 @@ your_pos_tendencies = [0] * 23
 # 21 - supersonic
 # 22 - carrying ball
 
+my_total_xg = 0
+your_total_xg = 0
+their_total_xg = 0
+
+my_goal_xg = 0
+your_goal_xg = 0
+their_goal_xg = 0
+
+my_xg_over_time = []
+your_xg_over_time = []
+their_xg_over_time = []
+
+my_xg_per_goal_list = []
+your_xg_per_goal_list = []
+their_xg_per_goal_list = []
+
+my_goals_from_shots_over_time = []
+your_goals_from_shots_over_time = []
+their_goals_from_shots_over_time = []
+
+my_goals_from_shots = 0
+your_goals_from_shots = 0
+their_goals_from_shots = 0
+
 for file in new_json_files:
     file_counter += 1
     if file_counter < len(new_json_files) + 1:
 
         f = open(path_to_json + file, )
         data = json.load(f)
+
+        # load corresponding xG data file
+        with open(path_to_xg + file.replace("json", "csv")) as f:
+            reader = csv.reader(f)
+            my_list = list(reader)
+
+        nrows = len(my_list)
+        ncols = len(my_list[0])
+
+        my_local_xg = 0
+        your_local_xg = 0
+        their_local_xg = 0
+
+        my_local_goals_from_shots = 0
+        your_local_goals_from_shots = 0
+        their_local_goals_from_shots = 0
+
+        for col in range(ncols):
+            for row in range(0, nrows):
+                if my_list[0][col] == "shot_taker_name":
+                    if row != 0:
+                        if my_list[row][col] == my_name:
+                            my_local_xg += float(my_list[row][4])
+                            my_total_xg += float(my_list[row][4])
+                            if my_list[row][5] == "True":
+                                my_goal_xg += float(my_list[row][4])
+                                my_xg_per_goal_list.append(float(my_list[row][4]))
+                                my_local_goals_from_shots += 1
+                                my_goals_from_shots += 1
+                        elif my_list[row][col] == your_name:
+                            your_local_xg += float(my_list[row][4])
+                            your_total_xg += float(my_list[row][4])
+                            if my_list[row][5] == "True":
+                                your_goal_xg += float(my_list[row][4])
+                                your_xg_per_goal_list.append(float(my_list[row][4]))
+                                your_local_goals_from_shots += 1
+                                your_goals_from_shots += 1
+                        else:
+                            their_local_xg += float(my_list[row][4])
+                            their_total_xg += float(my_list[row][4])
+                            if my_list[row][5] == "True":
+                                their_goal_xg += float(my_list[row][4])
+                                their_xg_per_goal_list.append(float(my_list[row][4]))
+                                their_local_goals_from_shots += 1
+                                their_goals_from_shots += 1
+
+        my_goals_from_shots_over_time.append(my_local_goals_from_shots)
+        your_goals_from_shots_over_time.append(your_local_goals_from_shots)
+        their_goals_from_shots_over_time.append(their_local_goals_from_shots)
 
         local_color = "blue"
         local_GS = 0
@@ -738,6 +812,10 @@ for file in new_json_files:
         your_assists_over_time.append(local_your_assists)
         their_assists_over_time.append(local_their_assists)
 
+        my_xg_over_time.append(my_local_xg)
+        your_xg_over_time.append(your_local_xg)
+        their_xg_over_time.append(their_local_xg)
+
         local_wentOvertime = False
 
         # check if game went overtime -- only if there is 1 GD between the teams, or 0 GD (FF in OT)
@@ -779,34 +857,37 @@ for file in new_json_files:
             result_color.append(their_color)
             normaltime_gd_array.append(local_GS - local_GC)
 
+        # print("%.2f"%(my_local_xg+your_local_xg),"-","%.2f"%their_local_xg,"\t",local_GS,"-",local_GC,"\t",file.replace(".json",""))
+
 your_miss_count = len(your_misses_distancetogoal)
 my_miss_count = len(my_misses_distancetogoal)
 their_miss_count = len(their_misses_distancetogoal)
+
 our_goal_count = my_goal_count + your_goal_count
 our_miss_count = my_miss_count + your_miss_count
 
-my_shot_count = (my_goal_count + my_miss_count)
-your_shot_count = (your_goal_count + your_miss_count)
-our_shot_count = (our_goal_count + our_miss_count)
-their_shot_count = (their_goal_count + their_miss_count)
+my_shot_count = len(my_shots_x)
+your_shot_count = len(your_shots_x)
+our_shot_count = my_shot_count + your_shot_count
+their_shot_count = len(their_shots_x)
 
 if their_shot_count > 0:
-    their_gs_ratio = their_goal_count / their_shot_count
+    their_gs_ratio = their_goals_from_shots / their_shot_count
 else:
     their_gs_ratio = 0
 
 if my_shot_count > 0:
-    my_gs_ratio = my_goal_count / my_shot_count
+    my_gs_ratio = my_goals_from_shots / my_shot_count
 else:
     my_gs_ratio = 0
 
 if your_shot_count > 0:
-    your_gs_ratio = your_goal_count / your_shot_count
+    your_gs_ratio = your_goals_from_shots / your_shot_count
 else:
     your_gs_ratio = 0
 
 if our_shot_count > 0:
-    our_gs_ratio = our_goal_count / our_shot_count
+    our_gs_ratio = (my_goals_from_shots + your_goals_from_shots) / our_shot_count
 else:
     our_gs_ratio = 0
 
@@ -822,6 +903,16 @@ our_turnovers_count = my_turnovers_count + your_turnovers_count
 our_turnovers_won_count = my_turnovers_won_count + your_turnovers_won_count
 our_dribbles_count = my_dribbles_count + your_dribbles_count
 our_aerials_count = my_aerials_count + your_aerials_count
+
+# TODO: fix possible div by 0 bugs for following variables
+our_total_xg = my_total_xg + your_total_xg
+our_total_goals_from_shots = my_goals_from_shots + your_goals_from_shots
+
+# gfs = goals from shots
+my_gfs_xg_ratio = my_goals_from_shots / my_total_xg
+your_gfs_xg_ratio = your_goals_from_shots / your_total_xg
+our_gfs_xg_ratio = our_total_goals_from_shots / our_total_xg
+their_gfs_xg_ratio = their_goals_from_shots / their_total_xg
 
 if my_goal_count > 0:
     my_avg_goal_distance = "%.0f" % mean(my_goals_distancetogoal)
@@ -896,8 +987,11 @@ else:
     their_avg_shot_distance = 0
 
 individual_data = [["Goals", my_goal_count, your_goal_count],
+                   ["Goals from Shots", my_goals_from_shots, your_goals_from_shots],
+                   ["xG", "%.0f" % my_total_xg, "%.0f" % your_total_xg],
+                   ["GfS/Shot Ratio", "%.2f" % my_gs_ratio, "%.2f" % your_gs_ratio],
+                   ["GfS/xG Ratio", "%.2f" % my_gfs_xg_ratio, "%.2f" % your_gfs_xg_ratio],
                    ["Misses", my_miss_count, your_miss_count],
-                   ["G/Shot", "%.2f" % my_gs_ratio, "%.2f" % your_gs_ratio],
                    ["Assists", my_assists_count, your_assists_count],
                    ["Saves", my_saves_count, your_saves_count],
                    ["Demos", my_demos_count, your_demos_count],
@@ -916,8 +1010,11 @@ individual_data = [["Goals", my_goal_count, your_goal_count],
                    ]
 
 team_data = [["Goals", our_goal_count, their_goal_count],
+             ["Goals from Shots", our_total_goals_from_shots, their_goals_from_shots],
+             ["xG", "%.0f" % our_total_xg, "%.0f" % their_total_xg],
+             ["GfS/Shot Ratio", "%.2f" % our_gs_ratio, "%.2f" % their_gs_ratio],
+             ["GfS/xG Ratio", "%.2f" % our_gfs_xg_ratio, "%.2f" % their_gfs_xg_ratio],
              ["Misses", our_miss_count, their_miss_count],
-             ["G/Shot", "%.2f" % our_gs_ratio, "%.2f" % their_gs_ratio],
              ["Assists", our_assists_count, their_assists_count],
              ["Saves", our_saves_count, their_saves_count],
              ["Demos", our_demos_count, their_demos_count],
@@ -959,10 +1056,18 @@ streak_goals = []
 streak_my_goals = []
 streak_your_goals = []
 streak_their_goals = []
+streak_xg = []
+streak_my_xg = []
+streak_your_xg = []
+streak_their_xg = []
 local_my_goals_in_streak = 0
 local_your_goals_in_streak = 0
 local_our_goals_in_streak = 0
 local_their_goals_in_streak = 0
+local_my_xg_in_streak = 0
+local_your_xg_in_streak = 0
+local_our_xg_in_streak = 0
+local_their_xg_in_streak = 0
 
 for result in range(0, len(result_array)):
     if result_array[result] == "W":
@@ -975,6 +1080,12 @@ for result in range(0, len(result_array)):
 
     local_our_goals_in_streak += (my_goals_over_time[result] + your_goals_over_time[result])
     local_their_goals_in_streak += their_goals_over_time[result]
+    
+    local_my_xg_in_streak += my_xg_over_time[result]
+    local_your_xg_in_streak += your_xg_over_time[result]
+
+    local_our_xg_in_streak += (my_xg_over_time[result] + your_xg_over_time[result])
+    local_their_xg_in_streak += their_xg_over_time[result]
 
     local_streak_results += str(result_array[result] + " ")
 
@@ -987,6 +1098,10 @@ for result in range(0, len(result_array)):
         streak_my_goals.append(local_my_goals_in_streak)
         streak_your_goals.append(local_your_goals_in_streak)
         streak_their_goals.append(local_their_goals_in_streak)
+        streak_xg.append(local_our_xg_in_streak)
+        streak_my_xg.append(local_my_xg_in_streak)
+        streak_your_xg.append(local_your_xg_in_streak)
+        streak_their_xg.append(local_their_xg_in_streak)
         local_wins_in_streak = 0
         local_losses_in_streak = 0
         local_streak_results = ""
@@ -994,6 +1109,10 @@ for result in range(0, len(result_array)):
         local_my_goals_in_streak = 0
         local_your_goals_in_streak = 0
         local_their_goals_in_streak = 0
+        local_our_xg_in_streak = 0
+        local_my_xg_in_streak = 0
+        local_your_xg_in_streak = 0
+        local_their_xg_in_streak = 0
 
     res_num += 1
 
@@ -1009,17 +1128,24 @@ for streak in range(0, len(streak_num_games)):
     your_goals_per_game_streak = "%.1f" % (streak_your_goals[streak] / num_games_in_streak)
     their_goals_per_game_streak = "%.1f" % (streak_their_goals[streak] / num_games_in_streak)
     gd_per_game_streak = "%.1f" % ((streak_goals[streak] - streak_their_goals[streak]) / num_games_in_streak)
+    our_xg_per_game_streak = "%.1f" % (streak_xg[streak] / num_games_in_streak)
+    my_xg_per_game_streak = "%.1f" % (streak_my_xg[streak] / num_games_in_streak)
+    your_xg_per_game_streak = "%.1f" % (streak_your_xg[streak] / num_games_in_streak)
+    their_xg_per_game_streak = "%.1f" % (streak_their_xg[streak] / num_games_in_streak)
+    gd_per_game_streak = "%.1f" % ((streak_xg[streak] - streak_their_xg[streak]) / num_games_in_streak)
 
     streak_data.append(
         [win_pct, streak_results[streak], streak_wins[streak] + streak_losses[streak], streak_wins[streak],
          streak_losses[streak],
          my_goals_per_game_streak, your_goals_per_game_streak, our_goals_per_game_streak, their_goals_per_game_streak,
+         gd_per_game_streak, my_xg_per_game_streak, your_xg_per_game_streak, our_xg_per_game_streak, their_xg_per_game_streak,
          gd_per_game_streak])
 
 print("\n")
 print(tabulate(streak_data,
-               headers=["Win %", "Results", "Games", "Wins", "Losses", my_alias + " Goals/G", your_alias + " Goals/G",
-                        "Our Goals/G", "Their Goals/G", "Goal Diff./G"], numalign="right"))
+               headers=["Win %", "Results", "GP", "W", "L", my_alias + " GS/G", your_alias + " GS/G",
+                        "GS/G", "GC/G", "GD/G", my_alias + " xG/G", your_alias + " xG/G",
+                        "xG/G", "xGC/G", "xGD/G"], numalign="right"))
 print("\n")
 
 games_nr = len(new_json_files)
@@ -1096,7 +1222,7 @@ print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime
 
 ###########
 fig = plt.figure(figsize=(40, 20))
-n_plots = 21
+n_plots = 25
 widths = [1]
 heights = [1] * n_plots
 spec = fig.add_gridspec(ncols=1, nrows=n_plots, width_ratios=widths, height_ratios=heights)
@@ -1107,37 +1233,25 @@ pitch_min_y = -6300
 pitch_max_x = pitch_min_x * -1
 pitch_max_y = pitch_min_y * -1
 
+our_xg_diff_over_time = []
+for xg in range(len(my_xg_over_time)):
+    our_xg_diff_over_time.append(my_xg_over_time[xg] + your_xg_over_time[xg] - their_xg_over_time[xg])
+
 ax1 = fig.add_subplot(spec[0, 0])  # results
-ax1.bar(range(len(gd_array)), gd_array, color=result_color)
+ax1.bar(range(len(gd_array)), gd_array, color=result_color, alpha=0.75)
 min_gd = min(gd_array)
 max_gd = max(gd_array)
-gd_lim = max(abs(min_gd), max_gd)
+min_xgd = min(our_xg_diff_over_time)
+max_xgd = max(our_xg_diff_over_time)
+gd_lim = max(abs(min_gd), max_gd, abs(min_xgd), max_xgd)
 ax1.set_ylim(-gd_lim, gd_lim)
 ax1.set_xlim(-1, len(gd_array))
 ax1.axis("off")
-plt.axhline(y=0, color='grey', linestyle=':')
+ax1.plot(range(len(gd_array)), our_xg_diff_over_time, color="black", alpha=1)
+plt.axhline(y=0, color='black', linestyle=':')
 
 for streak_game_num in streak_start_games:
-    plt.axvline(x=streak_game_num - 0.5, color='grey', linestyle='-')
-
-ax2 = fig.add_subplot(spec[1, 0], projection='3d')  # shot positions
-ax2.set_xlabel("X Axis")
-ax2.set_ylabel("Y Axis")
-ax2.set_zlabel("Z Axis")
-ax2.set_xlim(pitch_min_x, pitch_max_x)
-ax2.set_ylim(pitch_min_y, pitch_max_y)
-ax2.set_zlim(0, 2050)
-ax2.scatter(my_goals_x, my_goals_y, my_goals_z, color=my_color, alpha=0.25, s=75)
-ax2.scatter(your_goals_x, your_goals_y, your_goals_z, color=your_color, alpha=0.25, s=75)
-ax2.scatter(their_goals_x, their_goals_y, their_goals_z, color=their_color, alpha=0.25, s=75)
-
-ax2.scatter(my_misses_x, my_misses_y, my_misses_z, color=my_color, alpha=0.25, s=30, marker="x")
-ax2.scatter(your_misses_x, your_misses_y, your_misses_z, color=your_color, alpha=0.25, s=30, marker="x")
-ax2.scatter(their_misses_x, their_misses_y, their_misses_z, color=their_color, alpha=0.25, s=30, marker="x")
-ax2.set_title("3D Shot Heatmap of Misses (X) & Goals (O)")
-
-if side_view_3d_scatter:
-    ax2.view_init(0, 180)
+    plt.axvline(x=streak_game_num - 0.5, color='grey', linestyle='-', alpha=0.25)
 
 ax3 = fig.add_subplot(spec[2, 0])  # Results
 
@@ -1266,19 +1380,22 @@ my_stats = [my_assists_count, my_saves_count, my_goal_count, my_miss_count, my_s
             my_touches_count,
             my_demos_count, my_demos_conceded_count, my_passes_count, my_clears_count, my_score_count,
             my_turnovers_count, my_turnovers_won_count,
-            my_dribbles_count, my_aerials_count]
+            my_dribbles_count, my_aerials_count,
+            my_total_xg, my_gfs_xg_ratio * games_nr, my_goals_from_shots]
 
 your_stats = [your_assists_count, your_saves_count, your_goal_count, your_miss_count, your_shot_count,
               your_gs_ratio * games_nr, your_touches_count,
               your_demos_count, your_demos_conceded_count, your_passes_count, your_clears_count, your_score_count,
               your_turnovers_count, your_turnovers_won_count,
-              your_dribbles_count, your_aerials_count]
+              your_dribbles_count, your_aerials_count,
+              your_total_xg, your_gfs_xg_ratio * games_nr, your_goals_from_shots]
 
 ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
-dic = {1: "Assists", 2: "Saves", 3: "Goals", 4: "Misses", 5: "Shots", 6: "Goals/Shot", 7: "Touches",
+dic = {1: "Assists", 2: "Saves", 3: "Goals", 4: "Misses", 5: "Shots", 6: "GfS/Shot", 7: "Touches",
        8: "Demos", 9: "Demoed", 10: "Passes", 11: "Clears", 12: "Scores", 13: "Lost Ball", 14: "Won Ball",
-       15: "Dribbles", 16: "Aerials"}
+       15: "Dribbles", 16: "Aerials",
+       17: "xG", 18: "GfS/xG", 19: "Goals from Shots"}
 
 ticks = []
 
@@ -1333,8 +1450,8 @@ our_stats = []
 for stat in range(len(my_stats)):
     # exclude: demos_conceded, turnovers
     if stat != 8 and stat != 12:
-        # gs ratio requires division by 2
-        if stat == 5:
+        # gs ratio and gfs/xg ratio require division by 2
+        if stat == 5 or stat == 17:
             our_stats.append((my_stats[stat] + your_stats[stat]) / 2)
         else:
             our_stats.append(my_stats[stat] + your_stats[stat])
@@ -1342,12 +1459,14 @@ for stat in range(len(my_stats)):
 their_stats = [their_assists_count, their_saves_count, their_goal_count, their_miss_count, their_shot_count,
                their_gs_ratio * games_nr, their_touches_count,
                their_demos_count, their_passes_count, their_clears_count, their_score_count, their_turnovers_won_count,
-               their_dribbles_count, their_aerials_count]
+               their_dribbles_count, their_aerials_count,
+               their_total_xg, their_gfs_xg_ratio * games_nr, their_goals_from_shots]
 
 ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
 
-dic = {1: "Assists", 2: "Saves", 3: "Goals", 4: "Misses", 5: "Shots", 6: "Goals/Shot", 7: "Touches",
-       8: "Demos", 9: "Passes", 10: "Clears", 11: "Scores", 12: "Won Ball", 13: "Dribbles", 14: "Aerials"}
+dic = {1: "Assists", 2: "Saves", 3: "Goals", 4: "Misses", 5: "Shots", 6: "GfS/Shots", 7: "Touches",
+       8: "Demos", 9: "Passes", 10: "Clears", 11: "Scores", 12: "Won Ball", 13: "Dribbles", 14: "Aerials",
+       15: "xG", 16: "GfS/xG", 17: "Goals from Shots"}
 
 ticks = []
 
@@ -1511,6 +1630,10 @@ for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
 ax11.set_ylabel("ASSISTS", rotation="horizontal", ha="center", va="center", labelpad=35)
 
+my_goal_sizes_for_scatter = []
+for xg in my_xg_per_goal_list:
+    my_goal_sizes_for_scatter.append(xg * 20)
+
 ax13 = fig.add_subplot(spec[4, 0])  # Heatmap of Allan's goals
 heatmap, xedges, yedges = np.histogram2d(my_shots_y + [pitch_min_y] + [pitch_max_y],
                                          my_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
@@ -1518,11 +1641,15 @@ ax13.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y],
 im = ax13.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                  extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
 im.set_cmap('gist_gray_r')
-ax13.scatter(my_goals_x, my_goals_y, alpha=0.9, color=my_color, s=5)
+ax13.scatter(my_goals_x, my_goals_y, alpha=0.5, color=my_color, s=my_goal_sizes_for_scatter)
 ax13.set_xlim(pitch_min_x, pitch_max_x)
 ax13.set_ylim(pitch_min_y, pitch_max_y)
 ax13.axis("off")
 ax13.set_title(my_alias + "'s Shot & Goal Heatmap")
+
+your_goal_sizes_for_scatter = []
+for xg in your_xg_per_goal_list:
+    your_goal_sizes_for_scatter.append(xg * 20)
 
 ax14 = fig.add_subplot(spec[4, 0])  # Heatmap of Sertalp's goals
 heatmap, xedges, yedges = np.histogram2d(your_shots_y + [pitch_min_y] + [pitch_max_y],
@@ -1531,7 +1658,7 @@ ax14.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y],
 im = ax14.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                  extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
 im.set_cmap('gist_gray_r')
-ax14.scatter(your_goals_x, your_goals_y, alpha=0.9, color=your_color, s=5)
+ax14.scatter(your_goals_x, your_goals_y, alpha=0.5, color=your_color, s=your_goal_sizes_for_scatter)
 ax14.set_xlim(pitch_min_x, pitch_max_x)
 ax14.set_ylim(pitch_min_y, pitch_max_y)
 ax14.axis("off")
@@ -1544,11 +1671,16 @@ ax15.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y],
 im = ax15.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                  extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
 im.set_cmap('gist_gray_r')
-ax15.scatter(my_goals_x + your_goals_x, my_goals_y + your_goals_y, alpha=0.9, color=our_color, s=5)
+ax15.scatter(my_goals_x + your_goals_x, my_goals_y + your_goals_y, alpha=0.5, color=our_color,
+             s=my_goal_sizes_for_scatter + your_goal_sizes_for_scatter)
 ax15.set_xlim(pitch_min_x, pitch_max_x)
 ax15.set_ylim(pitch_min_y, pitch_max_y)
 ax15.axis("off")
 ax15.set_title("Our Shot & Goal Heatmap")
+
+their_goal_sizes_for_scatter = []
+for xg in their_xg_per_goal_list:
+    their_goal_sizes_for_scatter.append(xg * 20)
 
 ax16 = fig.add_subplot(spec[4, 0])  # Heatmap of Sertalp's goals
 heatmap, xedges, yedges = np.histogram2d(their_shots_y + [pitch_min_y] + [pitch_max_y],
@@ -1557,7 +1689,7 @@ ax16.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y],
 im = ax16.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                  extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
 im.set_cmap('gist_gray_r')
-ax16.scatter(their_goals_x, their_goals_y, alpha=0.9, color=their_color, s=5)
+ax16.scatter(their_goals_x, their_goals_y, alpha=0.5, color=their_color, s=their_goal_sizes_for_scatter)
 ax16.set_xlim(pitch_min_x, pitch_max_x)
 ax16.set_ylim(pitch_min_y, pitch_max_y)
 ax16.axis("off")
@@ -1753,8 +1885,170 @@ ax21.set_ylabel("Games")
 ax21.tick_params(axis="x", bottom=False, top=True, labelbottom=False, labeltop=False)
 ax20.set_title("Goals Scored & Conceded Distribution")
 
-ax1.set_position([0, 0.88, 1, 0.1])
-ax2.set_position([0.1, 0.1, 1, 0.65])  # 3D Scatterplot
+our_xg_over_time = []
+my_goals_minus_xg_over_time = []
+your_goals_minus_xg_over_time = []
+our_goals_from_shots_over_time = []
+
+for xg in range(len(my_xg_over_time)):
+    our_xg_over_time.append(my_xg_over_time[xg] + your_xg_over_time[xg])
+    my_goals_minus_xg_over_time.append(my_goals_over_time[xg] - my_xg_over_time[xg])
+    your_goals_minus_xg_over_time.append(your_goals_over_time[xg] - your_xg_over_time[xg])
+    our_goals_from_shots_over_time.append(your_goals_from_shots_over_time[xg] + my_goals_from_shots_over_time[xg])
+
+rolling_avg_window = 10
+
+if games_nr < 30:
+    rolling_avg_window = 1
+
+my_xg_over_time_rolling_avg = np.average(sliding_window_view(my_xg_over_time, window_shape=rolling_avg_window), axis=1)
+my_goals_from_shots_over_time_rolling_avg = np.average(
+    sliding_window_view(my_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
+your_xg_over_time_rolling_avg = np.average(sliding_window_view(your_xg_over_time, window_shape=rolling_avg_window),
+                                           axis=1)
+your_goals_from_shots_over_time_rolling_avg = np.average(
+    sliding_window_view(your_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
+our_xg_over_time_rolling_avg = np.average(sliding_window_view(our_xg_over_time, window_shape=rolling_avg_window),
+                                          axis=1)
+our_goals_from_shots_over_time_rolling_avg = np.average(
+    sliding_window_view(our_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
+their_xg_over_time_rolling_avg = np.average(sliding_window_view(their_xg_over_time, window_shape=rolling_avg_window),
+                                            axis=1)
+their_goals_from_shots_over_time_rolling_avg = np.average(
+    sliding_window_view(their_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
+
+all_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(my_goals_from_shots_over_time_rolling_avg),
+                          max(your_xg_over_time_rolling_avg), max(your_goals_from_shots_over_time_rolling_avg),
+                          max(our_xg_over_time_rolling_avg), max(our_goals_from_shots_over_time_rolling_avg),
+                          max(their_xg_over_time_rolling_avg), max(their_goals_from_shots_over_time_rolling_avg))
+
+individual_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(your_xg_over_time_rolling_avg),
+                                 max(my_goals_from_shots_over_time_rolling_avg), max(your_goals_from_shots_over_time_rolling_avg))
+
+our_gd_over_time_rolling_avg = []
+our_xgd_from_shots_over_time_rolling_avg = []
+
+my_ra_bg_colors = []
+your_ra_bg_colors = []
+our_ra_bg_colors = []
+their_ra_bg_colors = []
+
+our_xdiff_ra_bg_colors = []
+our_gdiff_bar_colors = []
+
+for val in range(0, len(my_xg_over_time_rolling_avg)):
+    if my_xg_over_time_rolling_avg[val] > my_goals_from_shots_over_time_rolling_avg[val]:
+        my_ra_bg_colors.append("red")
+    elif my_xg_over_time_rolling_avg[val] == my_goals_from_shots_over_time_rolling_avg[val]:
+        my_ra_bg_colors.append("yellow")
+    else:
+        my_ra_bg_colors.append("green")
+
+    if your_xg_over_time_rolling_avg[val] > your_goals_from_shots_over_time_rolling_avg[val]:
+        your_ra_bg_colors.append("red")
+    elif your_xg_over_time_rolling_avg[val] == your_goals_from_shots_over_time_rolling_avg[val]:
+        your_ra_bg_colors.append("yellow")
+    else:
+        your_ra_bg_colors.append("green")
+
+    if our_xg_over_time_rolling_avg[val] > our_goals_from_shots_over_time_rolling_avg[val]:
+        our_ra_bg_colors.append("red")
+    elif our_xg_over_time_rolling_avg[val] == our_goals_from_shots_over_time_rolling_avg[val]:
+        our_ra_bg_colors.append("yellow")
+    else:
+        our_ra_bg_colors.append("green")
+
+    if their_xg_over_time_rolling_avg[val] > their_goals_from_shots_over_time_rolling_avg[val]:
+        their_ra_bg_colors.append("red")
+    elif their_xg_over_time_rolling_avg[val] == their_goals_from_shots_over_time_rolling_avg[val]:
+        their_ra_bg_colors.append("yellow")
+    else:
+        their_ra_bg_colors.append("green")
+
+    our_gd_over_time_rolling_avg.append(
+        our_goals_from_shots_over_time_rolling_avg[val] - their_goals_from_shots_over_time_rolling_avg[val])
+    our_xgd_from_shots_over_time_rolling_avg.append(
+        our_xg_over_time_rolling_avg[val] - their_xg_over_time_rolling_avg[val])
+
+    if our_gd_over_time_rolling_avg[val] > our_xgd_from_shots_over_time_rolling_avg[val]:
+        our_xdiff_ra_bg_colors.append("green")
+    elif our_gd_over_time_rolling_avg[val] == our_xgd_from_shots_over_time_rolling_avg[val]:
+        our_xdiff_ra_bg_colors.append("yellow")
+    else:
+        our_xdiff_ra_bg_colors.append("red")
+
+    if our_gd_over_time_rolling_avg[val] > 0:
+        our_gdiff_bar_colors.append(our_color)
+    elif our_gd_over_time_rolling_avg[val] == 0:
+        our_gdiff_bar_colors.append("yellow")
+    else:
+        our_gdiff_bar_colors.append(their_color)
+
+our_gd_xgd_ra_max = max(max(our_gd_over_time_rolling_avg), max(our_xgd_from_shots_over_time_rolling_avg))
+our_gd_xgd_ra_min = min(min(our_gd_over_time_rolling_avg), min(our_xgd_from_shots_over_time_rolling_avg))
+
+our_gd_ylim = our_gd_xgd_ra_max
+if abs(our_gd_xgd_ra_min) > our_gd_ylim:
+    our_gd_ylim = abs(our_gd_xgd_ra_min)
+
+len_to_use = len(my_xg_over_time_rolling_avg)
+ax2 = fig.add_subplot(spec[2, 0])
+ax2.bar(range(0, len_to_use), individual_rolling_avg_max, color=my_ra_bg_colors, alpha=0.1, width=1)
+ax2.bar(range(0, len_to_use), my_goals_from_shots_over_time_rolling_avg, color=my_color, alpha=0.5,width=1)
+ax2.plot(range(0, len_to_use), my_xg_over_time_rolling_avg, color="black", alpha=1)
+ax2.set_title(my_alias + "'s goals from shots and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+ax2.set_ylim(0, individual_rolling_avg_max)
+ax2.set_xlim(0, len_to_use - 1)
+
+ax23 = fig.add_subplot(spec[2, 0])
+ax23.bar(range(0, len_to_use), individual_rolling_avg_max, color=your_ra_bg_colors, alpha=0.1, width=1)
+ax23.bar(range(0, len_to_use), your_goals_from_shots_over_time_rolling_avg, color=your_color, alpha=0.5,width=1)
+ax23.plot(range(0, len_to_use), your_xg_over_time_rolling_avg, color="black", alpha=1)
+ax23.set_title(your_alias + "'s goals from shots and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+ax23.set_ylim(0, individual_rolling_avg_max)
+ax23.set_xlim(0, len_to_use - 1)
+
+ax24 = fig.add_subplot(spec[2, 0])
+ax24.bar(range(0, len_to_use), all_rolling_avg_max, color=our_ra_bg_colors, alpha=0.1, width=1)
+ax24.bar(range(0, len_to_use), our_goals_from_shots_over_time_rolling_avg, color=our_color, alpha=0.5,width=1)
+ax24.plot(range(0, len_to_use), our_xg_over_time_rolling_avg, color="black", alpha=1)
+ax24.set_title("Our goals scored & conceded from shots and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+ax24.set_ylim(0, all_rolling_avg_max)
+ax24.set_xlim(0, len_to_use - 1)
+ax24.tick_params(axis="x", bottom=False, top=False, labelbottom=False, labeltop=False)
+
+
+ax25 = fig.add_subplot(spec[2, 0])
+ax25.bar(range(0, len_to_use), all_rolling_avg_max, color=their_ra_bg_colors, alpha=0.1, width=1)
+ax25.bar(range(0, len_to_use), their_goals_from_shots_over_time_rolling_avg, color=their_color, alpha=0.5,width=1)
+ax25.plot(range(0, len_to_use), their_xg_over_time_rolling_avg, color="black", alpha=1)
+ax25.set_ylim(0, all_rolling_avg_max)
+ax25.set_xlim(0, len_to_use - 1)
+# reverse y-axis of goals conceded
+ax25 = plt.gca()
+ax25.set_ylim(ax25.get_ylim()[::-1])
+
+ax26 = fig.add_subplot(spec[2, 0])
+ax26.bar(range(0, len_to_use), our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
+ax26.bar(range(0, len_to_use), -our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
+ax26.bar(range(0, len_to_use), our_gd_over_time_rolling_avg, color=our_gdiff_bar_colors, alpha=0.5,width=1)
+ax26.plot(range(0, len_to_use), our_xgd_from_shots_over_time_rolling_avg, color="black", alpha=1)
+ax26.set_title("Our GD from goals that came from shots and xGD (black line) over time (" + str(
+    rolling_avg_window) + " game rolling average)")
+ax26.set_ylim(-our_gd_ylim, our_gd_ylim)
+ax26.set_xlim(0, len_to_use - 1)
+plt.axhline(y=0, color='black', linestyle=':')
+
+
+# positioning and scaling of charts
+
+ax1.set_position([0, 0.88, 1, 0.1])  # Results chart at top
+
+ax2.set_position([0.5, 0.725, 0.2, 0.1])  # my xG
+ax23.set_position([0.5, 0.56875, 0.2, 0.1])  # your xG
+ax24.set_position([0.5, 0.3563, 0.2, 0.1])  # our xG
+ax25.set_position([0.5, 0.25625, 0.2, 0.1])  # our xGC
+ax26.set_position([0.5, 0.1, 0.2, 0.1])  # xGD
 
 ax19.set_position([0.39, 0.5, 0.09, 0.325])  # Goal Difference Distribution chart
 ax20.set_position([0.39, 0.275, 0.09, 0.15])  # Goals Scored Distribution chart
