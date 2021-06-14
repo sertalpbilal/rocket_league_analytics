@@ -23,81 +23,89 @@ Steps:
    Finally you can go to `src` and run `python boxcartest.py` to populate the dashboard.
 
 ## Screenshots:
-![preview6.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/preview6.png)
+![preview7.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/preview7.png)
 
 ## Output:
 ```
-STATS            Allan    Sertalp
--------------  -------  ---------
-Goals              248        218
-Misses             234        260
-G/Shot            0.51       0.46
-Assists            105        112
-Saves              285        233
-Demos              216        113
-Demoed              85         86
-Score            76526      68681
-Passes             686        748
-Clears             626        576
-Touches           5183       5052
-Goal Distance     2718       2654
-Miss Distance     3764       3521
-Shot Distance     3267       3155
-Won Ball          1172       1131
-Lost Ball         1245       1189
-Dribbles          1079       1007
-Aerials            956        426
+STATS               Allan    Sertalp
+----------------  -------  ---------
+Goals                 272        231
+Goals from Shots      233        203
+xG                    178        175
+GfS/Shot Ratio       0.47       0.42
+GfS/xG Ratio         1.31       1.16
+Misses                261        283
+Assists               109        117
+Saves                 306        249
+Demos                 241        116
+Demoed                 90         89
+Score               83089      73335
+Passes                735        806
+Clears                687        622
+Touches              5632       5418
+Goal Distance        2634       2648
+Miss Distance        3658       3500
+Shot Distance        3175       3144
+Won Ball             1267       1218
+Lost Ball            1345       1278
+Dribbles             1187       1080
+Aerials              1016        448
 
 
-STATS              Us    Them
--------------  ------  ------
-Goals             466     455
-Misses            494     729
-G/Shot           0.49    0.38
-Assists           217     214
-Saves             518     394
-Demos             329     171
-Score          145207  141898
-Passes           1434    1587
-Clears           1202    1197
-Touches         10235   11911
-Goal Distance    2688    2586
-Miss Distance    3636    3557
-Shot Distance    3211    3214
-Won Ball         2303    2434
-Dribbles         2086    2813
-Aerials          1382    1872
+STATS                 Us    Them
+----------------  ------  ------
+Goals                503     491
+Goals from Shots     436     431
+xG                   354     387
+GfS/Shot Ratio      0.44    0.36
+GfS/xG Ratio        1.23    1.11
+Misses               544     780
+Assists              226     232
+Saves                555     430
+Demos                357     179
+Score             156424  153053
+Passes              1541    1713
+Clears              1309    1290
+Touches            11050   12809
+Goal Distance       2641    2615
+Miss Distance       3576    3558
+Shot Distance       3160    3222
+Won Ball            2485    2623
+Dribbles            2267    3034
+Aerials             1464    2003
 
 
-Win %    Results                              Games    Wins    Losses    Allan Goals/G    Sertalp Goals/G    Our Goals/G    Their Goals/G    Goal Diff./G
--------  ---------------------------------  -------  ------  --------  ---------------  -----------------  -------------  ---------------  --------------
-47%      W W W L W L L W L L W L W W L L L       17       8         9              1.6                1.5            3.1                3             0.1
-54%      W W W L W W W W L L L L L               13       7         6                2                1.3            3.3              3.5            -0.2
-75%      W W W L                                  4       3         1              1.5                2.8            4.2              1.8             2.5
-41%      L L W L W L W W W L L L L L L W W       17       7        10              1.5                1.6            3.2              3.1             0.1
-33%      L L W                                    3       1         2              1.7                2.3              4              4.3            -0.3
-58%      W W L L L W L W W W L W                 12       7         5              1.6                1.8            3.3              2.9             0.4
-50%      L L L W W L W W                          8       4         4              2.5                2.1            4.6                4             0.6
-47%      W W W W L W W L L L W L L L L           15       7         8              1.5                1.5            3.1              3.1            -0.1
-0%       L L L                                    3       0         3                1                  1              2                4              -2
-38%      L L W W L L L W W L L L L W L W         16       6        10              1.4                1.2            2.6              2.9            -0.3
-20%      L L W L L                                5       1         4                2                  1              3              3.4            -0.4
-44%      W L W W L L L W L                        9       4         5              1.6                1.7            3.2              3.2               0
-70%      L W W L L W W W W W                     10       7         3              2.1                0.6            2.7              1.7               1
-75%      W L W W                                  4       3         1              2.5                  1            3.5              2.2             1.2
-38%      L W W L W W L W L L L L L               13       5         8              1.2                1.2            2.5              3.2            -0.8
+Win %    Results                              GP    W    L    Allan GS/G    Sertalp GS/G    GS/G    GC/G    GD/G    Allan xG/G    Sertalp xG/G    xG/G    xGC/G    xGD/G
+-------  ---------------------------------  ----  ---  ---  ------------  --------------  ------  ------  ------  ------------  --------------  ------  -------  -------
+47%      W W W L W L L W L L W L W W L L L    17    8    9           1.6             1.5     3.1       3    -0.4             1             1.3     2.3      2.7     -0.4
+54%      W W W L W W W W L L L L L            13    7    6             2             1.3     3.3     3.5    -0.3           1.2             0.8     2.1      2.4     -0.3
+75%      W W W L                               4    3    1           1.5             2.8     4.2     1.8     1.3           1.1             1.8     2.8      1.6      1.3
+41%      L L W L W L W W W L L L L L L W W    17    7   10           1.5             1.6     3.2     3.1    -0.5             1               1       2      2.5     -0.5
+33%      L L W                                 3    1    2           1.7             2.3       4     4.3     0.6           1.3             2.2     3.6        3      0.6
+58%      W W L L L W L W W W L W              12    7    5           1.6             1.8     3.3     2.9     0.7           1.3             1.4     2.7      2.1      0.7
+50%      L L L W W L W W                       8    4    4           2.5             2.1     4.6       4      -0           1.5             1.3     2.8      2.8       -0
+47%      W W W W L W W L L L W L L L L        15    7    8           1.5             1.5     3.1     3.1    -0.4           1.1             0.9       2      2.4     -0.4
+0%       L L L                                 3    0    3             1               1       2       4    -3.5           0.8             0.5     1.3      4.7     -3.5
+38%      L L W W L L L W W L L L L W L W      16    6   10           1.4             1.2     2.6     2.9    -0.3           1.1             0.9     1.9      2.3     -0.3
+20%      L L W L L                             5    1    4             2               1       3     3.4    -0.1           1.3             1.2     2.4      2.5     -0.1
+44%      W L W W L L L W L                     9    4    5           1.6             1.7     3.2     3.2    -0.2           0.8             1.2       2      2.2     -0.2
+70%      L W W L L W W W W W                  10    7    3           2.1             0.6     2.7     1.7     0.3           1.3             0.6     1.9      1.7      0.3
+75%      W L W W                               4    3    1           2.5               1     3.5     2.2    -0.3           0.9             0.9     1.9      2.1     -0.3
+38%      L W W L W W L W L L L L L            13    5    8           1.2             1.2     2.5     3.2      -1           0.7             1.1     1.8      2.8       -1
+0%       L L L                                 3    0    3           1.3             0.3     1.7     5.3     0.4           1.5               1     2.5      2.1      0.4
+67%      W L L W W W W L W                     9    6    3           2.2             1.3     3.6     2.2     0.5           1.6               1     2.5        2      0.5
 
 
 STATS      Overall    Normaltime    Overtime
 -------  ---------  ------------  ----------
-Games          149           128          21
-Win %        46.98         49.22       33.33
-Loss %       53.02         50.78       66.67
-Wins            70            63           7
-Losses          79            65          14
+Games          161           139          22
+Win %         47.2         49.64       31.82
+Loss %        52.8         50.36       68.18
+Wins            76            69           7
+Losses          85            70          15
 
 
-Execution time in seconds:  2.95
+Execution time in seconds:  4.13
 ```
 
 NOTE: Execution time also includes the time taken to display the dashboard. However it may then take another second or so to populate the plots in the dashboard.
