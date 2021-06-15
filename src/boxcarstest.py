@@ -32,7 +32,7 @@ startTime = time.time()
 
 check_new = False  # Only processes new files (in separate directory)
 show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
-save_and_crop = False # Saves an image of the dashboard and then crops charts into their own images
+save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
 my_name = "games5425898691"
@@ -2256,6 +2256,7 @@ ax10.set_position([0.75, 0.26, 0.227, 0.1])  # Saves over time
 ax11.set_position([0.75, 0.365, 0.227, 0.1])  # Assists over time
 
 if save_and_crop:
+    charts_dir = "data/charts/"
     plt.savefig("full_canvas.png")
 
     # Divide the canvas into individual charts by cropping
@@ -2267,7 +2268,7 @@ if save_and_crop:
     right = 4000
     bottom = 280
     img_res = img.crop((left, top, right, bottom))
-    img_res.save("charts/results-chart.png")
+    img_res.save(charts_dir + "results_with_xgd_chart.png")
 
     # Chart 2 - first player's shot and goal heatmap
     left = 100
@@ -2275,7 +2276,7 @@ if save_and_crop:
     right = 465
     bottom = 920
     img_res_2 = img.crop((left, top, right, bottom))
-    img_res_2.save("charts/p1_shot_and_goal_heatmap.png")
+    img_res_2.save(charts_dir + "p1_shot_and_goal_heatmap.png")
 
     # Chart 3 - first player's shot and goal heatmap
     left = 100
@@ -2283,7 +2284,7 @@ if save_and_crop:
     right = 465
     bottom = 1720
     img_res_3 = img.crop((left, top, right, bottom))
-    img_res_3.save("charts/t1_shot_and_goal_heatmap.png")
+    img_res_3.save(charts_dir + "t1_shot_and_goal_heatmap.png")
 
     # Chart 4 - individual stats per game comparison
     left = 460
@@ -2291,7 +2292,7 @@ if save_and_crop:
     right = 1050
     bottom = 1020
     img_res_4 = img.crop((left, top, right, bottom))
-    img_res_4.save("charts/t1_individual_stat_comparison.png")
+    img_res_4.save(charts_dir + "t1_individual_stat_comparison.png")
 
     # Chart 5 - team stats per game comparison
     left = 460
@@ -2299,7 +2300,7 @@ if save_and_crop:
     right = 1050
     bottom = 1820
     img_res_5 = img.crop((left, top, right, bottom))
-    img_res_5.save("charts/team_stat_comparison.png")
+    img_res_5.save(charts_dir + "team_stat_comparison.png")
 
     # Chart 6 - second player's shot and goal heatmap
     left = 1100
@@ -2307,7 +2308,7 @@ if save_and_crop:
     right = 1465
     bottom = 920
     img_res_7 = img.crop((left, top, right, bottom))
-    img_res_7.save("charts/p2_shot_and_goal_heatmap.png")
+    img_res_7.save(charts_dir + "p2_shot_and_goal_heatmap.png")
 
     # Chart 7 - opponent's shot and goal heatmap
     left = 1100
@@ -2315,7 +2316,7 @@ if save_and_crop:
     right = 1465
     bottom = 1720
     img_res_7 = img.crop((left, top, right, bottom))
-    img_res_7.save("charts/t2_shot_and_goal_heatmap.png")
+    img_res_7.save(charts_dir + "t2_shot_and_goal_heatmap.png")
 
     # Chart 8 - goal difference distribution
     left = 1480
@@ -2323,7 +2324,7 @@ if save_and_crop:
     right = 1965
     bottom = 1060
     img_res_8 = img.crop((left, top, right, bottom))
-    img_res_8.save("charts/gd_distribution_chart.png")
+    img_res_8.save(charts_dir + "gd_distribution_chart.png")
 
     # Chart 9 - goals scored & conceded distribution
     left = 1480
@@ -2331,7 +2332,7 @@ if save_and_crop:
     right = 1965
     bottom = 1820
     img_res_9 = img.crop((left, top, right, bottom))
-    img_res_9.save("charts/gs_and_gc_distribution_chart.png")
+    img_res_9.save(charts_dir + "gs_and_gc_distribution_chart.png")
 
     # Chart 10 - first player's xg chart
     left = 1950
@@ -2339,7 +2340,7 @@ if save_and_crop:
     right = 2840
     bottom = 605
     img_res_10 = img.crop((left, top, right, bottom))
-    img_res_10.save("charts/p1_xg_chart.png")
+    img_res_10.save(charts_dir + "p1_xg_chart.png")
 
     # Chart 11 - second player's xg chart
     left = 1950
@@ -2347,7 +2348,7 @@ if save_and_crop:
     right = 2840
     bottom = 905
     img_res_11 = img.crop((left, top, right, bottom))
-    img_res_11.save("charts/p2_xg_chart.png")
+    img_res_11.save(charts_dir + "p2_xg_chart.png")
 
     # Chart 12 - team xg chart
     left = 1950
@@ -2355,7 +2356,7 @@ if save_and_crop:
     right = 2840
     bottom = 1525
     img_res_12 = img.crop((left, top, right, bottom))
-    img_res_12.save("charts/team_xg_chart.png")
+    img_res_12.save(charts_dir + "team_xg_chart.png")
 
     # Chart 13 - team xgd chart
     left = 1950
@@ -2363,7 +2364,7 @@ if save_and_crop:
     right = 2840
     bottom = 1840
     img_res_13 = img.crop((left, top, right, bottom))
-    img_res_13.save("charts/team_xgd_chart.png")
+    img_res_13.save(charts_dir + "team_xgd_chart.png")
 
     # Chart 14 - positional tendency comparison
     left = 2840
@@ -2371,7 +2372,39 @@ if save_and_crop:
     right = 3430
     bottom = 1020
     img_res_14 = img.crop((left, top, right, bottom))
-    img_res_14.save("charts/t1_pos_tendencies_comparison.png")
+    img_res_14.save(charts_dir + "t1_pos_tendencies_comparison.png")
+
+    # Chart 15 - assists, saves, shots, goals charts
+    left = 2880
+    top = 1040
+    right = 3930
+    bottom = 1945
+    img_res_15 = img.crop((left, top, right, bottom))
+    img_res_15.save(charts_dir + "stats_per_game_charts.png")
+
+    # Chart 16 - results pie charts
+    left = 3450
+    top = 305
+    right = 3965
+    bottom = 510
+    img_res_16 = img.crop((left, top, right, bottom))
+    img_res_16.save(charts_dir + "results_pie_charts.png")
+
+    # Chart 17 - first player's touch heatmap
+    left = 3460
+    top = 610
+    right = 3700
+    bottom = 965
+    img_res_17 = img.crop((left, top, right, bottom))
+    img_res_17.save(charts_dir + "p1_touch_heatmap.png")
+
+    # Chart 18 - second player's touch heatmap
+    left = 3700
+    top = 610
+    right = 3940
+    bottom = 965
+    img_res_18 = img.crop((left, top, right, bottom))
+    img_res_18.save(charts_dir + "p2_touch_heatmap.png")
 
 executionTime = (time.time() - startTime)
 print('\n\nExecution time in seconds: ', "%.2f" % executionTime)
