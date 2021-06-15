@@ -49,6 +49,8 @@ class GameCollector:
             response = r.json()
             if r.status_code == 200:
                 self.replay_list += response['list']
+            else:
+                print(r.status_code)
             if 'next' in response:
                 url = response['next']
             else:
@@ -81,7 +83,7 @@ class GameCollector:
                             stop = True
                             print("Terminating downloads, hit the API limit")
                             break
-                    time.sleep(5)
+                    time.sleep(0.5)
                 else:
                     print(f"Replay file {game['id']} exists!")
 
