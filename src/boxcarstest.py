@@ -29,9 +29,9 @@ from PIL import Image
 
 startTime = time.time()
 
-check_new = False  # Only processes new files (in separate directory)
-show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
-save_and_crop = False # Saves an image of the dashboard and then crops charts into their own images
+check_new = True  # Only processes new files (in separate directory)
+show_xg_scorelines = True # Shows xG scorelines and normal scorelines and replay names of games
+save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
 my_name = "games5425898691"
@@ -886,20 +886,23 @@ for file in new_json_files:
         # our chances of scoring and conceding up to 20 goals
         for i in range(0,21):
             our_xgf_prob.append(poisson_probability(i, our_local_xg))
-            local_xgf_prob+= poisson_probability(i, our_local_xg)
+            local_xgf_prob += poisson_probability(i, our_local_xg)
             our_xgc_prob.append(poisson_probability(i, their_local_xg))
-            local_xgc_prob+= poisson_probability(i, their_local_xg)
-        prob_of_scoring_over_20 = 1 - local_xgf_prob
-        prob_of_conceding_over_20 = 1 - local_xgc_prob
+            local_xgc_prob += poisson_probability(i, their_local_xg)
+
         for i in range(0,21):
             draw_chance += (our_xgf_prob[i] * our_xgc_prob[i])
             for j in range(0,21):
                 if i > j:
                     win_chance += (our_xgf_prob[i] * our_xgc_prob[j])
+                    loss_chance += (our_xgf_prob[j] * our_xgc_prob[i])
+
         win_chance += (draw_chance/2)
-        loss_chance = 1 - win_chance
+        loss_chance += (draw_chance/2)
+
         win_chance_per_game.append(win_chance*100)
         total_win_chance+=(win_chance*100)
+        
         result_type = "W"
         if local_GC > local_GS:
             if local_wentOvertime:
