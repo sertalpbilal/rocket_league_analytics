@@ -23,7 +23,7 @@ Steps:
    Finally you can go to `src` and run `python boxcartest.py` to populate the dashboard.
 
 ## Screenshots:
-![full-canvas.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/full-canvas.png)
+![full_canvas.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/full_canvas.png)
 
 ## Output:
 ```
