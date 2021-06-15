@@ -9,10 +9,9 @@
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
 
-# TODO: add color to printing scores + xG
-
 import csv
 import json
+import math
 import os
 import time
 from collections import Counter
@@ -32,7 +31,7 @@ startTime = time.time()
 
 check_new = False  # Only processes new files (in separate directory)
 show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
-save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
+save_and_crop = False # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
 my_name = "games5425898691"
@@ -349,6 +348,9 @@ my_goal_count = 0
 your_goal_count = 0
 their_goal_count = 0
 
+win_chance_per_game = []
+total_win_chance = 0
+
 # positional tendencies
 my_pos_tendencies = [0] * 23
 your_pos_tendencies = [0] * 23
@@ -400,6 +402,8 @@ their_goals_from_shots_over_time = []
 my_goals_from_shots = 0
 your_goals_from_shots = 0
 their_goals_from_shots = 0
+
+scoreline_data = []
 
 for file in new_json_files:
     file_counter += 1
@@ -863,8 +867,65 @@ for file in new_json_files:
             result_color.append(their_color)
             normaltime_gd_array.append(local_GS - local_GC)
 
-        if show_xg_scorelines:
-            print("%.2f"%(my_local_xg+your_local_xg),"-","%.2f"%their_local_xg,"\t",local_GS,"-",local_GC,"\t",file.replace(".json",""))
+        def poisson_probability(actual, mean):
+            # iterative, to keep the components from getting too large or small:
+            p = math.exp(-mean)
+            for i in range(actual):
+                p *= mean
+                p /= i + 1
+            return p
+
+        our_local_xg = my_local_xg + your_local_xg
+        win_chance = 0
+        draw_chance = 0
+        loss_chance = 0
+        our_xgf_prob = []
+        our_xgc_prob = []
+        local_xgf_prob = 0
+        local_xgc_prob = 0
+        # our chances of scoring and conceding up to 20 goals
+        for i in range(0,21):
+            our_xgf_prob.append(poisson_probability(i, our_local_xg))
+            local_xgf_prob+= poisson_probability(i, our_local_xg)
+            our_xgc_prob.append(poisson_probability(i, their_local_xg))
+            local_xgc_prob+= poisson_probability(i, their_local_xg)
+        prob_of_scoring_over_20 = 1 - local_xgf_prob
+        prob_of_conceding_over_20 = 1 - local_xgc_prob
+        for i in range(0,21):
+            draw_chance += (our_xgf_prob[i] * our_xgc_prob[i])
+            for j in range(0,21):
+                if i > j:
+                    win_chance += (our_xgf_prob[i] * our_xgc_prob[j])
+        win_chance += (draw_chance/2)
+        loss_chance = 1 - win_chance
+        win_chance_per_game.append(win_chance*100)
+        total_win_chance+=(win_chance*100)
+        result_type = "W"
+        if local_GC > local_GS:
+            if local_wentOvertime:
+                result_type = "L*"
+            else:
+                result_type = "L"
+        if local_GS > local_GC and local_wentOvertime:
+            result_type = "W*"
+        if result_type == "W" or result_type == "W*":
+            result_fairness = win_chance
+        else:
+            result_fairness = loss_chance
+        if result_type == "W":
+            color_to_add = Fore.GREEN
+        if result_type == "W*":
+            color_to_add = Fore.LIGHTGREEN_EX
+        if result_type == "L":
+            color_to_add = Fore.RED
+        if result_type == "L*":
+            color_to_add = Fore.LIGHTRED_EX
+        scoreline_data.append([color_to_add + "%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, file.replace(".json",""),
+                               round((win_chance*100),2), round((result_fairness*100),2), result_type + Style.RESET_ALL])
+
+if show_xg_scorelines:
+    print(tabulate(scoreline_data, headers=["xGF", "xGC", "GF", "GC", "Replay ID","Win%","Fairness%", "Outcome"], numalign="right"))
+    print("\n")
 
 your_miss_count = len(your_misses_distancetogoal)
 my_miss_count = len(my_misses_distancetogoal)
@@ -1380,7 +1441,7 @@ print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime
 
 ###########
 fig = plt.figure(figsize=(40, 20))
-n_plots = 25
+n_plots = 26
 widths = [1]
 heights = [1] * n_plots
 spec = fig.add_gridspec(ncols=1, nrows=n_plots, width_ratios=widths, height_ratios=heights)
@@ -2085,6 +2146,16 @@ all_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(my_goals_from_sh
 individual_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(your_xg_over_time_rolling_avg),
                                  max(my_goals_from_shots_over_time_rolling_avg), max(your_goals_from_shots_over_time_rolling_avg))
 
+our_results_over_time = []
+for i in range(0,games_nr):
+    if gd_array[i] > 0:
+        our_results_over_time.append(100)
+    else:
+        our_results_over_time.append(0)
+
+our_winrate_over_time_rolling_avg = np.average(sliding_window_view(our_results_over_time, window_shape=rolling_avg_window), axis=1)
+our_xwinrate_over_time_rolling_avg = np.average(sliding_window_view(win_chance_per_game, window_shape=rolling_avg_window), axis=1)
+
 our_gd_over_time_rolling_avg = []
 our_xgd_from_shots_over_time_rolling_avg = []
 
@@ -2095,6 +2166,8 @@ their_ra_bg_colors = []
 
 our_xdiff_ra_bg_colors = []
 our_gdiff_bar_colors = []
+
+our_winrate_bar_colors = []
 
 for val in range(0, len(my_xg_over_time_rolling_avg)):
     if my_xg_over_time_rolling_avg[val] > my_goals_from_shots_over_time_rolling_avg[val]:
@@ -2144,6 +2217,13 @@ for val in range(0, len(my_xg_over_time_rolling_avg)):
     else:
         our_gdiff_bar_colors.append(their_color)
 
+    if our_winrate_over_time_rolling_avg[val] > our_xwinrate_over_time_rolling_avg[val]:
+        our_winrate_bar_colors.append("green")
+    elif our_winrate_over_time_rolling_avg[val] == our_xwinrate_over_time_rolling_avg[val]:
+        our_winrate_bar_colors.append("yellow")
+    else:
+        our_winrate_bar_colors.append("red")
+
 our_gd_xgd_ra_max = max(max(our_gd_over_time_rolling_avg), max(our_xgd_from_shots_over_time_rolling_avg))
 our_gd_xgd_ra_min = min(min(our_gd_over_time_rolling_avg), min(our_xgd_from_shots_over_time_rolling_avg))
 
@@ -2163,6 +2243,8 @@ their_avg_xg_line = their_total_xg/games_nr
 their_avg_gfs_line = their_goals_from_shots/games_nr
 our_avg_xgd_line = (our_total_xg-their_total_xg)/games_nr
 our_avg_gdfs_line = (my_goals_from_shots+your_goals_from_shots-their_goals_from_shots)/games_nr
+our_avg_winrate_line = (win_count/games_nr)*100
+our_avg_xwinrate_line = total_win_chance/games_nr
 
 ax2 = fig.add_subplot(spec[2, 0])
 ax2.bar(range(0, len_to_use), individual_rolling_avg_max, color=my_ra_bg_colors, alpha=0.1, width=1)
@@ -2184,40 +2266,45 @@ ax23.set_title(your_alias + "'s goals from shots and xG (black line) over time (
 ax23.set_ylim(0, individual_rolling_avg_max)
 ax23.set_xlim(0, len_to_use - 1)
 
+for i in range(len(their_xg_over_time_rolling_avg)):
+    their_xg_over_time_rolling_avg[i] *= -1
+    their_goals_from_shots_over_time_rolling_avg[i] *= -1
+
 ax24 = fig.add_subplot(spec[2, 0])
 ax24.bar(range(0, len_to_use), all_rolling_avg_max, color=our_ra_bg_colors, alpha=0.1, width=1)
+ax24.bar(range(0, len_to_use), -all_rolling_avg_max, color=their_ra_bg_colors, alpha=0.1, width=1)
 ax24.bar(range(0, len_to_use), our_goals_from_shots_over_time_rolling_avg, color=our_color, alpha=0.5,width=1)
+ax24.bar(range(0, len_to_use), their_goals_from_shots_over_time_rolling_avg, color=their_color, alpha=0.5,width=1)
+ax24.plot(range(0, len_to_use), their_xg_over_time_rolling_avg, color="black", alpha=1)
 ax24.plot(range(0, len_to_use), our_xg_over_time_rolling_avg, color="black", alpha=1)
 plt.axhline(y=our_avg_gfs_line, color=our_color, linestyle='dotted')
 plt.axhline(y=our_avg_xg_line, color='black', linestyle='dotted')
+plt.axhline(y=-their_avg_gfs_line, color=their_color, linestyle='dotted')
+plt.axhline(y=-their_avg_xg_line, color='black', linestyle='dotted')
 ax24.set_title("Our goals scored & conceded from shots and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
-ax24.set_ylim(0, all_rolling_avg_max)
+ax24.set_ylim(-all_rolling_avg_max, all_rolling_avg_max)
 ax24.set_xlim(0, len_to_use - 1)
-ax24.tick_params(axis="x", bottom=False, top=False, labelbottom=False, labeltop=False)
-
 
 ax25 = fig.add_subplot(spec[2, 0])
-ax25.bar(range(0, len_to_use), all_rolling_avg_max, color=their_ra_bg_colors, alpha=0.1, width=1)
-ax25.bar(range(0, len_to_use), their_goals_from_shots_over_time_rolling_avg, color=their_color, alpha=0.5,width=1)
-ax25.plot(range(0, len_to_use), their_xg_over_time_rolling_avg, color="black", alpha=1)
-plt.axhline(y=their_avg_gfs_line, color=their_color, linestyle='dotted')
-plt.axhline(y=their_avg_xg_line, color='black', linestyle='dotted')
-ax25.set_ylim(0, all_rolling_avg_max)
-ax25.set_xlim(0, len_to_use - 1)
-# reverse y-axis of goals conceded
-ax25 = plt.gca()
-ax25.set_ylim(ax25.get_ylim()[::-1])
-
-ax26 = fig.add_subplot(spec[2, 0])
-ax26.bar(range(0, len_to_use), our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
-ax26.bar(range(0, len_to_use), -our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
-ax26.bar(range(0, len_to_use), our_gd_over_time_rolling_avg, color=our_gdiff_bar_colors, alpha=0.5,width=1)
-ax26.plot(range(0, len_to_use), our_xgd_from_shots_over_time_rolling_avg, color="black", alpha=1)
-ax26.set_title("Our GD from goals that came from shots and xGD (black line) over time (" + str(
+ax25.bar(range(0, len_to_use), our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
+ax25.bar(range(0, len_to_use), -our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
+ax25.bar(range(0, len_to_use), our_gd_over_time_rolling_avg, color=our_gdiff_bar_colors, alpha=0.5,width=1)
+ax25.plot(range(0, len_to_use), our_xgd_from_shots_over_time_rolling_avg, color="black", alpha=1)
+ax25.set_title("Our GD from goals that came from shots and xGD (black line) over time (" + str(
     rolling_avg_window) + " game rolling average)")
 plt.axhline(y=our_avg_gdfs_line, color=our_color, linestyle='dotted')
 plt.axhline(y=our_avg_xgd_line, color='black', linestyle='dotted')
-ax26.set_ylim(-our_gd_ylim, our_gd_ylim)
+ax25.set_ylim(-our_gd_ylim, our_gd_ylim)
+ax25.set_xlim(0, len_to_use - 1)
+
+ax26 = fig.add_subplot(spec[2, 0])
+ax26.bar(range(0, len_to_use), 100, color=our_winrate_bar_colors, alpha=0.1, width=1)
+ax26.bar(range(0, len_to_use), our_winrate_over_time_rolling_avg, color=our_color, alpha=0.5,width=1)
+ax26.plot(range(0, len_to_use), our_xwinrate_over_time_rolling_avg, color="black", alpha=1)
+plt.axhline(y=our_avg_winrate_line, color=our_color, linestyle='dotted')
+plt.axhline(y=our_avg_xwinrate_line, color='black', linestyle='dotted')
+ax26.set_title("Our win rate and expected win rate (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+ax26.set_ylim(0, 100)
 ax26.set_xlim(0, len_to_use - 1)
 
 
@@ -2227,9 +2314,9 @@ ax1.set_position([0, 0.88, 1, 0.1])  # Results chart at top
 
 ax2.set_position([0.5, 0.725, 0.2, 0.1])  # my xG
 ax23.set_position([0.5, 0.56875, 0.2, 0.1])  # your xG
-ax24.set_position([0.5, 0.3563, 0.2, 0.1])  # our xG
-ax25.set_position([0.5, 0.25625, 0.2, 0.1])  # our xGC
-ax26.set_position([0.5, 0.1, 0.2, 0.1])  # xGD
+ax26.set_position([0.5, 0.4125, 0.2, 0.1])  # win rate
+ax24.set_position([0.5, 0.25625, 0.2, 0.1])  # our xG
+ax25.set_position([0.5, 0.1, 0.2, 0.1])  # xGD
 
 ax19.set_position([0.39, 0.5, 0.09, 0.325])  # Goal Difference Distribution chart
 ax20.set_position([0.39, 0.275, 0.09, 0.15])  # Goals Scored Distribution chart
@@ -2352,7 +2439,7 @@ if save_and_crop:
 
     # Chart 12 - team xg chart
     left = 1950
-    top = 1050
+    top = 1245
     right = 2840
     bottom = 1525
     img_res_12 = img.crop((left, top, right, bottom))
@@ -2405,6 +2492,14 @@ if save_and_crop:
     bottom = 965
     img_res_18 = img.crop((left, top, right, bottom))
     img_res_18.save(charts_dir + "p2_touch_heatmap.png")
+
+    # Chart 19 - team winrate chart
+    left = 1950
+    top = 940
+    right = 2840
+    bottom = 1215
+    img_res_19 = img.crop((left, top, right, bottom))
+    img_res_19.save(charts_dir + "team_winrate_chart.png")
 
 executionTime = (time.time() - startTime)
 print('\n\nExecution time in seconds: ', "%.2f" % executionTime)
