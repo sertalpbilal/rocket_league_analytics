@@ -1,6 +1,8 @@
 # Rocket League Analytics
 Rocket League detailed stat dashboard with expected goals analysis
 
+See dashboard here: https://sertalpbilal.github.io/rocket_league_analytics
+
 ## Generating xG model and dashboard
 
 The xG model file is under `src/xg_model`.
