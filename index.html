@@ -1,1 +1,122 @@
-It works!
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rocket League Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link rel="stylesheet" href="static/css/styles.css">
+</head>
+<body>
+
+    <header>
+        <nav class="navbar navbar-light bg-light">
+            <div class="container">
+                <span class="navbar-brand mb-0 h1">Rocket League Analytics</span>
+            </div>
+        </nav>
+    </header>
+
+    <main id="app">
+        
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="stat-title">Goal Difference and Expected Goal Difference</div>
+                    <a href="data/charts/results_with_xgd_chart.png" target="_blank"><img src="data/charts/results_with_xgd_chart.png" class="w-100" /></a>
+                </div>
+                <div class="col-12 col-md-6 d-flex flex-column justify-content-center">
+                    <div class="stat-title">Player Shot Heatmaps</div>
+                    <div class="d-flex align-items-center">
+                        <a href="data/charts/p1_shot_and_goal_heatmap.png" target="_blank" class="d-table-cell"><img src="data/charts/p1_shot_and_goal_heatmap.png" class="w-100" /></a>
+                        <a href="data/charts/p2_shot_and_goal_heatmap.png" target="_blank" class="d-table-cell"><img src="data/charts/p2_shot_and_goal_heatmap.png" class="w-100" /></a>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="stat-title">Player Stats</div>
+                    <a href="data/charts/t1_individual_stat_comparison.png" target="_blank" class="d-table-cell"><img src="data/charts/t1_individual_stat_comparison.png" class="w-100" /></a>
+                </div>
+                <div class="col-12 col-md-6 d-flex flex-column justify-content-center">
+                    <div class="stat-title">Team Shot Heatmaps</div>
+                    <div class="d-flex align-items-center">
+                        <a href="data/charts/t1_shot_and_goal_heatmap.png" target="_blank" class="d-table-cell"><img src="data/charts/t1_shot_and_goal_heatmap.png" class="w-100" /></a>
+                        <a href="data/charts/t2_shot_and_goal_heatmap.png" target="_blank" class="d-table-cell"><img src="data/charts/t2_shot_and_goal_heatmap.png" class="w-100" /></a>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="stat-title">Player Stats</div>
+                    <a href="data/charts/team_stat_comparison.png" target="_blank" class="d-table-cell"><img src="data/charts/team_stat_comparison.png" class="w-100" /></a>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="stat-title">Goal Difference Distribution</div>
+                    <div>
+                        <a href="data/charts/gd_distribution_chart.png" target="_blank"><img src="data/charts/gd_distribution_chart.png" class="w-100" /></a>
+                        <small class="text-muted">Gray bar: Overtime goals</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="stat-title">Goal Scored / Conceded Distribution</div>
+                    <div>
+                        <a href="data/charts/gs_and_gc_distribution_chart.png" target="_blank"><img src="data/charts/gs_and_gc_distribution_chart.png" class="w-100" /></a>
+                    </div>
+                </div>
+                <div class="col-12 col-md-8">
+                    <div class="stat-title">Individual Goal and Expected Goals (xG)</div>
+                    <div>
+                        <a href="data/charts/p1_xg_chart.png" target="_blank"><img src="data/charts/p1_xg_chart.png" class="w-100" /></a>
+                    </div>
+                    <div>
+                        <a href="data/charts/p2_xg_chart.png" target="_blank"><img src="data/charts/p2_xg_chart.png" class="w-100" /></a>
+                    </div>
+                </div>
+                <div class="col-12 col-md-8">
+                    <div class="stat-title">Team Win Rate</div>
+                    <div>
+                        <a href="data/charts/team_winrate_chart.png" target="_blank"><img src="data/charts/team_winrate_chart.png" class="w-100" /></a>
+                    </div>
+                </div>
+                <div class="col-12 col-md-8">
+                    <div class="stat-title">Team Goal / Expected Goal (xG) Rate</div>
+                    <div>
+                        <a href="data/charts/team_xg_chart.png" target="_blank"><img src="data/charts/team_xg_chart.png" class="w-100" /></a>
+                    </div>
+                    <div>
+                        <a href="data/charts/team_xgd_chart.png" target="_blank"><img src="data/charts/team_xgd_chart.png" class="w-100" /></a>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 d-flex flex-column justify-content-center">
+                    <div class="stat-title">Player Touch Heatmaps</div>
+                    <div class="d-flex align-items-center">
+                        <a href="data/charts/p1_touch_heatmap.png" target="_blank" class="d-table-cell"><img src="data/charts/p1_touch_heatmap.png" class="w-100" /></a>
+                        <a href="data/charts/p2_touch_heatmap.png" target="_blank" class="d-table-cell"><img src="data/charts/p2_touch_heatmap.png" class="w-100" /></a>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="stat-title">Individual Play Style</div>
+                    <a href="data/charts/t1_pos_tendencies_comparison.png" target="_blank" class="d-table-cell"><img src="data/charts/t1_pos_tendencies_comparison.png" class="w-100" /></a>
+                </div>
+                <div class="col-12">
+                    <div class="stat-title">Results</div>
+                    <div class="text-center d-flex">
+                        <a href="data/charts/results_pie_charts.png" target="_blank" class="d-table-cell mx-auto"><img src="data/charts/results_pie_charts.png" class="w-100" /></a>
+                    </div>
+                </div>
+                <div class="col-12 col-md-8">
+                    <div class="stat-title">Key Stats per Game</div>
+                    <div>
+                        <a href="data/charts/stats_per_game_charts.png" target="_blank"><img src="data/charts/stats_per_game_charts.png" class="w-100" /></a>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="row">
+                GAMELIST
+            </div> -->
+        </div>
+    </main>
+    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js" integrity="sha512-WNLxfP/8cVYL9sj8Jnp6et0BkubLP31jhTG9vhL/F5uEZmg5wEzKoXp1kJslzPQWwPT1eyMiSxlKCgzHLOTOTQ==" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
+    <script src="static/js/index.js"></script>
+
+</body>
+</html>
