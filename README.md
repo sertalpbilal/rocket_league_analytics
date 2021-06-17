@@ -25,7 +25,12 @@ Steps:
    Finally you can go to `src` and run `python boxcartest.py` to populate the dashboard.
 
 ## Screenshots:
+Considering all games:
 ![full_canvas.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/data/charts/full_canvas.png)
+
+Considering just the games in the latest streak of games:
+![full_canvas.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/data/charts/latest_streak/full_canvas.png)
+
 
 ## Output:
 Alongside all of the charts produced by the program, the program also outputs 5 tables:
