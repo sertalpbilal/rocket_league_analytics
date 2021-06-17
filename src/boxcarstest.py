@@ -9,6 +9,8 @@
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
 
+# TODO: Demo heatmap
+
 import csv
 import json
 import math
@@ -29,9 +31,9 @@ from PIL import Image
 
 startTime = time.time()
 
-check_new = True  # Only processes new files (in separate directory)
+check_new = False  # Only processes new files (in separate directory)
 show_xg_scorelines = True # Shows xG scorelines and normal scorelines and replay names of games
-save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
+save_and_crop = False # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
 my_name = "games5425898691"
@@ -900,9 +902,11 @@ for file in new_json_files:
         win_chance += (draw_chance/2)
         loss_chance += (draw_chance/2)
 
+        score_prob = (our_xgf_prob[local_GS] * our_xgc_prob[local_GC]) / (1 - draw_chance)
+
         win_chance_per_game.append(win_chance*100)
         total_win_chance+=(win_chance*100)
-        
+
         result_type = "W"
         if local_GC > local_GS:
             if local_wentOvertime:
@@ -924,10 +928,10 @@ for file in new_json_files:
         if result_type == "L*":
             color_to_add = Fore.LIGHTRED_EX
         scoreline_data.append([color_to_add + "%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, file.replace(".json",""),
-                               round((win_chance*100),2), round((result_fairness*100),2), result_type + Style.RESET_ALL])
+                               round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type + Style.RESET_ALL])
 
 if show_xg_scorelines:
-    print(tabulate(scoreline_data, headers=["xGF", "xGC", "GF", "GC", "Replay ID","Win%","Fairness%", "Outcome"], numalign="right"))
+    print(tabulate(scoreline_data, headers=["xGF", "xGC", "GF", "GC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome"], numalign="right"))
     print("\n")
 
 your_miss_count = len(your_misses_distancetogoal)
