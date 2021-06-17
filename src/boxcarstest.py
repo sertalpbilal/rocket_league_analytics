@@ -11,6 +11,8 @@
 
 # TODO: Demo heatmap
 
+# TODO: Make replay IDs in scorelines.tsv hyperlinks
+
 import csv
 import json
 import math
@@ -59,6 +61,7 @@ else:
 path_to_untrimmed_csv = 'data/dataframe/'
 path_to_csv = 'data/dataframe-trimmed/'
 path_to_xg = 'data/xg-out/'
+path_to_tables = 'data/tables/'
 
 # Trim CSVs if there are CSVs to trim
 if len(os.listdir(path_to_untrimmed_csv)) > 0:
@@ -406,6 +409,7 @@ your_goals_from_shots = 0
 their_goals_from_shots = 0
 
 scoreline_data = []
+scoreline_data_no_colors = []
 
 for file in new_json_files:
     file_counter += 1
@@ -929,10 +933,16 @@ for file in new_json_files:
             color_to_add = Fore.LIGHTRED_EX
         scoreline_data.append([color_to_add + "%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, file.replace(".json",""),
                                round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type + Style.RESET_ALL])
-
+        scoreline_data_no_colors.append(["%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, file.replace(".json",""),
+                               round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type])
 if show_xg_scorelines:
     print(tabulate(scoreline_data, headers=["xGF", "xGC", "GF", "GC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome"], numalign="right"))
     print("\n")
+
+content = tabulate(scoreline_data_no_colors, headers=["xGF", "xGC", "GF", "GC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome"], tablefmt="tsv")
+f = open(path_to_tables + "scorelines.tsv", "w")
+f.write(content)
+f.close()
 
 your_miss_count = len(your_misses_distancetogoal)
 my_miss_count = len(my_misses_distancetogoal)
@@ -1107,6 +1117,16 @@ team_data = [["Goals", our_goal_count, their_goal_count],
              ["Aerials", our_aerials_count, their_aerials_count]
              ]
 
+content = tabulate(individual_data, headers=["Stat", my_alias, your_alias], numalign="right",tablefmt="tsv")
+f = open(path_to_tables + "player_comparison.tsv", "w")
+f.write(content)
+f.close()
+
+content = tabulate(team_data, headers=["Stat", "Us", "Them"], numalign="right", tablefmt="tsv")
+f = open(path_to_tables + "team_comparison.tsv", "w")
+f.write(content)
+f.close()
+
 # coloring output
 for i in range(len(individual_data)):
     if individual_data[i][0] != "Misses" and individual_data[i][0] != "Demoed" and individual_data[i][0] != "Lost Ball":
@@ -1262,6 +1282,15 @@ for streak in range(0, len(streak_num_games)):
          my_goals_per_game_streak, your_goals_per_game_streak, our_goals_per_game_streak, their_goals_per_game_streak,
          gd_per_game_streak, my_xg_per_game_streak, your_xg_per_game_streak, our_xg_per_game_streak, their_xg_per_game_streak,
          xgd_per_game_streak])
+
+content = tabulate(streak_data,
+               headers=["Win %", "Results", "GP", "W", "L", my_alias + " GS/G", your_alias + "GS/G",
+                        "GS/G", "GC/G", "GD/G", my_alias + " xG/G", your_alias + " xG/G",
+                        "xG/G", "xGC/G", "xGD/G"], numalign="right", tablefmt="tsv")
+f = open(path_to_tables + "streaks.tsv", "w")
+f.write(content)
+f.close()
+
 
 # colored output
 for i in range(len(streak_data)):
@@ -1426,6 +1455,13 @@ result_data = [["Games", games_nr, normaltime_games_count, overtime_games_count]
                ["Losses", loss_count, normaltime_losses_count, overtime_losses_count]
                ]
 
+
+content = tabulate(result_data,
+               headers=["Stat", "Overall", "Normaltime", "Overtime"], numalign="right", tablefmt="tsv")
+f = open(path_to_tables + "results.tsv", "w")
+f.write(content)
+f.close()
+
 for i in range(len(result_data)):
     if i == 0:
         result_data[i][1] = Fore.YELLOW + str(result_data[i][1]) + Style.RESET_ALL
@@ -1441,7 +1477,6 @@ for i in range(len(result_data)):
         result_data[i][1] = Fore.RED + str(result_data[i][1]) + Style.RESET_ALL
         result_data[i][2] = Fore.RED + str(result_data[i][2]) + Style.RESET_ALL
         result_data[i][3] = Fore.RED + str(result_data[i][3]) + Style.RESET_ALL
-
 
 
 print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime"], numalign="right"))
