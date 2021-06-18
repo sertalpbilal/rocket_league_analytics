@@ -8,10 +8,23 @@
     padding-left: 1em;
 }
 
+header {
+    margin-bottom: 10px;
+}
+
 a img {
     border: 1px solid rgba(0, 0, 0, 0);
 }
 
 a img:hover {
     border: 1px solid rgb(255, 115, 0);
+}
+
+@media (max-width: 768px) { 
+    .table-responsive {
+        font-size: x-small
+    }
+    .table-responsive a {
+        font-size: x-small
+    }
 }
