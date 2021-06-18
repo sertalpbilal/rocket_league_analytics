@@ -21,6 +21,10 @@ var app = new Vue({
                 let game_xg = xg_out[i]['xg']
                 e['xg_color'] = color_func(game_xg)
                 e['goal_color'] = color_func((e['goal'] == 'True') + 0)
+                if (! e['time']) {
+                    e['time'] = "300"
+                }
+                e['time'] = parseInt(e['time'])
             })
             return shots
         }
@@ -36,7 +40,7 @@ var app = new Vue({
                     "info": false,
                     "paging": false,
                     "columnDefs": [{
-                        "targets": [3],
+                        "targets": [4],
                         "orderable": false
                         }],
                     "fixedHeader": true,
