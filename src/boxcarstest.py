@@ -33,9 +33,9 @@ from PIL import Image
 
 startTime = time.time()
 
-check_new = False  # Only processes new files (in separate directory)
+check_new = True  # Only processes new files (in separate directory)
 show_xg_scorelines = True # Shows xG scorelines and normal scorelines and replay names of games
-save_and_crop = False # Saves an image of the dashboard and then crops charts into their own images
+save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
 my_name = "games5425898691"
@@ -55,13 +55,22 @@ bg_img = plt.imread("simple-pitch.png")
 
 if check_new:
     path_to_json = 'data/json-new/'
+    path_to_tables = 'data/tables/latest_streak/'
+    path_to_charts = 'data/charts/latest_streak/'
 else:
     path_to_json = 'data/json/'
+    path_to_tables = 'data/tables/'
+    path_to_charts = 'data/charts/'
 
 path_to_untrimmed_csv = 'data/dataframe/'
 path_to_csv = 'data/dataframe-trimmed/'
 path_to_xg = 'data/xg-out/'
-path_to_tables = 'data/tables/'
+
+if not os.path.exists(path_to_tables):
+    os.makedirs(path_to_tables)
+
+if not os.path.exists(path_to_charts):
+    os.makedirs(path_to_charts)
 
 # Trim CSVs if there are CSVs to trim
 if len(os.listdir(path_to_untrimmed_csv)) > 0:
@@ -487,6 +496,7 @@ for file in new_json_files:
         local_their_assists = 0
 
         local_multiplier = 1
+        local_time = data["gameMetadata"]["time"]
 
         # Link our names to IDs and detect our team color
         for i in data['players']:
@@ -934,12 +944,14 @@ for file in new_json_files:
         scoreline_data.append([color_to_add + "%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, file.replace(".json",""),
                                round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type + Style.RESET_ALL])
         scoreline_data_no_colors.append(["%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, file.replace(".json",""),
-                               round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type])
+                               round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type, local_time])
 if show_xg_scorelines:
     print(tabulate(scoreline_data, headers=["xGF", "xGC", "GF", "GC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome"], numalign="right"))
     print("\n")
 
-content = tabulate(scoreline_data_no_colors, headers=["xGF", "xGC", "GF", "GC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome"], tablefmt="tsv")
+content = tabulate(scoreline_data_no_colors, headers=["xGF", "xGC", "GF", "GC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome", "StartTime"], tablefmt="tsv")
+if not os.path.exists(path_to_tables + "scorelines.tsv"):
+    open(path_to_tables + "scorelines.tsv", 'w').close()
 f = open(path_to_tables + "scorelines.tsv", "w")
 f.write(content)
 f.close()
@@ -1118,11 +1130,15 @@ team_data = [["Goals", our_goal_count, their_goal_count],
              ]
 
 content = tabulate(individual_data, headers=["Stat", my_alias, your_alias], numalign="right",tablefmt="tsv")
+if not os.path.exists(path_to_tables + "player_comparison.tsv"):
+    open(path_to_tables + "player_comparison.tsv", 'w').close()
 f = open(path_to_tables + "player_comparison.tsv", "w")
 f.write(content)
 f.close()
 
 content = tabulate(team_data, headers=["Stat", "Us", "Them"], numalign="right", tablefmt="tsv")
+if not os.path.exists(path_to_tables + "team_comparison.tsv"):
+    open(path_to_tables + "team_comparison.tsv", 'w').close()
 f = open(path_to_tables + "team_comparison.tsv", "w")
 f.write(content)
 f.close()
@@ -1222,7 +1238,7 @@ for result in range(0, len(result_array)):
 
     local_our_goals_in_streak += (my_goals_over_time[result] + your_goals_over_time[result])
     local_their_goals_in_streak += their_goals_over_time[result]
-    
+
     local_my_xg_in_streak += my_xg_over_time[result]
     local_your_xg_in_streak += your_xg_over_time[result]
 
@@ -1287,6 +1303,8 @@ content = tabulate(streak_data,
                headers=["Win %", "Results", "GP", "W", "L", my_alias + " GS/G", your_alias + "GS/G",
                         "GS/G", "GC/G", "GD/G", my_alias + " xG/G", your_alias + " xG/G",
                         "xG/G", "xGC/G", "xGD/G"], numalign="right", tablefmt="tsv")
+if not os.path.exists(path_to_tables + "streaks.tsv"):
+    open(path_to_tables + "streaks.tsv", 'w').close()
 f = open(path_to_tables + "streaks.tsv", "w")
 f.write(content)
 f.close()
@@ -1318,7 +1336,7 @@ for i in range(len(streak_data)):
     streak_data[i][1] = streak_data[i][1].replace("W",Fore.GREEN+"W")
     streak_data[i][1] = streak_data[i][1].replace("L",Fore.RED+"L")
     streak_data[i][1] += Style.RESET_ALL
-    
+
     # individual GS/G values
     if streak_data[i][5] > streak_data[i][6]:
         streak_data[i][5] = Fore.MAGENTA + str(streak_data[i][5])
@@ -1329,8 +1347,8 @@ for i in range(len(streak_data)):
     if streak_data[i][5] < streak_data[i][6]:
         streak_data[i][5] = Fore.CYAN + str(streak_data[i][5])
         streak_data[i][6] = Fore.MAGENTA + str(streak_data[i][6]) + Style.RESET_ALL
-        
-    # GD / G 
+
+    # GD / G
     gdpg_in_streak =  float(streak_data[i][9])
 
     if gdpg_in_streak > 0:
@@ -1348,20 +1366,20 @@ for i in range(len(streak_data)):
         streak_data[i][8] = Fore.RED + str(streak_data[i][8]) + Style.RESET_ALL
         streak_data[i][7] = Fore.RED + str(streak_data[i][7]) + Style.RESET_ALL
 
-        
-    # xGD / G 
+
+    # xGD / G
     xgdpg_in_streak =  float(streak_data[i][14])
 
     if xgdpg_in_streak > 0:
         streak_data[i][14] = Fore.GREEN + str(streak_data[i][14]) + Style.RESET_ALL
         streak_data[i][13] = Fore.GREEN + str(streak_data[i][13]) + Style.RESET_ALL
         streak_data[i][12] = Fore.GREEN + str(streak_data[i][12]) + Style.RESET_ALL
-        
+
     if xgdpg_in_streak == 0:
         streak_data[i][14] = Fore.YELLOW + str(streak_data[i][14]) + Style.RESET_ALL
         streak_data[i][13] = Fore.YELLOW + str(streak_data[i][13]) + Style.RESET_ALL
         streak_data[i][12] = Fore.YELLOW + str(streak_data[i][12]) + Style.RESET_ALL
-        
+
     if xgdpg_in_streak < 0:
         streak_data[i][14] = Fore.RED + str(streak_data[i][14]) + Style.RESET_ALL
         streak_data[i][13] = Fore.RED + str(streak_data[i][13]) + Style.RESET_ALL
@@ -1377,7 +1395,7 @@ for i in range(len(streak_data)):
     if streak_data[i][10] < streak_data[i][11]:
         streak_data[i][10] = Fore.CYAN + str(streak_data[i][10])
         streak_data[i][11] = Fore.MAGENTA + str(streak_data[i][11]) + Style.RESET_ALL
-    
+
 print("\n")
 print(tabulate(streak_data,
                headers=["Win %", "Results", "GP", "W", "L", my_alias + " GS/G", your_alias + " GS/G",
@@ -1458,6 +1476,8 @@ result_data = [["Games", games_nr, normaltime_games_count, overtime_games_count]
 
 content = tabulate(result_data,
                headers=["Stat", "Overall", "Normaltime", "Overtime"], numalign="right", tablefmt="tsv")
+if not os.path.exists(path_to_tables + "streaks.tsv"):
+    open(path_to_tables + "results.tsv", 'w').close()
 f = open(path_to_tables + "results.tsv", "w")
 f.write(content)
 f.close()
@@ -2384,12 +2404,11 @@ ax9.set_position([0.75, 0.155, 0.227, 0.1])  # Shots over time
 ax10.set_position([0.75, 0.26, 0.227, 0.1])  # Saves over time
 ax11.set_position([0.75, 0.365, 0.227, 0.1])  # Assists over time
 
-if save_and_crop:
-    charts_dir = "data/charts/"
-    plt.savefig("full_canvas.png")
 
+if save_and_crop:
+    plt.savefig(path_to_charts + "full_canvas.png")
     # Divide the canvas into individual charts by cropping
-    img = Image.open(r"full_canvas.png")
+    img = Image.open(path_to_charts + "full_canvas.png")
 
     # Chart 1 - results chart
     left = 0
@@ -2397,7 +2416,7 @@ if save_and_crop:
     right = 4000
     bottom = 280
     img_res = img.crop((left, top, right, bottom))
-    img_res.save(charts_dir + "results_with_xgd_chart.png")
+    img_res.save(path_to_charts + "results_with_xgd_chart.png")
 
     # Chart 2 - first player's shot and goal heatmap
     left = 100
@@ -2405,7 +2424,7 @@ if save_and_crop:
     right = 465
     bottom = 920
     img_res_2 = img.crop((left, top, right, bottom))
-    img_res_2.save(charts_dir + "p1_shot_and_goal_heatmap.png")
+    img_res_2.save(path_to_charts + "p1_shot_and_goal_heatmap.png")
 
     # Chart 3 - first player's shot and goal heatmap
     left = 100
@@ -2413,7 +2432,7 @@ if save_and_crop:
     right = 465
     bottom = 1720
     img_res_3 = img.crop((left, top, right, bottom))
-    img_res_3.save(charts_dir + "t1_shot_and_goal_heatmap.png")
+    img_res_3.save(path_to_charts + "t1_shot_and_goal_heatmap.png")
 
     # Chart 4 - individual stats per game comparison
     left = 460
@@ -2421,7 +2440,7 @@ if save_and_crop:
     right = 1050
     bottom = 1020
     img_res_4 = img.crop((left, top, right, bottom))
-    img_res_4.save(charts_dir + "t1_individual_stat_comparison.png")
+    img_res_4.save(path_to_charts + "t1_individual_stat_comparison.png")
 
     # Chart 5 - team stats per game comparison
     left = 460
@@ -2429,7 +2448,7 @@ if save_and_crop:
     right = 1050
     bottom = 1820
     img_res_5 = img.crop((left, top, right, bottom))
-    img_res_5.save(charts_dir + "team_stat_comparison.png")
+    img_res_5.save(path_to_charts + "team_stat_comparison.png")
 
     # Chart 6 - second player's shot and goal heatmap
     left = 1100
@@ -2437,7 +2456,7 @@ if save_and_crop:
     right = 1465
     bottom = 920
     img_res_7 = img.crop((left, top, right, bottom))
-    img_res_7.save(charts_dir + "p2_shot_and_goal_heatmap.png")
+    img_res_7.save(path_to_charts + "p2_shot_and_goal_heatmap.png")
 
     # Chart 7 - opponent's shot and goal heatmap
     left = 1100
@@ -2445,7 +2464,7 @@ if save_and_crop:
     right = 1465
     bottom = 1720
     img_res_7 = img.crop((left, top, right, bottom))
-    img_res_7.save(charts_dir + "t2_shot_and_goal_heatmap.png")
+    img_res_7.save(path_to_charts + "t2_shot_and_goal_heatmap.png")
 
     # Chart 8 - goal difference distribution
     left = 1480
@@ -2453,7 +2472,7 @@ if save_and_crop:
     right = 1965
     bottom = 1060
     img_res_8 = img.crop((left, top, right, bottom))
-    img_res_8.save(charts_dir + "gd_distribution_chart.png")
+    img_res_8.save(path_to_charts + "gd_distribution_chart.png")
 
     # Chart 9 - goals scored & conceded distribution
     left = 1480
@@ -2461,7 +2480,7 @@ if save_and_crop:
     right = 1965
     bottom = 1820
     img_res_9 = img.crop((left, top, right, bottom))
-    img_res_9.save(charts_dir + "gs_and_gc_distribution_chart.png")
+    img_res_9.save(path_to_charts + "gs_and_gc_distribution_chart.png")
 
     # Chart 10 - first player's xg chart
     left = 1950
@@ -2469,7 +2488,7 @@ if save_and_crop:
     right = 2840
     bottom = 605
     img_res_10 = img.crop((left, top, right, bottom))
-    img_res_10.save(charts_dir + "p1_xg_chart.png")
+    img_res_10.save(path_to_charts + "p1_xg_chart.png")
 
     # Chart 11 - second player's xg chart
     left = 1950
@@ -2477,7 +2496,7 @@ if save_and_crop:
     right = 2840
     bottom = 905
     img_res_11 = img.crop((left, top, right, bottom))
-    img_res_11.save(charts_dir + "p2_xg_chart.png")
+    img_res_11.save(path_to_charts + "p2_xg_chart.png")
 
     # Chart 12 - team xg chart
     left = 1950
@@ -2485,7 +2504,7 @@ if save_and_crop:
     right = 2840
     bottom = 1525
     img_res_12 = img.crop((left, top, right, bottom))
-    img_res_12.save(charts_dir + "team_xg_chart.png")
+    img_res_12.save(path_to_charts + "team_xg_chart.png")
 
     # Chart 13 - team xgd chart
     left = 1950
@@ -2493,7 +2512,7 @@ if save_and_crop:
     right = 2840
     bottom = 1840
     img_res_13 = img.crop((left, top, right, bottom))
-    img_res_13.save(charts_dir + "team_xgd_chart.png")
+    img_res_13.save(path_to_charts + "team_xgd_chart.png")
 
     # Chart 14 - positional tendency comparison
     left = 2840
@@ -2501,7 +2520,7 @@ if save_and_crop:
     right = 3430
     bottom = 1020
     img_res_14 = img.crop((left, top, right, bottom))
-    img_res_14.save(charts_dir + "t1_pos_tendencies_comparison.png")
+    img_res_14.save(path_to_charts + "t1_pos_tendencies_comparison.png")
 
     # Chart 15 - assists, saves, shots, goals charts
     left = 2880
@@ -2509,7 +2528,7 @@ if save_and_crop:
     right = 3930
     bottom = 1945
     img_res_15 = img.crop((left, top, right, bottom))
-    img_res_15.save(charts_dir + "stats_per_game_charts.png")
+    img_res_15.save(path_to_charts + "stats_per_game_charts.png")
 
     # Chart 16 - results pie charts
     left = 3450
@@ -2517,7 +2536,7 @@ if save_and_crop:
     right = 3965
     bottom = 510
     img_res_16 = img.crop((left, top, right, bottom))
-    img_res_16.save(charts_dir + "results_pie_charts.png")
+    img_res_16.save(path_to_charts + "results_pie_charts.png")
 
     # Chart 17 - first player's touch heatmap
     left = 3460
@@ -2525,7 +2544,7 @@ if save_and_crop:
     right = 3700
     bottom = 965
     img_res_17 = img.crop((left, top, right, bottom))
-    img_res_17.save(charts_dir + "p1_touch_heatmap.png")
+    img_res_17.save(path_to_charts + "p1_touch_heatmap.png")
 
     # Chart 18 - second player's touch heatmap
     left = 3700
@@ -2533,7 +2552,7 @@ if save_and_crop:
     right = 3940
     bottom = 965
     img_res_18 = img.crop((left, top, right, bottom))
-    img_res_18.save(charts_dir + "p2_touch_heatmap.png")
+    img_res_18.save(path_to_charts + "p2_touch_heatmap.png")
 
     # Chart 19 - team winrate chart
     left = 1950
@@ -2541,7 +2560,7 @@ if save_and_crop:
     right = 2840
     bottom = 1215
     img_res_19 = img.crop((left, top, right, bottom))
-    img_res_19.save(charts_dir + "team_winrate_chart.png")
+    img_res_19.save(path_to_charts + "team_winrate_chart.png")
 
 executionTime = (time.time() - startTime)
 print('\n\nExecution time in seconds: ', "%.2f" % executionTime)
