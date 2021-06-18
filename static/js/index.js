@@ -28,14 +28,18 @@ var app = new Vue({
             $("#game_list").DataTable().destroy();
             this.$nextTick(() => {
                 $("#game_list").DataTable({
-                    "order": [],
+                    "order": [[ 1, 'desc' ]],
                     "lengthChange": true,
                     "pageLength": 10,
                     "searching": false,
                     "info": true,
                     "paging": true,
-                    "columnDefs": [],
-                    "fixedHeader": true
+                    "columnDefs": [{
+                        "targets": [9],
+                        "orderable": false
+                        }],
+                    "fixedHeader": true,
+                    "scrollX": true
                 });
             })
         }
@@ -75,5 +79,3 @@ $(document).ready(() => {
             console.log('ready')
         })
 })
-
-// https://stackoverflow.com/questions/5448545/how-to-retrieve-get-parameters-from-javascript

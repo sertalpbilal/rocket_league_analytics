@@ -12,6 +12,8 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.23/b-1.6.5/b-colvis-1.6.5/b-html5-1.6.5/fc-3.3.2/fh-3.1.7/r-2.2.6/sp-1.2.2/datatables.min.css" />
     <script src="https://d3js.org/d3.v6.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-interpolate/1.3.0/d3-interpolate.js" integrity="sha512-KcUKnCgVgjA6pyyyN33d5S1IHk9hFUaldkL8BmKvqR+7q9HyZj3jmWJemF6IJuLkcj3biCNzdGgXNPJCjurXnQ==" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/js/fontawesome.min.js" integrity="sha256-TMRxGf3NaZhrxTfD8y/NGiyE4UXBA3udH1l+Co8JDVU=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css" integrity="sha256-rx5u3IdaOCszi7Jb18XD9HSn8bNiEgAqWJbdBvIYYyU=" crossorigin="anonymous">
     <link rel="stylesheet" href="static/css/styles.css">
 </head>
 <body>
@@ -28,52 +30,55 @@
         
         <div class="container mb-3">
             <div class="row justify-content-center">
-                <div class="col-6">
-                    <a class="btn btn-secondary w-100 p-3 m-2" href="dashboard.html" role="button">Dashboard</a>
+                <div class="col-8 col-md-4">
+                    <a class="btn btn-secondary w-100 p-3 m-2" href="dashboard.html" role="button">Stat Dashboard - All Games</a>
                 </div>
             </div>
             <div class="row justify-content-center">
                 <div class="col-12 col-md-12">
                     <h5>Game List</h5>
-                    <div class="table-responsive">
-                        <table class="table table-sm text-small table-responsive" id="game_list" v-if="games.length > 0">
-                            <thead>
-                                <tr>
-                                    <th class="d-none d-md-table-cell">Order</th>
-                                    <th class="text-muted d-none d-md-table-cell">ID</th>
-                                    <th class="d-none d-md-table-cell">Date</th>
-                                    <th>xGF</th>
-                                    <th>xGC</th>
-                                    <th>GF</th>
-                                    <th>GC</th>
-                                    <th>P(Win)</th>
-                                    <th>P(Score)</th>
-                                    <th>Result</th>
-                                    <!-- <th>Report</th> -->
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="game, id in sorted_games">
-                                    <td class="d-none d-md-table-cell">{{ id }}</td>
-                                    <td class="text-muted d-none d-md-table-cell">{{ game['Replay ID'] }}</td>
-                                    <td class="d-none d-md-table-cell">{{ (new Date(game['StartTime'] * 1000)).toISOString().slice(0,16) }}</td>
-                                    <td>{{ game['xGF'] }}</td>
-                                    <td>{{ game['xGC'] }}</td>
-                                    <td>{{ game['GF'] }}</td>
-                                    <td>{{ game['GC'] }}</td>
-                                    <td :style="{'background': game['win_color']}">{{ game['P(Win)'] }}</td>
-                                    <td>{{ game['P(Score)'] }}</td>
-                                    <td :style="{'background': game['outcome_color']}">{{ game['Outcome'] }}</td>
-                                    <!-- <td>
-                                        <a class="btn btn-secondary pt-0 pb-0 pl-2 pr-2" :href="'game.html?id=' + game['Replay ID']" role="button">Report</a>
-                                    </td> -->
-                                </tr>
-                            </tbody>
-                        </table>
+                    <!-- <div class="table-responsive"> -->
+                        <div class="text-small-mobile" v-if="games.length > 0">
+                            <table class="table table-sm table-responsive" id="game_list">
+                                <thead>
+                                    <tr>
+                                        <!-- <th class="d-none d-md-table-cell">Order</th> -->
+                                        <th class="text-muted d-none d-md-table-cell">ID</th>
+                                        <th class="d-none d-md-table-cell">Date</th>
+                                        <th>xGF</th>
+                                        <th>xGC</th>
+                                        <th>GF</th>
+                                        <th>GC</th>
+                                        <th>P(Win)</th>
+                                        <th>P(Score)</th>
+                                        <th>Res</th>
+                                        <th>Links</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="game, id in sorted_games">
+                                        <!-- <td class="d-none d-md-table-cell">{{ id }}</td> -->
+                                        <td class="text-muted d-none d-md-table-cell">{{ game['Replay ID'] }}</td>
+                                        <td class="d-none d-md-table-cell">{{ (new Date(game['StartTime'] * 1000)).toISOString().slice(0,16) }}</td>
+                                        <td class="align-middle">{{ game['xGF'] }}</td>
+                                        <td class="align-middle">{{ game['xGC'] }}</td>
+                                        <td class="align-middle">{{ game['GF'] }}</td>
+                                        <td class="align-middle">{{ game['GC'] }}</td>
+                                        <td class="align-middle" :style="{'background': game['win_color']}">{{ game['P(Win)'] }}</td>
+                                        <td class="align-middle">{{ game['P(Score)'] }}</td>
+                                        <td class="align-middle" :style="{'background': game['outcome_color']}">{{ game['Outcome'] }}</td>
+                                        <td class="align-middle">
+                                            <a class="btn btn-info pt-0 pb-0 pl-1 pr-1 mlink" :href="'game.html?id=' + game['Replay ID']" role="button"><i class="fas fa-chart-bar"></i></a>
+                                            <a target=_blank class="btn btn-danger pt-0 pb-0 pl-1 pr-1 mlink" :href="'https://ballchasing.com/replay/' + game['Replay ID'] + '#watch'" role="button"><i class="fas fa-video"></i></a>                                            
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <div class="" v-else>
                             Loading the table, please wait...
                         </div>
-                    </div>
+                    <!-- </div> -->
                 </div>
             </div>
         </div>

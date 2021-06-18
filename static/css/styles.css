@@ -22,9 +22,28 @@ a img:hover {
 
 @media (max-width: 768px) { 
     .table-responsive {
-        font-size: x-small
+        font-size: x-small !important;
     }
     .table-responsive a {
-        font-size: x-small
+        font-size: x-small;
     }
+    .text-small-mobile {
+        font-size: small;
+    }
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mlink {
+    font-size: 0.8em !important;
+}
+
+.text-xsmall {
+    font-size: x-small !important;
+}
+
+table {
+    text-align: center;
 }
