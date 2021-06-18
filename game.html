@@ -36,32 +36,34 @@
                 </div>
                 <div class="col-12">
                     <h5>Shots</h5>
-                    <table class="table table-sm table-striped" id="shot_list">
-                        <thead>
-                            <tr>
-                                <th>Player</th>
-                                <th>Team</th>
-                                <th>Time</th>
-                                <th>Ball Position</th>
-                                <th>xG</th>
-                                <th>Goal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="shot, idx in shots_combined">
-                                <td>{{ shot['shot_taker_name'] }}</td>
-                                <td :style="{'color': shot['team_color']}">{{ shot['team_name'] }}</td>
-                                <td>{{ shot['time'] }}</td>
-                                <td>
-                                    {{ parseFloat(shot['ball_pos_x']).toFixed(2) }} /
-                                    {{ parseFloat(shot['ball_pos_y']).toFixed(2) }} /
-                                    {{ parseFloat(shot['ball_pos_z']).toFixed(2) }}
-                                </td>
-                                <td :style="{'background': shot['xg_color']}">{{ parseFloat(shot['xg_info']['xg']).toFixed(3) }}</td>
-                                <td :style="{'background': shot['goal_color']}">{{ shot['goal'] }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="text-small-mobile">
+                        <table class="table table-sm table-striped table-responsive" id="shot_list">
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Team</th>
+                                    <th>Time</th>
+                                    <th>Ball Position</th>
+                                    <th>xG</th>
+                                    <th>Goal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="shot, idx in shots_combined">
+                                    <td>{{ shot['shot_taker_name'] }}</td>
+                                    <td :style="{'color': shot['team_color']}">{{ shot['team_name'] }}</td>
+                                    <td>{{ parseInt(shot['time']) }}</td>
+                                    <td class="text-smaller">
+                                        {{ parseFloat(shot['ball_pos_x']).toFixed(2) }} /
+                                        {{ parseFloat(shot['ball_pos_y']).toFixed(2) }} /
+                                        {{ parseFloat(shot['ball_pos_z']).toFixed(2) }}
+                                    </td>
+                                    <td :style="{'background': shot['xg_color']}">{{ parseFloat(shot['xg_info']['xg']).toFixed(3) }}</td>
+                                    <td :style="{'background': shot['goal_color']}">{{ shot['goal'] }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
