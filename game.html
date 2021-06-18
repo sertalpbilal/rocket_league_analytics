@@ -47,6 +47,7 @@
                                     <th>Ball Position</th>
                                     <th>xG</th>
                                     <th>Goal</th>
+                                    <th>Replay</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -62,6 +63,9 @@
                                     </td>
                                     <td :style="{'background': shot['xg_color']}">{{ parseFloat(shot['xg_info']['xg']).toFixed(3) }}</td>
                                     <td :style="{'background': shot['goal_color']}">{{ shot['goal'] }}</td>
+                                    <td>
+                                        <a target=_blank class="btn btn-danger pt-0 pb-0 pl-1 pr-1 mlink" role="button" :href="'https://ballchasing.com/replay/' + game_id + '#watch?t=' + shot['sec'] + 's'"><i class="fas fa-video"></i></a>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

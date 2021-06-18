@@ -25,6 +25,7 @@ var app = new Vue({
                     e['time'] = "300"
                 }
                 e['time'] = parseInt(e['time'])
+                e['sec'] = (parseInt(e['frame'])/27.5 - 3).toFixed(2)
             })
             return shots
         }
