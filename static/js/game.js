@@ -19,6 +19,7 @@ var app = new Vue({
                 e['team_color'] = e['is_orange'] == 1 ? "orange" : "blue"
                 e['xg_info'] = xg_out[i]
                 let game_xg = xg_out[i]['xg']
+                e['xg'] = parseFloat(game_xg)
                 e['xg_color'] = color_func(game_xg)
                 e['goal_color'] = color_func((e['goal'] == 'True') + 0)
                 if (! e['time']) {
@@ -51,6 +52,133 @@ var app = new Vue({
         }
     }
 })
+
+function plot_pitch_shot() {
+
+    const raw_width = 12080+20;
+    const raw_height = 8240+20;
+
+    // 5140 y max (in svg it is x)
+    // 4100 x max (in svg it is y)
+
+    const margin = { top: 10, right: 10, bottom: 10, left: 10 },
+        width = raw_width - margin.left - margin.right,
+        height = raw_height - margin.top - margin.bottom;
+
+    const svg = d3.select("#pitch_with_shots")
+        .append("svg")
+        .attr("viewBox", `0 0  ${(width + margin.left + margin.right)} ${(height + margin.top + margin.bottom)}`)
+        .attr("id", "fixture_plot")
+        .attr('class', 'w-100')
+        .append('g')
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+    let data = app.shots_combined
+
+    let pitch = (context) => {
+        context.moveTo(6040, 0);
+        context.lineTo(1900, 0);
+        context.lineTo(900, 1000);
+        context.lineTo(900, 3170);
+        context.lineTo(0, 3170);
+        context.lineTo(0, 5070);
+        context.lineTo(900, 5070);
+        context.lineTo(900, 7240);
+        context.lineTo(1900, 8240);
+        context.lineTo(6040, 8240);
+        context.lineTo(6040, 0);
+
+        context.lineTo(10180,0);
+        context.lineTo(11180,1000)
+        context.lineTo(11180,3170)
+        context.lineTo(12080,3170)
+        context.lineTo(12080,5070)
+        context.lineTo(11180,5070)
+        context.lineTo(11180,7240)
+        context.lineTo(10180,8240)
+        context.lineTo(6040,8240)
+
+        return context;
+    }
+
+    // pitch
+    svg.append("path")
+        .style("stroke", "black")
+        .style("stroke-width", 50)
+        .style("fill", "#f3f9ff")
+        .attr("d", pitch(d3.path()))
+
+
+    // y-axis
+    let min_y = -4120 //Math.min(...data.map(i => i.ball_pos_x))
+    let max_y = 4120 //Math.max(...data.map(i => i.ball_pos_x))
+    const y = d3.scaleLinear().domain([min_y, max_y]).range([0, height])
+
+    // x-axis
+    let min_x = -6050 //Math.min(...data.map(i => i.ball_pos_y))
+    let max_x = 6050 // Math.max(...data.map(i => i.ball_pos_y))
+    const x = d3.scaleLinear().domain([min_x, max_x]).range([0, width])
+
+    function highlight_shot (event,d) {
+        let target = d3.select(event.currentTarget)
+        target.style("fill-opacity", 1)
+        d3.selectAll(".xg-entry").filter(i => i !== d).style("display", "none")
+    }
+    function undo_higlight(event,d) {
+        let target = d3.select(event.currentTarget)
+        target.style("fill-opacity", 0.5)
+        d3.selectAll(".xg-entry").style("display", "inline")
+    }
+
+    let shots = svg.append('g')
+        .attr("id", "shot_container")
+        .selectAll()
+        .data(data.filter(i => i.goal == "False"))
+        .enter()
+
+    shots.append("circle")
+        .attr("class", "shot-circles xg-entry")
+        .style("stroke", "black")
+        .style("stroke-opacity", 1)
+        .style("stroke-width", 20)
+        .style("fill", (d) => d.is_orange == 1 ? "orange" : "blue")
+        .attr("r", (d) => parseFloat(d.xg)*150 + 50)
+        .attr("cx", (d) => d.is_orange == 1 ? x(d.shot_taker_pos_y) : x(-d.shot_taker_pos_y))
+        .attr("cy", (d) => d.is_orange == 1 ? y(-d.shot_taker_pos_x) : y(-d.shot_taker_pos_x))
+        .style("fill-opacity", 0.5)
+        .on("mouseover", highlight_shot)
+        .on("mouseleave", undo_higlight)
+
+    let goals = svg.append('g')
+        .attr("id", "goal_container")
+        .selectAll()
+        .data(data.filter(i => i.goal == "True"))
+        .enter()
+    
+    goals.append("path")
+        .attr("class", "goal-stars xg-entry")
+        .style("stroke", "black")
+        .style("stroke-opacity", 1)
+        .style("stroke-width", 20)
+        // .style("stroke", "gray")
+        .style("fill", (d) => d.is_orange == 1 ? "orange" : "blue")
+        .attr("d", function(d) {
+            return  d3.symbol().size(d.xg*500*150 + 500*50).type(d3.symbolStar)()
+        })
+        .attr("transform", (d) => {
+            if (d.is_orange == 1) {
+                return "translate(" + x(d.shot_taker_pos_y) + "," + y(-d.shot_taker_pos_x) + ")"
+            }
+            else {
+                return "translate(" + x(-d.shot_taker_pos_y) + "," + y(-d.shot_taker_pos_x) + ")"
+            }
+        })
+        .style("fill-opacity", 0.5)
+        .on("mouseover", highlight_shot)
+        .on("mouseleave", undo_higlight)
+
+}
 
 async function fetch_local_file(file) {
     return new Promise((resolve, reject) => {
@@ -105,6 +233,9 @@ $(document).ready(() => {
             fetch_game_xg()
         ]).then(() => {
             console.log('ready')
-            app.init_shot_table()
+            app.$nextTick(() => {
+                app.init_shot_table()
+                plot_pitch_shot()
+            })
         })
 })
