@@ -114,11 +114,34 @@ function plot_pitch_shot() {
     let min_y = -4120 //Math.min(...data.map(i => i.ball_pos_x))
     let max_y = 4120 //Math.max(...data.map(i => i.ball_pos_x))
     const y = d3.scaleLinear().domain([min_y, max_y]).range([0, height])
+    svg.append('g')
+        .attr("id", "y-axis-holder")
+        .attr("class", "axis-holder")
+        .call(
+            d3.axisRight(y).tickValues([-3120, -950, 0, 950, 3120])
+            .tickSize(width)
+            .tickFormat("")
+        );
 
     // x-axis
-    let min_x = -6050 //Math.min(...data.map(i => i.ball_pos_y))
-    let max_x = 6050 // Math.max(...data.map(i => i.ball_pos_y))
+    let min_x = -6040 //Math.min(...data.map(i => i.ball_pos_y))
+    let max_x = 6040 // Math.max(...data.map(i => i.ball_pos_y))
     const x = d3.scaleLinear().domain([min_x, max_x]).range([0, width])
+    svg.append('g')
+        .attr("id", "x-axis-holder")
+        .attr("class", "axis-holder")
+        .call(
+            d3.axisBottom(x).tickValues([-6040, -5140, -4140, -2070, 0, 2070, 4140, 5140, 6040])
+            .tickSize(height)
+            .tickFormat("")
+        );
+    
+    svg.selectAll(".axis-holder")
+        // .attr("font-size", "140pt")
+        .attr("color", "purple")
+        .attr("stroke-width", 20)
+        .attr("stroke-dasharray", "100,20")
+        .attr("stroke-opacity", 0.04)
 
     function highlight_shot (event,d) {
         let target = d3.select(event.currentTarget)
@@ -144,8 +167,10 @@ function plot_pitch_shot() {
         .style("stroke-width", 20)
         .style("fill", (d) => d.is_orange == 1 ? "orange" : "blue")
         .attr("r", (d) => parseFloat(d.xg)*150 + 50)
-        .attr("cx", (d) => d.is_orange == 1 ? x(d.shot_taker_pos_y) : x(-d.shot_taker_pos_y))
-        .attr("cy", (d) => d.is_orange == 1 ? y(-d.shot_taker_pos_x) : y(-d.shot_taker_pos_x))
+        // .attr("cx", (d) => d.is_orange == 1 ? x(d.shot_taker_pos_y) : x(-d.shot_taker_pos_y))
+        .attr("cx", (d) => d.is_orange == 1 ? x(d.ball_pos_y) : x(-d.ball_pos_y))
+        // .attr("cy", (d) => d.is_orange == 1 ? y(-d.shot_taker_pos_x) : y(-d.shot_taker_pos_x))
+        .attr("cy", (d) => d.is_orange == 1 ? y(-d.ball_pos_x) : y(-d.ball_pos_x))
         .style("fill-opacity", 0.5)
         .on("mouseover", highlight_shot)
         .on("mouseleave", undo_higlight)
@@ -168,10 +193,12 @@ function plot_pitch_shot() {
         })
         .attr("transform", (d) => {
             if (d.is_orange == 1) {
-                return "translate(" + x(d.shot_taker_pos_y) + "," + y(-d.shot_taker_pos_x) + ")"
+                // return "translate(" + x(d.shot_taker_pos_y) + "," + y(-d.shot_taker_pos_x) + ")"
+                return "translate(" + x(d.ball_pos_y) + "," + y(-d.ball_pos_x) + ")"
             }
             else {
-                return "translate(" + x(-d.shot_taker_pos_y) + "," + y(-d.shot_taker_pos_x) + ")"
+                // return "translate(" + x(-d.shot_taker_pos_y) + "," + y(-d.shot_taker_pos_x) + ")"
+                return "translate(" + x(-d.ball_pos_y) + "," + y(-d.ball_pos_x) + ")"
             }
         })
         .style("fill-opacity", 0.5)
