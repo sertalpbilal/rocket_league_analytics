@@ -168,9 +168,9 @@ function plot_pitch_shot() {
         .style("fill", (d) => d.is_orange == 1 ? "orange" : "blue")
         .attr("r", (d) => parseFloat(d.xg)*150 + 50)
         // .attr("cx", (d) => d.is_orange == 1 ? x(d.shot_taker_pos_y) : x(-d.shot_taker_pos_y))
-        .attr("cx", (d) => d.is_orange == 1 ? x(d.ball_pos_y) : x(-d.ball_pos_y))
+        .attr("cx", (d) => d.is_orange == 1 ? x(-d.ball_pos_y) : x(d.ball_pos_y))
         // .attr("cy", (d) => d.is_orange == 1 ? y(-d.shot_taker_pos_x) : y(-d.shot_taker_pos_x))
-        .attr("cy", (d) => d.is_orange == 1 ? y(-d.ball_pos_x) : y(-d.ball_pos_x))
+        .attr("cy", (d) => d.is_orange == 1 ? y(d.ball_pos_x) : y(-d.ball_pos_x))
         .style("fill-opacity", 0.5)
         .on("mouseover", highlight_shot)
         .on("mouseleave", undo_higlight)
@@ -192,13 +192,13 @@ function plot_pitch_shot() {
             return  d3.symbol().size(d.xg*500*150 + 500*50).type(d3.symbolStar)()
         })
         .attr("transform", (d) => {
-            if (d.is_orange == 1) {
+            if (d.is_orange == 0) {
                 // return "translate(" + x(d.shot_taker_pos_y) + "," + y(-d.shot_taker_pos_x) + ")"
                 return "translate(" + x(d.ball_pos_y) + "," + y(-d.ball_pos_x) + ")"
             }
             else {
                 // return "translate(" + x(-d.shot_taker_pos_y) + "," + y(-d.shot_taker_pos_x) + ")"
-                return "translate(" + x(-d.ball_pos_y) + "," + y(-d.ball_pos_x) + ")"
+                return "translate(" + x(-d.ball_pos_y) + "," + y(d.ball_pos_x) + ")"
             }
         })
         .style("fill-opacity", 0.5)
