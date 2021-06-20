@@ -434,6 +434,8 @@ your_goals_per_match = []
 
 my_mvp_count = 0
 your_mvp_count = 0
+their_mvp_count = 0
+our_mvp_count = 0
 mvp_per_match = []
 
 my_shots_goal_or_miss = [] # 0 = miss, 1 = goal
@@ -787,6 +789,12 @@ for file in new_json_files:
 
         if opp2_local_score == max_local_score:
             local_mvp_per_match[3] = "Opponent2"
+
+        if my_alias in local_mvp_per_match or your_alias in local_mvp_per_match:
+            our_mvp_count += 1
+
+        if "Opponent1" in local_mvp_per_match or "Opponent2" in local_mvp_per_match:
+            their_mvp_count += 1
 
         mvp_per_match.append(local_mvp_per_match)
 
@@ -1196,7 +1204,8 @@ individual_data = [["Goals", my_goal_count, your_goal_count],
                    ["Won Ball", my_turnovers_won_count, your_turnovers_won_count],
                    ["Lost Ball", my_turnovers_count, your_turnovers_count],
                    ["Dribbles", my_dribbles_count, your_dribbles_count],
-                   ["Aerials", my_aerials_count, your_aerials_count]
+                   ["Aerials", my_aerials_count, your_aerials_count],
+                   ["MVPs", my_mvp_count, your_mvp_count]
                    ]
 
 team_data = [["Goals", our_goal_count, their_goal_count],
@@ -1218,7 +1227,8 @@ team_data = [["Goals", our_goal_count, their_goal_count],
              ["Shot Distance", our_avg_shot_distance, their_avg_shot_distance],
              ["Won Ball", our_turnovers_won_count, their_turnovers_won_count],
              ["Dribbles", our_dribbles_count, their_dribbles_count],
-             ["Aerials", our_aerials_count, their_aerials_count]
+             ["Aerials", our_aerials_count, their_aerials_count],
+             ["MVPs", our_mvp_count, their_mvp_count]
              ]
 
 content = tabulate(individual_data, headers=["Stat", my_alias, your_alias], numalign="right",tablefmt="tsv")
@@ -2539,21 +2549,21 @@ my_stats = [my_assists_count, my_saves_count, my_goal_count, my_miss_count, my_s
             my_demos_count, my_demos_conceded_count, my_passes_count, my_clears_count, my_score_count,
             my_turnovers_count, my_turnovers_won_count,
             my_dribbles_count, my_aerials_count,
-            my_total_xg, my_gfs_xg_ratio * games_nr, my_goals_from_shots]
+            my_total_xg, my_gfs_xg_ratio * games_nr, my_goals_from_shots, my_mvp_count]
 
 your_stats = [your_assists_count, your_saves_count, your_goal_count, your_miss_count, your_shot_count,
               your_gs_ratio * games_nr, your_touches_count,
               your_demos_count, your_demos_conceded_count, your_passes_count, your_clears_count, your_score_count,
               your_turnovers_count, your_turnovers_won_count,
               your_dribbles_count, your_aerials_count,
-              your_total_xg, your_gfs_xg_ratio * games_nr, your_goals_from_shots]
+              your_total_xg, your_gfs_xg_ratio * games_nr, your_goals_from_shots, your_mvp_count]
 
 ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
 dic = {1: "Assists", 2: "Saves", 3: "Goals", 4: "Misses", 5: "Shots", 6: "GfS/Shots", 7: "Touches",
        8: "Demos", 9: "Demoed", 10: "Passes", 11: "Clears", 12: "Scores", 13: "Lost Ball", 14: "Won Ball",
        15: "Dribbles", 16: "Aerials",
-       17: "xG", 18: "GfS/xG", 19: "Goals from Shots"}
+       17: "xG", 18: "GfS/xG", 19: "Goals from Shots", 20: "MVPs"}
 
 ticks = []
 
@@ -2606,25 +2616,28 @@ ax6.set_title(my_alias + " - " + your_alias + " (per Game)")
 our_stats = []
 
 for stat in range(len(my_stats)):
-    # exclude: demos_conceded, turnovers
-    if stat != 8 and stat != 12:
+    # exclude: demos_conceded, turnovers, mvp count
+    if stat != 8 and stat != 12 and stat != 20:
         # gs ratio and gfs/xg ratio require division by 2
         if stat == 5 or stat == 17:
             our_stats.append((my_stats[stat] + your_stats[stat]) / 2)
         else:
             our_stats.append(my_stats[stat] + your_stats[stat])
+    # mvp count
+    if stat == 20:
+        our_stats.append(our_mvp_count)
 
 their_stats = [their_assists_count, their_saves_count, their_goal_count, their_miss_count, their_shot_count,
                their_gs_ratio * games_nr, their_touches_count,
                their_demos_count, their_passes_count, their_clears_count, their_score_count, their_turnovers_won_count,
                their_dribbles_count, their_aerials_count,
-               their_total_xg, their_gfs_xg_ratio * games_nr, their_goals_from_shots]
+               their_total_xg, their_gfs_xg_ratio * games_nr, their_goals_from_shots, their_mvp_count]
 
 ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
 
 dic = {1: "Assists", 2: "Saves", 3: "Goals", 4: "Misses", 5: "Shots", 6: "GfS/Shots", 7: "Touches",
        8: "Demos", 9: "Passes", 10: "Clears", 11: "Scores", 12: "Won Ball", 13: "Dribbles", 14: "Aerials",
-       15: "xG", 16: "GfS/xG", 17: "Goals from Shots"}
+       15: "xG", 16: "GfS/xG", 17: "Goals from Shots", 18: "MVPs"}
 
 ticks = []
 
