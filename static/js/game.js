@@ -182,6 +182,16 @@ function plot_pitch_shot() {
         .attr("transform", `translate(${x(d.x_mult * d.opp_2_pos_y)},${y(d.y_mult * d.opp_2_pos_x)})`)
         .attr("fill-opacity", 0.5)
         .style("pointer-events", "none")
+        // ball
+        ff.append("path")
+        .style("stroke", "black")
+        .style("stroke-opacity", 3)
+        .style("stroke-width", 20)
+        .style("fill", "gray")
+        .attr("d", d3.symbol().size(xg_size(0.4)).type(d3.symbolCircle)())
+        .attr("transform", `translate(${x(d.x_mult * d.ball_pos_y)},${y(d.y_mult * d.ball_pos_x)})`)
+        .attr("fill-opacity", 0.4)
+        .style("pointer-events", "none")
         
     }
     function undo_higlight(event,d) {
@@ -210,7 +220,7 @@ function plot_pitch_shot() {
         .style("stroke-width", 20)
         .style("fill", (d) => d.is_orange == 1 ? "orange" : "blue")
         .attr("d", (d) => d3.symbol().size(xg_size(d.xg)).type(d3.symbolCircle)())
-        .attr("transform", (d) => `translate(${x(d.x_mult * d.ball_pos_y)},${y(d.y_mult * d.ball_pos_x)})`)
+        .attr("transform", (d) => `translate(${x(d.x_mult * d.shot_taker_pos_y)},${y(d.y_mult * d.shot_taker_pos_x)})`)
         .attr("fill-opacity", 0.5)
         .on("mouseover", highlight_shot)
         .on("mouseleave", undo_higlight)
@@ -228,7 +238,7 @@ function plot_pitch_shot() {
         .style("stroke-width", 20)
         .style("fill", (d) => d.is_orange == 1 ? "orange" : "blue")
         .attr("d", (d) => d3.symbol().size(xg_size(d.xg)).type(d3.symbolStar)())
-        .attr("transform", (d) => `translate(${x(d.x_mult * d.ball_pos_y)},${y(d.y_mult * d.ball_pos_x)})`)
+        .attr("transform", (d) => `translate(${x(d.x_mult * d.shot_taker_pos_y)},${y(d.y_mult * d.shot_taker_pos_x)})`)
         .attr("fill-opacity", 0.5)
         .on("mouseover", highlight_shot)
         .on("mouseleave", undo_higlight)
