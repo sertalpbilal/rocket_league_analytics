@@ -53,7 +53,7 @@ their_color = "darkred"
 bg_img = plt.imread("simple-pitch.png")
 
 if check_new:
-    path_to_json = 'data/json-new/'
+    path_to_json = 'data/json_new/'
     path_to_tables = 'data/tables/latest_streak/'
     path_to_charts = 'data/charts/latest_streak/'
 else:
@@ -62,8 +62,8 @@ else:
     path_to_charts = 'data/charts/'
 
 path_to_untrimmed_csv = 'data/dataframe/'
-path_to_csv = 'data/dataframe-trimmed/'
-path_to_xg = 'data/xg-out/'
+path_to_csv = 'data/dataframe_trimmed/'
+path_to_xg = 'data/xg_out/'
 
 if not os.path.exists(path_to_tables):
     os.makedirs(path_to_tables)
