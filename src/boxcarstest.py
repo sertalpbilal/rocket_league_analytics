@@ -11,7 +11,6 @@
 
 # TODO: Demo heatmap
 
-# TODO: Make replay IDs in scorelines.tsv hyperlinks
 
 import csv
 import json
@@ -33,8 +32,8 @@ from PIL import Image
 
 startTime = time.time()
 
-check_new = True  # Only processes new files (in separate directory)
-show_xg_scorelines = True # Shows xG scorelines and normal scorelines and replay names of games
+check_new = False  # Only processes new files (in separate directory)
+show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
 save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
@@ -420,6 +419,13 @@ their_goals_from_shots = 0
 scoreline_data = []
 scoreline_data_no_colors = []
 
+my_scores_over_time = []
+your_scores_over_time = []
+
+# also includes non-shot goals
+my_goals_per_match = []
+your_goals_per_match = []
+
 for file in new_json_files:
     file_counter += 1
     if file_counter < len(new_json_files) + 1:
@@ -533,10 +539,17 @@ for file in new_json_files:
                 local_their_goals += 1
                 their_goal_count += 1
 
+        my_goals_per_match.append(local_my_goals)
+        your_goals_per_match.append(local_your_goals)
+
         for i in data["players"]:
             if i["id"]["id"] == my_id:
                 if "score" in i:
+                    my_scores_over_time.append(i["score"])
                     my_score_count += i["score"]
+                if "saves" in i:
+                    my_saves_count += i["saves"]
+                    local_my_saves += i["saves"]
                 if "totalPasses" in i["stats"]["hitCounts"]:
                     my_passes_count += i["stats"]["hitCounts"]["totalPasses"]
                 if "totalClears" in i["stats"]["hitCounts"]:
@@ -605,7 +618,11 @@ for file in new_json_files:
 
             elif i["id"]["id"] == your_id:
                 if "score" in i:
+                    your_scores_over_time.append(i["score"])
                     your_score_count += i["score"]
+                if "saves" in i:
+                    your_saves_count += i["saves"]
+                    local_your_saves += i["saves"]
                 if "totalPasses" in i["stats"]["hitCounts"]:
                     your_passes_count += i["stats"]["hitCounts"]["totalPasses"]
                 if "totalClears" in i["stats"]["hitCounts"]:
@@ -674,6 +691,9 @@ for file in new_json_files:
             else:
                 if "score" in i:
                     their_score_count += i["score"]
+                if "saves" in i:
+                    their_saves_count += i["saves"]
+                    local_their_saves += i["saves"]
                 if "totalPasses" in i["stats"]["hitCounts"]:
                     their_passes_count += i["stats"]["hitCounts"]["totalPasses"]
                 if "totalClears" in i["stats"]["hitCounts"]:
@@ -686,6 +706,8 @@ for file in new_json_files:
                     their_dribbles_count += i["stats"]["hitCounts"]["totalDribbles"]
                 if "totalAerials" in i["stats"]["hitCounts"]:
                     their_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
+
+
 
         if "demos" in data["gameMetadata"]:
             for i in data["gameMetadata"]["demos"]:
@@ -732,19 +754,6 @@ for file in new_json_files:
                 your_touches_z.append(i["ballData"]["posZ"])
             else:
                 their_touches_count += 1
-
-            if "save" in i:
-                if i["playerId"]["id"] == my_id:
-                    my_saves_count += 1
-                    local_my_saves += 1
-
-                elif i["playerId"]["id"] == your_id:
-                    your_saves_count += 1
-                    local_your_saves += 1
-
-                else:
-                    their_saves_count += 1
-                    local_their_saves += 1
 
             if "shot" in i:
                 if i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id:
@@ -2404,6 +2413,196 @@ ax9.set_position([0.75, 0.155, 0.227, 0.1])  # Shots over time
 ax10.set_position([0.75, 0.26, 0.227, 0.1])  # Saves over time
 ax11.set_position([0.75, 0.365, 0.227, 0.1])  # Assists over time
 
+### Individual Records
+
+my_most_consecutive_games_scored_in_helper = 0
+my_most_consecutive_games_scored_in = 0
+for goals in my_goals_per_match:
+    if goals > 0:
+        my_most_consecutive_games_scored_in_helper += 1
+    else:
+        my_most_consecutive_games_scored_in_helper = 0
+    if my_most_consecutive_games_scored_in_helper > my_most_consecutive_games_scored_in:
+        my_most_consecutive_games_scored_in = my_most_consecutive_games_scored_in_helper
+        
+your_most_consecutive_games_scored_in_helper = 0
+your_most_consecutive_games_scored_in = 0
+for goals in your_goals_per_match:
+    if goals > 0:
+        your_most_consecutive_games_scored_in_helper += 1
+    else:
+        your_most_consecutive_games_scored_in_helper = 0
+    if your_most_consecutive_games_scored_in_helper > your_most_consecutive_games_scored_in:
+        your_most_consecutive_games_scored_in = your_most_consecutive_games_scored_in_helper
+        
+my_most_consecutive_games_fts_in_helper = 0
+my_most_consecutive_games_fts_in = 0
+for goals in my_goals_per_match:
+    if goals == 0:
+        my_most_consecutive_games_fts_in_helper += 1
+    else:
+        my_most_consecutive_games_fts_in_helper = 0
+    if my_most_consecutive_games_fts_in_helper > my_most_consecutive_games_fts_in:
+        my_most_consecutive_games_fts_in = my_most_consecutive_games_fts_in_helper
+        
+your_most_consecutive_games_fts_in_helper = 0
+your_most_consecutive_games_fts_in = 0
+for goals in your_goals_per_match:
+    if goals == 0:
+        your_most_consecutive_games_fts_in_helper += 1
+    else:
+        your_most_consecutive_games_fts_in_helper = 0
+    if your_most_consecutive_games_fts_in_helper > your_most_consecutive_games_fts_in:
+        your_most_consecutive_games_fts_in = your_most_consecutive_games_fts_in_helper
+
+my_most_consecutive_games_shot_in_helper = 0
+my_most_consecutive_games_shot_in = 0
+for shots in my_shots_over_time:
+    if shots > 0:
+        my_most_consecutive_games_shot_in_helper += 1
+    else:
+        my_most_consecutive_games_shot_in_helper = 0
+    if my_most_consecutive_games_shot_in_helper > my_most_consecutive_games_shot_in:
+        my_most_consecutive_games_shot_in = my_most_consecutive_games_shot_in_helper
+
+your_most_consecutive_games_shot_in_helper = 0
+your_most_consecutive_games_shot_in = 0
+for shots in your_shots_over_time:
+    if shots > 0:
+        your_most_consecutive_games_shot_in_helper += 1
+    else:
+        your_most_consecutive_games_shot_in_helper = 0
+    if your_most_consecutive_games_shot_in_helper > your_most_consecutive_games_shot_in:
+        your_most_consecutive_games_shot_in = your_most_consecutive_games_shot_in_helper
+
+my_most_consecutive_games_noshot_in_helper = 0
+my_most_consecutive_games_noshot_in = 0
+for shots in my_shots_over_time:
+    if shots == 0:
+        my_most_consecutive_games_noshot_in_helper += 1
+    else:
+        my_most_consecutive_games_noshot_in_helper = 0
+    if my_most_consecutive_games_noshot_in_helper > my_most_consecutive_games_noshot_in:
+        my_most_consecutive_games_noshot_in = my_most_consecutive_games_noshot_in_helper
+
+your_most_consecutive_games_noshot_in_helper = 0
+your_most_consecutive_games_noshot_in = 0
+for shots in your_shots_over_time:
+    if shots == 0:
+        your_most_consecutive_games_noshot_in_helper += 1
+    else:
+        your_most_consecutive_games_noshot_in_helper = 0
+    if your_most_consecutive_games_noshot_in_helper > your_most_consecutive_games_noshot_in:
+        your_most_consecutive_games_noshot_in = your_most_consecutive_games_noshot_in_helper
+        
+my_most_consecutive_games_assist_in_helper = 0
+my_most_consecutive_games_assist_in = 0
+for assists in my_assists_over_time:
+    if assists > 0:
+        my_most_consecutive_games_assist_in_helper += 1
+    else:
+        my_most_consecutive_games_assist_in_helper = 0
+    if my_most_consecutive_games_assist_in_helper > my_most_consecutive_games_assist_in:
+        my_most_consecutive_games_assist_in = my_most_consecutive_games_assist_in_helper
+
+your_most_consecutive_games_assist_in_helper = 0
+your_most_consecutive_games_assist_in = 0
+for assists in your_assists_over_time:
+    if assists > 0:
+        your_most_consecutive_games_assist_in_helper += 1
+    else:
+        your_most_consecutive_games_assist_in_helper = 0
+    if your_most_consecutive_games_assist_in_helper > your_most_consecutive_games_assist_in:
+        your_most_consecutive_games_assist_in = your_most_consecutive_games_assist_in_helper
+        
+my_most_consecutive_games_noassist_in_helper = 0
+my_most_consecutive_games_noassist_in = 0
+for assists in my_assists_over_time:
+    if assists == 0:
+        my_most_consecutive_games_noassist_in_helper += 1
+    else:
+        my_most_consecutive_games_noassist_in_helper = 0
+    if my_most_consecutive_games_noassist_in_helper > my_most_consecutive_games_noassist_in:
+        my_most_consecutive_games_noassist_in = my_most_consecutive_games_noassist_in_helper
+
+your_most_consecutive_games_noassist_in_helper = 0
+your_most_consecutive_games_noassist_in = 0
+for assists in your_assists_over_time:
+    if assists == 0:
+        your_most_consecutive_games_noassist_in_helper += 1
+    else:
+        your_most_consecutive_games_noassist_in_helper = 0
+    if your_most_consecutive_games_noassist_in_helper > your_most_consecutive_games_noassist_in:
+        your_most_consecutive_games_noassist_in = your_most_consecutive_games_noassist_in_helper
+
+my_most_consecutive_games_save_in_helper = 0
+my_most_consecutive_games_save_in = 0
+for saves in my_saves_over_time:
+    if saves > 0:
+        my_most_consecutive_games_save_in_helper += 1
+    else:
+        my_most_consecutive_games_save_in_helper = 0
+    if my_most_consecutive_games_save_in_helper > my_most_consecutive_games_save_in:
+        my_most_consecutive_games_save_in = my_most_consecutive_games_save_in_helper
+
+your_most_consecutive_games_save_in_helper = 0
+your_most_consecutive_games_save_in = 0
+for saves in your_saves_over_time:
+    if saves > 0:
+        your_most_consecutive_games_save_in_helper += 1
+    else:
+        your_most_consecutive_games_save_in_helper = 0
+    if your_most_consecutive_games_save_in_helper > your_most_consecutive_games_save_in:
+        your_most_consecutive_games_save_in = your_most_consecutive_games_save_in_helper
+
+my_most_consecutive_games_nosave_in_helper = 0
+my_most_consecutive_games_nosave_in = 0
+for saves in my_saves_over_time:
+    if saves == 0:
+        my_most_consecutive_games_nosave_in_helper += 1
+    else:
+        my_most_consecutive_games_nosave_in_helper = 0
+    if my_most_consecutive_games_nosave_in_helper > my_most_consecutive_games_nosave_in:
+        my_most_consecutive_games_nosave_in = my_most_consecutive_games_nosave_in_helper
+
+your_most_consecutive_games_nosave_in_helper = 0
+your_most_consecutive_games_nosave_in = 0
+for saves in your_saves_over_time:
+    if saves == 0:
+        your_most_consecutive_games_nosave_in_helper += 1
+    else:
+        your_most_consecutive_games_nosave_in_helper = 0
+    if your_most_consecutive_games_nosave_in_helper > your_most_consecutive_games_nosave_in:
+        your_most_consecutive_games_nosave_in = your_most_consecutive_games_nosave_in_helper
+        
+
+    
+individual_record_data = [["Most goals scored in one match", max(my_goals_per_match), max(your_goals_per_match)],
+                          ["Most consecutive matches scored in", my_most_consecutive_games_scored_in, your_most_consecutive_games_scored_in],
+                          ["Most consecutive matches failed to scored in", my_most_consecutive_games_fts_in, your_most_consecutive_games_fts_in],
+                          ["Most shots in one match", max(my_shots_over_time), max(your_shots_over_time)],
+                          ["Most consecutive matches shot in", my_most_consecutive_games_shot_in, your_most_consecutive_games_shot_in],
+                          ["Most consecutive matches failed to shoot in", my_most_consecutive_games_noshot_in, your_most_consecutive_games_noshot_in],
+                          ["Most assists in one match", max(my_assists_over_time), max(your_assists_over_time)],
+                          ["Most consecutive matches assisted in", my_most_consecutive_games_assist_in, your_most_consecutive_games_assist_in],
+                          ["Most consecutive matches failed to assist in", my_most_consecutive_games_noassist_in, your_most_consecutive_games_noassist_in],
+                          ["Most saves in one match", max(my_saves_over_time), max(your_saves_over_time)],
+                          ["Most consecutive matches saved in", my_most_consecutive_games_save_in,
+                           your_most_consecutive_games_save_in],
+                          ["Most consecutive matches failed to save in", my_most_consecutive_games_nosave_in,
+                           your_most_consecutive_games_nosave_in],
+                          ["Highest score in one match", max(my_scores_over_time), max(your_scores_over_time)]
+
+                          ]
+
+#TODO: add assists, saves
+
+content = tabulate(individual_record_data, headers=["Record", my_alias, your_alias], numalign="right", tablefmt="tsv")
+if not os.path.exists(path_to_tables + "player_records.tsv"):
+    open(path_to_tables + "player_records.tsv", 'w').close()
+f = open(path_to_tables + "player_records.tsv", "w")
+f.write(content)
+f.close()
 
 if save_and_crop:
     plt.savefig(path_to_charts + "full_canvas.png")
