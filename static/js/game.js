@@ -256,7 +256,7 @@ async function fetch_local_file(file) {
 
 async function fetch_game_shots() {
     return fetch_local_file('data/shots/' + app.game_id + '.csv').then((data) => {
-        tablevals = data.split('\n').map(i => i.split(','));
+        tablevals =$.csv.toArrays(data);
         keys = tablevals[0];
         values = tablevals.slice(1).filter(i => i[0]);
         let zip_data = values.map(i => _.zipObject(keys, i));
@@ -266,7 +266,7 @@ async function fetch_game_shots() {
 
 async function fetch_game_xg() {
     return fetch_local_file('data/xg_out/' + app.game_id + '.csv').then((data) => {
-        tablevals = data.split('\n').map(i => i.split(','));
+        tablevals = $.csv.toArrays(data);
         keys = tablevals[0];
         values = tablevals.slice(1).filter(i => i[0]);
         let zip_data = values.map(i => _.zipObject(keys, i));
