@@ -43,7 +43,7 @@
                                     <th>Team</th>
                                     <th>Frame</th>
                                     <th>Time</th>
-                                    <th>Ball Position</th>
+                                    <!-- <th>Ball Position</th> -->
                                     <th>xG</th>
                                     <th>Goal</th>
                                     <th>Replay</th>
@@ -55,11 +55,11 @@
                                     <td :style="{'color': shot['team_color']}">{{ shot['team_name'] }}</td>
                                     <td>{{ parseInt(shot['frame']) }}</td>
                                     <td>{{ parseInt(shot['time']) }}</td>
-                                    <td class="text-smaller">
+                                    <!-- <td class="text-smaller">
                                         {{ parseFloat(shot['ball_pos_x']).toFixed(2) }} /
                                         {{ parseFloat(shot['ball_pos_y']).toFixed(2) }} /
                                         {{ parseFloat(shot['ball_pos_z']).toFixed(2) }}
-                                    </td>
+                                    </td> -->
                                     <td :style="{'background': shot['xg_color']}">{{ parseFloat(shot['xg_info']['xg']).toFixed(3) }}</td>
                                     <td :style="{'background': shot['goal_color']}">{{ shot['goal'] }}</td>
                                     <td>
