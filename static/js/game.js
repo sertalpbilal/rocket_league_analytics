@@ -29,6 +29,7 @@ var app = new Vue({
                 e['sec'] = (parseInt(e['frame'])/27.5 - 3).toFixed(2)
                 e['x_mult'] = e['is_orange'] == 1 ? -1 : 1
                 e['y_mult'] = e['is_orange'] == 1 ? 1 : -1
+                e['order'] = i
             })
             return shots
         }
@@ -193,12 +194,15 @@ function plot_pitch_shot() {
         .attr("fill-opacity", 0.4)
         .style("pointer-events", "none")
         
+        $("#shot-" + d.order).addClass("higlighted-row")
+
     }
     function undo_higlight(event,d) {
         let target = d3.select(event.currentTarget)
         target.style("fill-opacity", 0.5)
         d3.select("#frozen_frame").remove()
         d3.selectAll(".xg-entry").style("display", "inline")
+        $("#shot-" + d.order).removeClass("higlighted-row")
     }
 
     let shots = svg.append('g')
@@ -215,6 +219,7 @@ function plot_pitch_shot() {
 
     shots.append("path")
         .attr("class", "shot-circles xg-entry")
+        .attr("id", (d) => 'marker-' + d.order)
         .style("stroke", "black")
         .style("stroke-opacity", 1)
         .style("stroke-width", 20)
@@ -233,6 +238,7 @@ function plot_pitch_shot() {
     
     goals.append("path")
         .attr("class", "goal-stars xg-entry")
+        .attr("id", (d) => 'marker-' + d.order)
         .style("stroke", "black")
         .style("stroke-opacity", 1)
         .style("stroke-width", 20)

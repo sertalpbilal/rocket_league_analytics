@@ -50,7 +50,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="shot, idx in shots_combined">
+                                <tr v-for="shot, idx in shots_combined" :id="'shot-' + shot['order']">
                                     <td>{{ shot['shot_taker_name'] }}</td>
                                     <td :style="{'color': shot['team_color']}">{{ shot['team_name'] }}</td>
                                     <td>{{ parseInt(shot['frame']) }}</td>
