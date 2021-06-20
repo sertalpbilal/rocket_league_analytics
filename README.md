@@ -33,11 +33,13 @@ Considering just the games in the latest streak of games:
 
 
 ## Output:
-Alongside all of the charts produced by the program, the program also outputs 5 tables:
-1. ![Scorelines](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/scorelines.tsv)
-2. ![Player Comparison](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/player_comparison.tsv)
-3. ![Team Comparison](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/team_comparison.tsv)
-4. ![Streaks](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/latest_streak/streaks.tsv)
-5. ![Results](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/latest_streak/results.tsv)
+Alongside all of the charts produced by the program, the program also outputs 7 tables:
+1. ![Player Comparison](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/player_comparison.tsv)
+2. ![Player Records](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/player_records.tsv)
+3. ![Results](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/latest_streak/results.tsv)
+4. ![Scorelines](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/scorelines.tsv)
+5. ![Streaks](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/latest_streak/streaks.tsv)
+6. ![Team Comparison](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/team_comparison.tsv)
+7. ![Team Records](https://github.com/sertalpbilal/rocket_league_analytics/blob/main/data/tables/team_records.tsv)
 
 Tables for the latest streak of matches can be found [here](https://github.com/sertalpbilal/rocket_league_analytics/tree/main/data/tables/latest_streak).
