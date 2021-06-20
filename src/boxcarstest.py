@@ -364,6 +364,8 @@ their_goal_count = 0
 win_chance_per_game = []
 total_win_chance = 0
 
+loss_chance_per_game = []
+
 # positional tendencies
 my_pos_tendencies = [0] * 23
 your_pos_tendencies = [0] * 23
@@ -408,6 +410,10 @@ my_xg_per_goal_list = []
 your_xg_per_goal_list = []
 their_xg_per_goal_list = []
 
+my_xg_per_miss_list = []
+your_xg_per_miss_list = []
+their_xg_per_miss_list = []
+
 my_goals_from_shots_over_time = []
 your_goals_from_shots_over_time = []
 their_goals_from_shots_over_time = []
@@ -425,6 +431,15 @@ your_scores_over_time = []
 # also includes non-shot goals
 my_goals_per_match = []
 your_goals_per_match = []
+
+my_mvp_count = 0
+your_mvp_count = 0
+mvp_per_match = []
+
+my_shots_goal_or_miss = [] # 0 = miss, 1 = goal
+your_shots_goal_or_miss = []
+our_shots_goal_or_miss = []
+their_shots_goal_or_miss = []
 
 for file in new_json_files:
     file_counter += 1
@@ -453,15 +468,36 @@ for file in new_json_files:
             for row in range(0, nrows):
                 if my_list[0][col] == "shot_taker_name":
                     if row != 0:
+                        if my_list[row][col] == my_name or my_list[row][col] == your_name:
+                            if my_list[row][5] == "True":
+                                our_shots_goal_or_miss.append(1)
+                            elif my_list[row][5] == "False":
+                                our_shots_goal_or_miss.append(0)
+
+                        if my_list[row][col] != my_name and my_list[row][col] != your_name:
+                            if my_list[row][5] == "True":
+                                their_shots_goal_or_miss.append(1)
+                            elif my_list[row][5] == "False":
+                                their_shots_goal_or_miss.append(0)
+
                         if my_list[row][col] == my_name:
                             my_local_xg += float(my_list[row][4])
                             my_total_xg += float(my_list[row][4])
+
+
                             if my_list[row][5] == "True":
                                 my_goal_xg += float(my_list[row][4])
                                 my_xg_per_goal_list.append(float(my_list[row][4]))
                                 my_local_goals_from_shots += 1
                                 my_goals_from_shots += 1
+                                my_shots_goal_or_miss.append(1)
+                            elif my_list[row][5] == "False":
+                                my_shots_goal_or_miss.append(0)
+                                my_xg_per_miss_list.append(float(my_list[row][4]))
+
                         elif my_list[row][col] == your_name:
+                            
+
                             your_local_xg += float(my_list[row][4])
                             your_total_xg += float(my_list[row][4])
                             if my_list[row][5] == "True":
@@ -469,7 +505,13 @@ for file in new_json_files:
                                 your_xg_per_goal_list.append(float(my_list[row][4]))
                                 your_local_goals_from_shots += 1
                                 your_goals_from_shots += 1
+                                your_shots_goal_or_miss.append(1)
+                            elif my_list[row][5] == "False":
+                                your_shots_goal_or_miss.append(0)
+                                your_xg_per_miss_list.append(float(my_list[row][4]))
+
                         else:
+
                             their_local_xg += float(my_list[row][4])
                             their_total_xg += float(my_list[row][4])
                             if my_list[row][5] == "True":
@@ -477,6 +519,8 @@ for file in new_json_files:
                                 their_xg_per_goal_list.append(float(my_list[row][4]))
                                 their_local_goals_from_shots += 1
                                 their_goals_from_shots += 1
+                            elif my_list[row][5] == "False":
+                                their_xg_per_miss_list.append(float(my_list[row][4]))
 
         my_goals_from_shots_over_time.append(my_local_goals_from_shots)
         your_goals_from_shots_over_time.append(your_local_goals_from_shots)
@@ -503,9 +547,12 @@ for file in new_json_files:
 
         local_multiplier = 1
         local_time = data["gameMetadata"]["time"]
+        local_names = []
+        local_ids = []
 
         # Link our names to IDs and detect our team color
         for i in data['players']:
+            local_names.append(i["name"])
             if i["name"] == my_name:
                 if i["isOrange"]:
                     local_color = "orange"
@@ -542,10 +589,19 @@ for file in new_json_files:
         my_goals_per_match.append(local_my_goals)
         your_goals_per_match.append(local_your_goals)
 
+        my_local_score = 0
+        your_local_score = 0
+        opp1_local_score = 0
+        opp2_local_score = 0
+
         for i in data["players"]:
+            if i["id"]["id"] != my_id and i["id"]["id"] != your_id:
+                local_ids.append(i["id"]["id"])
+
             if i["id"]["id"] == my_id:
                 if "score" in i:
                     my_scores_over_time.append(i["score"])
+                    my_local_score = i["score"]
                     my_score_count += i["score"]
                 if "saves" in i:
                     my_saves_count += i["saves"]
@@ -620,6 +676,7 @@ for file in new_json_files:
                 if "score" in i:
                     your_scores_over_time.append(i["score"])
                     your_score_count += i["score"]
+                    your_local_score = i["score"]
                 if "saves" in i:
                     your_saves_count += i["saves"]
                     local_your_saves += i["saves"]
@@ -688,9 +745,15 @@ for file in new_json_files:
                 if "ballCarries" in i["stats"]:
                     if "totalCarryTime" in i["stats"]["ballCarries"]:
                         your_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
+
             else:
                 if "score" in i:
                     their_score_count += i["score"]
+                    if i["id"]["id"] == local_ids[0]:
+                        opp1_local_score = i["score"]
+                    elif i["id"]["id"] == local_ids[1]:
+                        opp2_local_score = i["score"]
+
                 if "saves" in i:
                     their_saves_count += i["saves"]
                     local_their_saves += i["saves"]
@@ -707,7 +770,25 @@ for file in new_json_files:
                 if "totalAerials" in i["stats"]["hitCounts"]:
                     their_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
 
+        max_local_score = max(max(my_local_score,your_local_score),max(opp1_local_score,opp2_local_score))
+        local_mvp_per_match = ["","","",""]
 
+        # determine MVP - no tiebreaker (players can share MVP if they scored the same amount of pts)
+        if my_local_score == max_local_score:
+            my_mvp_count+=1
+            local_mvp_per_match[0] = my_alias
+
+        if your_local_score == max_local_score:
+            your_mvp_count+=1
+            local_mvp_per_match[1] = your_alias
+
+        if opp1_local_score == max_local_score:
+            local_mvp_per_match[2] = "Opponent1"
+
+        if opp2_local_score == max_local_score:
+            local_mvp_per_match[3] = "Opponent2"
+
+        mvp_per_match.append(local_mvp_per_match)
 
         if "demos" in data["gameMetadata"]:
             for i in data["gameMetadata"]["demos"]:
@@ -928,6 +1009,7 @@ for file in new_json_files:
         score_prob = (our_xgf_prob[local_GS] * our_xgc_prob[local_GC]) / (1 - draw_chance)
 
         win_chance_per_game.append(win_chance*100)
+        loss_chance_per_game.append(loss_chance*100)
         total_win_chance+=(win_chance*100)
 
         result_type = "W"
@@ -964,6 +1046,7 @@ if not os.path.exists(path_to_tables + "scorelines.tsv"):
 f = open(path_to_tables + "scorelines.tsv", "w")
 f.write(content)
 f.close()
+
 
 your_miss_count = len(your_misses_distancetogoal)
 my_miss_count = len(my_misses_distancetogoal)
@@ -1413,6 +1496,11 @@ print(tabulate(streak_data,
 print("\n")
 
 games_nr = len(new_json_files)
+our_shots_over_time = [your_shots_over_time[x] + my_shots_over_time[x] for x in range(games_nr)]
+our_saves_over_time = [your_saves_over_time[x] + my_saves_over_time[x] for x in range(games_nr)]
+our_xg_over_time = [your_xg_over_time[x] + my_xg_over_time[x] for x in range(games_nr)]
+our_assists_over_time = [your_assists_over_time[x] + my_assists_over_time[x] for x in range(games_nr)]
+
 
 """
 scorelines_array = []
@@ -1441,6 +1529,17 @@ print(tabulate(scoreline_and_pct,
                headers=["Result", "Scoreline", "Occurrence %", "Occurrence", "Goal Diff."], numalign="right"))
 print("\n")
 """
+
+our_xg_over_time = []
+my_goals_minus_xg_over_time = []
+your_goals_minus_xg_over_time = []
+our_goals_from_shots_over_time = []
+
+for xg in range(len(my_xg_over_time)):
+    our_xg_over_time.append(my_xg_over_time[xg] + your_xg_over_time[xg])
+    my_goals_minus_xg_over_time.append(my_goals_over_time[xg] - my_xg_over_time[xg])
+    your_goals_minus_xg_over_time.append(your_goals_over_time[xg] - your_xg_over_time[xg])
+    our_goals_from_shots_over_time.append(your_goals_from_shots_over_time[xg] + my_goals_from_shots_over_time[xg])
 
 ############
 
@@ -1509,6 +1608,773 @@ for i in range(len(result_data)):
 
 
 print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime"], numalign="right"))
+
+### Individual Records
+
+my_most_consecutive_games_scored_in_helper = 0
+my_most_consecutive_games_scored_in = 0
+my_most_consecutive_games_fts_in_helper = 0
+my_most_consecutive_games_fts_in = 0
+for goals in my_goals_per_match:
+    if goals > 0:
+        my_most_consecutive_games_scored_in_helper += 1
+    else:
+        my_most_consecutive_games_scored_in_helper = 0
+    if my_most_consecutive_games_scored_in_helper > my_most_consecutive_games_scored_in:
+        my_most_consecutive_games_scored_in = my_most_consecutive_games_scored_in_helper
+
+    if goals == 0:
+        my_most_consecutive_games_fts_in_helper += 1
+    else:
+        my_most_consecutive_games_fts_in_helper = 0
+    if my_most_consecutive_games_fts_in_helper > my_most_consecutive_games_fts_in:
+        my_most_consecutive_games_fts_in = my_most_consecutive_games_fts_in_helper
+
+
+
+your_most_consecutive_games_scored_in_helper = 0
+your_most_consecutive_games_scored_in = 0
+your_most_consecutive_games_fts_in_helper = 0
+your_most_consecutive_games_fts_in = 0
+for goals in your_goals_per_match:
+    if goals > 0:
+        your_most_consecutive_games_scored_in_helper += 1
+    else:
+        your_most_consecutive_games_scored_in_helper = 0
+    if your_most_consecutive_games_scored_in_helper > your_most_consecutive_games_scored_in:
+        your_most_consecutive_games_scored_in = your_most_consecutive_games_scored_in_helper
+    if goals == 0:
+        your_most_consecutive_games_fts_in_helper += 1
+    else:
+        your_most_consecutive_games_fts_in_helper = 0
+    if your_most_consecutive_games_fts_in_helper > your_most_consecutive_games_fts_in:
+        your_most_consecutive_games_fts_in = your_most_consecutive_games_fts_in_helper
+
+my_most_consecutive_games_shot_in_helper = 0
+my_most_consecutive_games_shot_in = 0
+my_most_consecutive_games_noshot_in_helper = 0
+my_most_consecutive_games_noshot_in = 0
+for shots in my_shots_over_time:
+    if shots > 0:
+        my_most_consecutive_games_shot_in_helper += 1
+    else:
+        my_most_consecutive_games_shot_in_helper = 0
+    if my_most_consecutive_games_shot_in_helper > my_most_consecutive_games_shot_in:
+        my_most_consecutive_games_shot_in = my_most_consecutive_games_shot_in_helper
+
+    if shots == 0:
+        my_most_consecutive_games_noshot_in_helper += 1
+    else:
+        my_most_consecutive_games_noshot_in_helper = 0
+    if my_most_consecutive_games_noshot_in_helper > my_most_consecutive_games_noshot_in:
+        my_most_consecutive_games_noshot_in = my_most_consecutive_games_noshot_in_helper
+
+your_most_consecutive_games_shot_in_helper = 0
+your_most_consecutive_games_shot_in = 0
+your_most_consecutive_games_noshot_in_helper = 0
+your_most_consecutive_games_noshot_in = 0
+for shots in your_shots_over_time:
+    if shots > 0:
+        your_most_consecutive_games_shot_in_helper += 1
+    else:
+        your_most_consecutive_games_shot_in_helper = 0
+    if your_most_consecutive_games_shot_in_helper > your_most_consecutive_games_shot_in:
+        your_most_consecutive_games_shot_in = your_most_consecutive_games_shot_in_helper
+
+    if shots == 0:
+        your_most_consecutive_games_noshot_in_helper += 1
+    else:
+        your_most_consecutive_games_noshot_in_helper = 0
+    if your_most_consecutive_games_noshot_in_helper > your_most_consecutive_games_noshot_in:
+        your_most_consecutive_games_noshot_in = your_most_consecutive_games_noshot_in_helper
+
+my_most_consecutive_games_assist_in_helper = 0
+my_most_consecutive_games_assist_in = 0
+my_most_consecutive_games_noassist_in_helper = 0
+my_most_consecutive_games_noassist_in = 0
+for assists in my_assists_over_time:
+    if assists > 0:
+        my_most_consecutive_games_assist_in_helper += 1
+    else:
+        my_most_consecutive_games_assist_in_helper = 0
+    if my_most_consecutive_games_assist_in_helper > my_most_consecutive_games_assist_in:
+        my_most_consecutive_games_assist_in = my_most_consecutive_games_assist_in_helper
+
+    if assists == 0:
+        my_most_consecutive_games_noassist_in_helper += 1
+    else:
+        my_most_consecutive_games_noassist_in_helper = 0
+    if my_most_consecutive_games_noassist_in_helper > my_most_consecutive_games_noassist_in:
+        my_most_consecutive_games_noassist_in = my_most_consecutive_games_noassist_in_helper
+
+your_most_consecutive_games_assist_in_helper = 0
+your_most_consecutive_games_assist_in = 0
+your_most_consecutive_games_noassist_in_helper = 0
+your_most_consecutive_games_noassist_in = 0
+for assists in your_assists_over_time:
+    if assists > 0:
+        your_most_consecutive_games_assist_in_helper += 1
+    else:
+        your_most_consecutive_games_assist_in_helper = 0
+    if your_most_consecutive_games_assist_in_helper > your_most_consecutive_games_assist_in:
+        your_most_consecutive_games_assist_in = your_most_consecutive_games_assist_in_helper
+
+    if assists == 0:
+        your_most_consecutive_games_noassist_in_helper += 1
+    else:
+        your_most_consecutive_games_noassist_in_helper = 0
+    if your_most_consecutive_games_noassist_in_helper > your_most_consecutive_games_noassist_in:
+        your_most_consecutive_games_noassist_in = your_most_consecutive_games_noassist_in_helper
+
+my_most_consecutive_games_save_in_helper = 0
+my_most_consecutive_games_save_in = 0
+my_most_consecutive_games_nosave_in_helper = 0
+my_most_consecutive_games_nosave_in = 0
+for saves in my_saves_over_time:
+    if saves > 0:
+        my_most_consecutive_games_save_in_helper += 1
+    else:
+        my_most_consecutive_games_save_in_helper = 0
+    if my_most_consecutive_games_save_in_helper > my_most_consecutive_games_save_in:
+        my_most_consecutive_games_save_in = my_most_consecutive_games_save_in_helper
+
+    if saves == 0:
+        my_most_consecutive_games_nosave_in_helper += 1
+    else:
+        my_most_consecutive_games_nosave_in_helper = 0
+    if my_most_consecutive_games_nosave_in_helper > my_most_consecutive_games_nosave_in:
+        my_most_consecutive_games_nosave_in = my_most_consecutive_games_nosave_in_helper
+
+your_most_consecutive_games_save_in_helper = 0
+your_most_consecutive_games_save_in = 0
+your_most_consecutive_games_nosave_in_helper = 0
+your_most_consecutive_games_nosave_in = 0
+for saves in your_saves_over_time:
+    if saves > 0:
+        your_most_consecutive_games_save_in_helper += 1
+    else:
+        your_most_consecutive_games_save_in_helper = 0
+    if your_most_consecutive_games_save_in_helper > your_most_consecutive_games_save_in:
+        your_most_consecutive_games_save_in = your_most_consecutive_games_save_in_helper
+
+    if saves == 0:
+        your_most_consecutive_games_nosave_in_helper += 1
+    else:
+        your_most_consecutive_games_nosave_in_helper = 0
+    if your_most_consecutive_games_nosave_in_helper > your_most_consecutive_games_nosave_in:
+        your_most_consecutive_games_nosave_in = your_most_consecutive_games_nosave_in_helper
+
+# returns (at least 1 goal or 1 assist or 1 returned) / blanks
+my_most_consecutive_games_returned_in_helper = 0
+my_most_consecutive_games_returned_in = 0
+my_most_consecutive_games_blanked_in_helper = 0
+my_most_consecutive_games_blanked_in = 0
+for match in range(len(my_saves_over_time)):
+    if my_saves_over_time[match] > 0 or my_goals_over_time[match] > 0 or my_assists_over_time[match] > 0:
+        my_most_consecutive_games_returned_in_helper += 1
+    else:
+        my_most_consecutive_games_returned_in_helper = 0
+    if my_most_consecutive_games_returned_in_helper > my_most_consecutive_games_returned_in:
+        my_most_consecutive_games_returned_in = my_most_consecutive_games_returned_in_helper
+
+    if my_saves_over_time[match] == 0 and my_goals_over_time[match] == 0 and my_assists_over_time[match] == 0:
+        my_most_consecutive_games_blanked_in_helper += 1
+    else:
+        my_most_consecutive_games_blanked_in_helper = 0
+    if my_most_consecutive_games_blanked_in_helper > my_most_consecutive_games_blanked_in:
+        my_most_consecutive_games_blanked_in = my_most_consecutive_games_blanked_in_helper
+
+your_most_consecutive_games_returned_in_helper = 0
+your_most_consecutive_games_returned_in = 0
+your_most_consecutive_games_blanked_in_helper = 0
+your_most_consecutive_games_blanked_in = 0
+for match in range(len(your_saves_over_time)):
+    if your_saves_over_time[match] > 0 or your_goals_over_time[match] > 0 or your_assists_over_time[match] > 0:
+        your_most_consecutive_games_returned_in_helper += 1
+    else:
+        your_most_consecutive_games_returned_in_helper = 0
+    if your_most_consecutive_games_returned_in_helper > your_most_consecutive_games_returned_in:
+        your_most_consecutive_games_returned_in = your_most_consecutive_games_returned_in_helper
+
+    if your_saves_over_time[match] == 0 and your_goals_over_time[match] == 0 and your_assists_over_time[match] == 0:
+        your_most_consecutive_games_blanked_in_helper += 1
+    else:
+        your_most_consecutive_games_blanked_in_helper = 0
+    if your_most_consecutive_games_blanked_in_helper > your_most_consecutive_games_blanked_in:
+        your_most_consecutive_games_blanked_in = your_most_consecutive_games_blanked_in_helper
+
+my_highest_xg_without_scoring = 0
+your_highest_xg_without_scoring = 0
+our_highest_xg_without_scoring = 0
+their_highest_xg_without_scoring = 0
+
+my_biggest_xg_overperformance = 0
+your_biggest_xg_overperformance = 0
+our_biggest_xg_overperformance = 0
+their_biggest_xg_overperformance = 0
+
+my_biggest_xg_overperformance_goals = 0
+your_biggest_xg_overperformance_goals = 0
+our_biggest_xg_overperformance_goals = 0
+their_biggest_xg_overperformance_goals = 0
+
+my_biggest_xg_overperformance_xg = 0
+your_biggest_xg_overperformance_xg = 0
+our_biggest_xg_overperformance_xg = 0
+their_biggest_xg_overperformance_xg = 0
+
+for match in range(len(my_goals_from_shots_over_time)):
+    if my_xg_over_time[match] != 0:
+        if my_goals_from_shots_over_time[match] / my_xg_over_time[match] > my_biggest_xg_overperformance:
+            my_biggest_xg_overperformance = my_goals_from_shots_over_time[match] / my_xg_over_time[match]
+            my_biggest_xg_overperformance_goals = my_goals_from_shots_over_time[match]
+            my_biggest_xg_overperformance_xg = my_xg_over_time[match]
+
+    if your_xg_over_time[match] != 0:
+        if your_goals_from_shots_over_time[match] / your_xg_over_time[match] > your_biggest_xg_overperformance:
+            your_biggest_xg_overperformance = your_goals_from_shots_over_time[match] / your_xg_over_time[match]
+            your_biggest_xg_overperformance_goals = your_goals_from_shots_over_time[match]
+            your_biggest_xg_overperformance_xg = your_xg_over_time[match]
+
+    if our_xg_over_time[match] != 0:
+        if our_goals_from_shots_over_time[match] / our_xg_over_time[match] > our_biggest_xg_overperformance:
+            our_biggest_xg_overperformance = our_goals_from_shots_over_time[match] / our_xg_over_time[match]
+            our_biggest_xg_overperformance_goals = our_goals_from_shots_over_time[match]
+            our_biggest_xg_overperformance_xg = our_xg_over_time[match]
+
+    if their_xg_over_time[match] != 0:
+        if their_goals_from_shots_over_time[match] / their_xg_over_time[match] > their_biggest_xg_overperformance:
+            their_biggest_xg_overperformance = their_goals_from_shots_over_time[match] / their_xg_over_time[match]
+            their_biggest_xg_overperformance_goals = their_goals_from_shots_over_time[match]
+            their_biggest_xg_overperformance_xg = their_xg_over_time[match]
+
+    if my_goals_from_shots_over_time[match] == 0:
+        if my_xg_over_time[match] > my_highest_xg_without_scoring:
+            my_highest_xg_without_scoring = my_xg_over_time[match]
+
+    if your_goals_from_shots_over_time[match] == 0:
+        if your_xg_over_time[match] > your_highest_xg_without_scoring:
+            your_highest_xg_without_scoring = your_xg_over_time[match]
+
+    if our_goals_from_shots_over_time[match] == 0:
+        if our_xg_over_time[match] > our_highest_xg_without_scoring:
+            our_highest_xg_without_scoring = our_xg_over_time[match]
+
+    if their_goals_from_shots_over_time[match] == 0:
+        if their_xg_over_time[match] > their_highest_xg_without_scoring:
+            their_highest_xg_without_scoring = their_xg_over_time[match]
+
+my_biggest_xg_miss = 0
+my_lowest_xg_goal = 0
+for shot in range(len(my_xg_per_goal_list)):
+    if shot == 0:
+        my_lowest_xg_goal = my_xg_per_goal_list[shot]
+    else:
+        if my_xg_per_goal_list[shot] < my_lowest_xg_goal:
+            my_lowest_xg_goal = my_xg_per_goal_list[shot]
+
+for shot in range(len(my_xg_per_miss_list)):
+    if my_xg_per_miss_list[shot] > my_biggest_xg_miss:
+        my_biggest_xg_miss = my_xg_per_miss_list[shot]
+
+your_biggest_xg_miss = 0
+your_lowest_xg_goal = 0
+for shot in range(len(your_xg_per_goal_list)):
+    if shot == 0:
+        your_lowest_xg_goal = your_xg_per_goal_list[shot]
+    else:
+        if your_xg_per_goal_list[shot] < your_lowest_xg_goal:
+            your_lowest_xg_goal = your_xg_per_goal_list[shot]
+
+for shot in range(len(your_xg_per_miss_list)):
+    if your_xg_per_miss_list[shot] > your_biggest_xg_miss:
+        your_biggest_xg_miss = your_xg_per_miss_list[shot]
+
+our_biggest_xg_miss = max(your_biggest_xg_miss,my_biggest_xg_miss)
+our_lowest_xg_goal = min(your_lowest_xg_goal,my_lowest_xg_goal)
+
+their_biggest_xg_miss = 0
+their_lowest_xg_goal = 0
+for shot in range(len(their_xg_per_goal_list)):
+    if shot == 0:
+        their_lowest_xg_goal = their_xg_per_goal_list[shot]
+    else:
+        if their_xg_per_goal_list[shot] < their_lowest_xg_goal:
+            their_lowest_xg_goal = their_xg_per_goal_list[shot]
+
+for shot in range(len(their_xg_per_miss_list)):
+    if their_xg_per_miss_list[shot] > their_biggest_xg_miss:
+        their_biggest_xg_miss = their_xg_per_miss_list[shot]
+
+my_highest_goal_scored = 0
+my_furthest_goal_scored = 0
+for distance in my_goals_distancetogoal:
+    if distance > my_furthest_goal_scored:
+        my_furthest_goal_scored = distance
+
+for z in my_goals_z:
+    if z > my_highest_goal_scored:
+        my_highest_goal_scored = z
+
+your_highest_goal_scored = 0
+your_furthest_goal_scored = 0
+for distance in your_goals_distancetogoal:
+    if distance > your_furthest_goal_scored:
+        your_furthest_goal_scored = distance
+
+for z in your_goals_z:
+    if z > your_highest_goal_scored:
+        your_highest_goal_scored = z
+
+my_most_consecutive_mvp_helper = 0
+my_most_consecutive_mvp = 0
+my_most_consecutive_nomvp_in_helper = 0
+my_most_consecutive_nomvp_in = 0
+your_most_consecutive_mvp_helper = 0
+your_most_consecutive_mvp = 0
+your_most_consecutive_nomvp_in_helper = 0
+your_most_consecutive_nomvp_in = 0
+
+our_most_consecutive_mvp_helper = 0
+our_most_consecutive_mvp = 0
+our_most_consecutive_nomvp_in_helper = 0
+our_most_consecutive_nomvp_in = 0
+their_most_consecutive_mvp_helper = 0
+their_most_consecutive_mvp = 0
+their_most_consecutive_nomvp_in_helper = 0
+their_most_consecutive_nomvp_in = 0
+for match in range(len(mvp_per_match)):
+    if my_alias in mvp_per_match[match]:
+        my_most_consecutive_mvp_helper += 1
+    else:
+        my_most_consecutive_mvp_helper = 0
+    if my_most_consecutive_mvp_helper > my_most_consecutive_mvp:
+        my_most_consecutive_mvp = my_most_consecutive_mvp_helper
+
+    if my_alias not in mvp_per_match[match]:
+        my_most_consecutive_nomvp_in_helper += 1
+    else:
+        my_most_consecutive_nomvp_in_helper = 0
+    if my_most_consecutive_nomvp_in_helper > my_most_consecutive_nomvp_in:
+        my_most_consecutive_nomvp_in = my_most_consecutive_nomvp_in_helper
+
+    if your_alias in mvp_per_match[match]:
+        your_most_consecutive_mvp_helper += 1
+    else:
+        your_most_consecutive_mvp_helper = 0
+    if your_most_consecutive_mvp_helper > your_most_consecutive_mvp:
+        your_most_consecutive_mvp = your_most_consecutive_mvp_helper
+
+    if your_alias not in mvp_per_match[match]:
+        your_most_consecutive_nomvp_in_helper += 1
+    else:
+        your_most_consecutive_nomvp_in_helper = 0
+    if your_most_consecutive_nomvp_in_helper > your_most_consecutive_nomvp_in:
+        your_most_consecutive_nomvp_in = your_most_consecutive_nomvp_in_helper
+
+    if (my_alias in mvp_per_match[match]) or (your_alias in mvp_per_match[match]):
+        our_most_consecutive_mvp_helper += 1
+    else:
+        our_most_consecutive_mvp_helper = 0
+    if our_most_consecutive_mvp_helper > our_most_consecutive_mvp:
+        our_most_consecutive_mvp = our_most_consecutive_mvp_helper
+
+    if (my_alias not in mvp_per_match[match]) and (your_alias not in mvp_per_match[match]):
+        our_most_consecutive_nomvp_in_helper += 1
+    else:
+        our_most_consecutive_nomvp_in_helper = 0
+    if our_most_consecutive_nomvp_in_helper > our_most_consecutive_nomvp_in:
+        our_most_consecutive_nomvp_in = our_most_consecutive_nomvp_in_helper
+
+    if ("Opponent1" in mvp_per_match[match]) or ("Opponent2" in mvp_per_match[match]):
+        their_most_consecutive_mvp_helper += 1
+    else:
+        their_most_consecutive_mvp_helper = 0
+    if their_most_consecutive_mvp_helper > their_most_consecutive_mvp:
+        their_most_consecutive_mvp = their_most_consecutive_mvp_helper
+
+    if ("Opponent1" not in mvp_per_match[match]) and ("Opponent2" not in mvp_per_match[match]):
+        their_most_consecutive_nomvp_in_helper += 1
+    else:
+        their_most_consecutive_nomvp_in_helper = 0
+    if their_most_consecutive_nomvp_in_helper > their_most_consecutive_nomvp_in:
+        their_most_consecutive_nomvp_in = their_most_consecutive_nomvp_in_helper
+
+
+my_most_consecutive_goals_from_shots_helper = 0
+my_most_consecutive_goals_from_shots = 0
+my_most_consecutive_misses_from_shots_helper = 0
+my_most_consecutive_misses_from_shots = 0
+for shot in my_shots_goal_or_miss:
+    if shot == 1:
+        my_most_consecutive_goals_from_shots_helper += 1
+    else:
+        my_most_consecutive_goals_from_shots_helper = 0
+    if my_most_consecutive_goals_from_shots_helper > my_most_consecutive_goals_from_shots:
+        my_most_consecutive_goals_from_shots = my_most_consecutive_goals_from_shots_helper
+
+    if shot == 0:
+        my_most_consecutive_misses_from_shots_helper += 1
+    else:
+        my_most_consecutive_misses_from_shots_helper = 0
+    if my_most_consecutive_misses_from_shots_helper > my_most_consecutive_misses_from_shots:
+        my_most_consecutive_misses_from_shots = my_most_consecutive_misses_from_shots_helper
+
+your_most_consecutive_goals_from_shots_helper = 0
+your_most_consecutive_goals_from_shots = 0
+your_most_consecutive_misses_from_shots_helper = 0
+your_most_consecutive_misses_from_shots = 0
+for shot in your_shots_goal_or_miss:
+    if shot == 1:
+        your_most_consecutive_goals_from_shots_helper += 1
+    else:
+        your_most_consecutive_goals_from_shots_helper = 0
+    if your_most_consecutive_goals_from_shots_helper > your_most_consecutive_goals_from_shots:
+        your_most_consecutive_goals_from_shots = your_most_consecutive_goals_from_shots_helper
+
+    if shot == 0:
+        your_most_consecutive_misses_from_shots_helper += 1
+    else:
+        your_most_consecutive_misses_from_shots_helper = 0
+    if your_most_consecutive_misses_from_shots_helper > your_most_consecutive_misses_from_shots:
+        your_most_consecutive_misses_from_shots = your_most_consecutive_misses_from_shots_helper
+
+our_most_consecutive_goals_from_shots_helper = 0
+our_most_consecutive_goals_from_shots = 0
+our_most_consecutive_misses_from_shots_helper = 0
+our_most_consecutive_misses_from_shots = 0
+for shot in our_shots_goal_or_miss:
+    if shot == 1:
+        our_most_consecutive_goals_from_shots_helper += 1
+    else:
+        our_most_consecutive_goals_from_shots_helper = 0
+    if our_most_consecutive_goals_from_shots_helper > our_most_consecutive_goals_from_shots:
+        our_most_consecutive_goals_from_shots = our_most_consecutive_goals_from_shots_helper
+
+    if shot == 0:
+        our_most_consecutive_misses_from_shots_helper += 1
+    else:
+        our_most_consecutive_misses_from_shots_helper = 0
+    if our_most_consecutive_misses_from_shots_helper > our_most_consecutive_misses_from_shots:
+        our_most_consecutive_misses_from_shots = our_most_consecutive_misses_from_shots_helper
+
+their_most_consecutive_goals_from_shots_helper = 0
+their_most_consecutive_goals_from_shots = 0
+their_most_consecutive_misses_from_shots_helper = 0
+their_most_consecutive_misses_from_shots = 0
+for shot in their_shots_goal_or_miss:
+    if shot == 1:
+        their_most_consecutive_goals_from_shots_helper += 1
+    else:
+        their_most_consecutive_goals_from_shots_helper = 0
+    if their_most_consecutive_goals_from_shots_helper > their_most_consecutive_goals_from_shots:
+        their_most_consecutive_goals_from_shots = their_most_consecutive_goals_from_shots_helper
+
+    if shot == 0:
+        their_most_consecutive_misses_from_shots_helper += 1
+    else:
+        their_most_consecutive_misses_from_shots_helper = 0
+    if their_most_consecutive_misses_from_shots_helper > their_most_consecutive_misses_from_shots:
+        their_most_consecutive_misses_from_shots = their_most_consecutive_misses_from_shots_helper
+
+my_most_consecutive_games_scored_or_assisted_in_helper = 0
+my_most_consecutive_games_scored_or_assisted_in = 0
+my_most_consecutive_games_ftsoa_in_helper = 0
+my_most_consecutive_games_ftsoa_in = 0
+my_most_goals_or_assists_in_one_game = 0
+for match in range(len(my_goals_over_time)):
+    if my_goals_over_time[match] > 0 or my_assists_over_time[match] > 0:
+        my_most_consecutive_games_ftsoa_in_helper = 0
+        my_most_consecutive_games_scored_or_assisted_in_helper += 1
+        if my_goals_over_time[match] + my_assists_over_time[match] > my_most_goals_or_assists_in_one_game:
+            my_most_goals_or_assists_in_one_game = my_goals_over_time[match] + my_assists_over_time[match]
+        if my_most_consecutive_games_scored_or_assisted_in_helper > my_most_consecutive_games_scored_or_assisted_in:
+            my_most_consecutive_games_scored_or_assisted_in = my_most_consecutive_games_scored_or_assisted_in_helper
+
+    if my_goals_over_time[match] == 0 and my_assists_over_time[match] == 0:
+        my_most_consecutive_games_scored_or_assisted_in_helper = 0
+        my_most_consecutive_games_ftsoa_in_helper += 1
+        if my_most_consecutive_games_ftsoa_in_helper > my_most_consecutive_games_ftsoa_in:
+            my_most_consecutive_games_ftsoa_in = my_most_consecutive_games_ftsoa_in_helper
+
+your_most_consecutive_games_scored_or_assisted_in_helper = 0
+your_most_consecutive_games_scored_or_assisted_in = 0
+your_most_consecutive_games_ftsoa_in_helper = 0
+your_most_consecutive_games_ftsoa_in = 0
+your_most_goals_or_assists_in_one_game = 0
+for match in range(len(your_goals_over_time)):
+    if your_goals_over_time[match] > 0 or your_assists_over_time[match] > 0:
+        your_most_consecutive_games_ftsoa_in_helper = 0
+        your_most_consecutive_games_scored_or_assisted_in_helper += 1
+        if your_goals_over_time[match] + your_assists_over_time[match] > your_most_goals_or_assists_in_one_game:
+            your_most_goals_or_assists_in_one_game = your_goals_over_time[match] + your_assists_over_time[match]
+        if your_most_consecutive_games_scored_or_assisted_in_helper > your_most_consecutive_games_scored_or_assisted_in:
+            your_most_consecutive_games_scored_or_assisted_in = your_most_consecutive_games_scored_or_assisted_in_helper
+
+    if your_goals_over_time[match] == 0 and your_assists_over_time[match] == 0:
+        your_most_consecutive_games_scored_or_assisted_in_helper = 0
+        your_most_consecutive_games_ftsoa_in_helper += 1
+        if your_most_consecutive_games_ftsoa_in_helper > your_most_consecutive_games_ftsoa_in:
+            your_most_consecutive_games_ftsoa_in = your_most_consecutive_games_ftsoa_in_helper
+
+
+individual_record_data = [["Most goals scored in one match", max(my_goals_per_match), max(your_goals_per_match)],
+                          ["Most consecutive matches scored in", my_most_consecutive_games_scored_in,
+                           your_most_consecutive_games_scored_in],
+                          ["Most consecutive matches failed to scored in", my_most_consecutive_games_fts_in,
+                           your_most_consecutive_games_fts_in],
+                          ["Most shots in one match", max(my_shots_over_time), max(your_shots_over_time)],
+                          ["Most consecutive matches shot in", my_most_consecutive_games_shot_in,
+                           your_most_consecutive_games_shot_in],
+                          ["Most consecutive matches failed to shoot in", my_most_consecutive_games_noshot_in,
+                           your_most_consecutive_games_noshot_in],
+                          ["Most assists in one match", max(my_assists_over_time), max(your_assists_over_time)],
+                          ["Most consecutive matches assisted in", my_most_consecutive_games_assist_in,
+                           your_most_consecutive_games_assist_in],
+                          ["Most consecutive matches failed to assist in", my_most_consecutive_games_noassist_in,
+                           your_most_consecutive_games_noassist_in],
+                          ["Most saves in one match", max(my_saves_over_time), max(your_saves_over_time)],
+                          ["Most consecutive matches saved in", my_most_consecutive_games_save_in,
+                           your_most_consecutive_games_save_in],
+                          ["Most consecutive matches failed to save in", my_most_consecutive_games_nosave_in,
+                           your_most_consecutive_games_nosave_in],
+                          ["Highest score in one match", max(my_scores_over_time), max(your_scores_over_time)],
+                          ["Lowest score in one match", min(my_scores_over_time), min(your_scores_over_time)],
+                          ["Highest xG in one match", round(max(my_xg_over_time),2), round(max(your_xg_over_time),2)],
+                          ["Highest xG without scoring in one match (only shot-goals)",
+                           round(my_highest_xg_without_scoring, 2), round(your_highest_xg_without_scoring, 2)],
+                          ["Biggest xG overperformance in one match (only shot-goals)", str(my_biggest_xg_overperformance_goals) + "G from " + str(round(my_biggest_xg_overperformance_xg, 2)) + " xG",
+                           str(your_biggest_xg_overperformance_goals) + "G from " + str(round(your_biggest_xg_overperformance_xg, 2)) + " xG"],
+                          ["Biggest xG overperformance in one match (only shot-goals) %","%.0f"%(((my_biggest_xg_overperformance_goals/my_biggest_xg_overperformance_xg)*100)-100)+"%","%.0f"%(((your_biggest_xg_overperformance_goals/your_biggest_xg_overperformance_xg)*100)-100)+"%"],
+                          ["Biggest chance missed (xG)", round(my_biggest_xg_miss,3), round(your_biggest_xg_miss,3)],
+                          ["Unlikeliest shot-goal scored (xG)", round(my_lowest_xg_goal,3), round(your_lowest_xg_goal,3)],
+                          ["Furthest goal scored (m)", round(my_furthest_goal_scored/100), round(your_furthest_goal_scored/100)],
+                          ["Highest goal scored (m)", round(my_highest_goal_scored/100), round(your_highest_goal_scored/100)],
+                          ["Most consecutive matches returned in",my_most_consecutive_games_returned_in,your_most_consecutive_games_returned_in],
+                          ["Most consecutive matches blanked in", my_most_consecutive_games_blanked_in,your_most_consecutive_games_blanked_in],
+                          ["Most consecutive MVPs (no tiebreaker)", my_most_consecutive_mvp,
+                           your_most_consecutive_mvp],
+                          ["Most consecutive matches without MVP", my_most_consecutive_nomvp_in,
+                           your_most_consecutive_nomvp_in],
+                          ["Most consecutive goals from shots",my_most_consecutive_goals_from_shots, your_most_consecutive_goals_from_shots],
+                          ["Most consecutive misses from shots",my_most_consecutive_misses_from_shots,your_most_consecutive_misses_from_shots],
+                          ["Most goal involvements (G+A) in one match",my_most_goals_or_assists_in_one_game,your_most_goals_or_assists_in_one_game],
+                          ["Most consecutive matches with a goal involvement",my_most_consecutive_games_scored_or_assisted_in,your_most_consecutive_games_scored_or_assisted_in],
+                          ["Most consecutive matches without a goal involvement",my_most_consecutive_games_ftsoa_in,your_most_consecutive_games_ftsoa_in]
+                          ]
+
+content = tabulate(individual_record_data, headers=["Record", my_alias, your_alias], numalign="right", tablefmt="tsv")
+if not os.path.exists(path_to_tables + "player_records.tsv"):
+    open(path_to_tables + "player_records.tsv", 'w').close()
+f = open(path_to_tables + "player_records.tsv", "w")
+f.write(content)
+f.close()
+
+
+### Team Records
+biggest_winstreak = 0
+biggest_lossstreak = 0
+winstreak_helper = 0
+lossstreak_helper = 0
+biggest_50plus_streak = 0
+biggest_lessthan50_streak = 0
+helper_50plus = 0
+helper_lessthan50 = 0
+biggest_scoredstreak = 0
+biggest_concededstreak = 0
+biggest_ftscorestreak = 0
+biggest_csstreak = 0
+scoredstreak_helper = 0
+concededstreak_helper = 0
+ftscorestreak_helper = 0
+csstreak_helper = 0
+our_unlikeliest_win_pct_in_a_win = 0
+our_likeliest_win_pct_in_a_win = 0
+their_unlikeliest_win_pct_in_a_win = 0
+their_likeliest_win_pct_in_a_win = 0
+
+our_unlikeliest_win_gs = 0
+our_unlikeliest_win_gc = 0
+our_unlikeliest_win_xgs = 0
+our_unlikeliest_win_xgc = 0
+our_likeliest_win_gs = 0
+our_likeliest_win_gc = 0
+our_likeliest_win_xgs = 0
+our_likeliest_win_xgc = 0
+
+their_unlikeliest_win_gs = 0
+their_unlikeliest_win_gc = 0
+their_unlikeliest_win_xgs = 0
+their_unlikeliest_win_xgc = 0
+their_likeliest_win_gs = 0
+their_likeliest_win_gc = 0
+their_likeliest_win_xgs = 0
+their_likeliest_win_xgc = 0
+
+firstwin_pos = 0
+firstloss_pos = 0
+
+for result in range(len(result_array)):
+    if result_array[result] == "W":
+        if firstwin_pos == 0:
+            firstwin_pos = result
+            our_unlikeliest_win_gs = gs_array[result]
+            our_unlikeliest_win_gc = gc_array[result]
+            our_unlikeliest_win_xgs = our_xg_over_time[result]
+            our_unlikeliest_win_xgc = their_xg_over_time[result]
+            our_likeliest_win_gs = gs_array[result]
+            our_likeliest_win_gc = gc_array[result]
+            our_likeliest_win_xgs = our_xg_over_time[result]
+            our_likeliest_win_xgc = their_xg_over_time[result]
+
+        if result == firstwin_pos:
+            our_unlikeliest_win_pct_in_a_win = win_chance_per_game[result]
+            our_likeliest_win_pct_in_a_win = win_chance_per_game[result]
+
+        else:
+            if win_chance_per_game[result] < our_unlikeliest_win_pct_in_a_win:
+                our_unlikeliest_win_pct_in_a_win = win_chance_per_game[result]
+                our_unlikeliest_win_gs = gs_array[result]
+                our_unlikeliest_win_gc = gc_array[result]
+                our_unlikeliest_win_xgs = our_xg_over_time[result]
+                our_unlikeliest_win_xgc = their_xg_over_time[result]
+            if win_chance_per_game[result] > our_likeliest_win_pct_in_a_win:
+                our_likeliest_win_pct_in_a_win = win_chance_per_game[result]
+                our_likeliest_win_gs = gs_array[result]
+                our_likeliest_win_gc = gc_array[result]
+                our_likeliest_win_xgs = our_xg_over_time[result]
+                our_likeliest_win_xgc = their_xg_over_time[result]
+
+        winstreak_helper += 1
+        lossstreak_helper = 0
+        if winstreak_helper > biggest_winstreak:
+            biggest_winstreak = winstreak_helper
+
+    if result_array[result] == "L":
+        if firstloss_pos == 0:
+            firstloss_pos = result
+            their_unlikeliest_win_gs = gc_array[result]
+            their_unlikeliest_win_gc = gs_array[result]
+            their_unlikeliest_win_xgs = their_xg_over_time[result]
+            their_unlikeliest_win_xgc = our_xg_over_time[result]
+            their_likeliest_win_gs = gc_array[result]
+            their_likeliest_win_gc = gs_array[result]
+            their_likeliest_win_xgs = their_xg_over_time[result]
+            their_likeliest_win_xgc = our_xg_over_time[result]
+
+        if result == firstloss_pos:
+            their_unlikeliest_win_pct_in_a_win = loss_chance_per_game[result]
+            their_likeliest_win_pct_in_a_win = loss_chance_per_game[result]
+
+        else:
+            if loss_chance_per_game[result] < their_unlikeliest_win_pct_in_a_win:
+                their_unlikeliest_win_pct_in_a_win = loss_chance_per_game[result]
+                their_unlikeliest_win_gs = gc_array[result]
+                their_unlikeliest_win_gc = gs_array[result]
+                their_unlikeliest_win_xgs = their_xg_over_time[result]
+                their_unlikeliest_win_xgc = our_xg_over_time[result]
+            if loss_chance_per_game[result] > their_likeliest_win_pct_in_a_win:
+                their_likeliest_win_pct_in_a_win = loss_chance_per_game[result]
+                their_likeliest_win_gs = gc_array[result]
+                their_likeliest_win_gc = gs_array[result]
+                their_likeliest_win_xgs = their_xg_over_time[result]
+                their_likeliest_win_xgc = our_xg_over_time[result]
+
+        lossstreak_helper += 1
+        winstreak_helper = 0
+        if lossstreak_helper > biggest_lossstreak:
+            biggest_lossstreak = lossstreak_helper
+
+    if win_chance_per_game[result] >= 50:
+        helper_50plus += 1
+        helper_lessthan50 = 0
+        if helper_50plus > biggest_50plus_streak:
+            biggest_50plus_streak = helper_50plus
+
+    if win_chance_per_game[result] < 50:
+        helper_lessthan50 += 1
+        helper_50plus = 0
+        if helper_lessthan50 > biggest_lessthan50_streak:
+            biggest_lessthan50_streak = helper_lessthan50
+
+    if gs_array[result] > 0:
+        scoredstreak_helper += 1
+        ftscorestreak_helper = 0
+    else:
+        ftscorestreak_helper += 1
+        scoredstreak_helper = 0
+
+    if gc_array[result] > 0:
+        concededstreak_helper += 1
+        csstreak_helper = 0
+    else:
+        csstreak_helper += 1
+        concededstreak_helper = 0
+
+    if concededstreak_helper > biggest_concededstreak:
+        biggest_concededstreak = concededstreak_helper
+    if csstreak_helper > biggest_csstreak:
+        biggest_csstreak = csstreak_helper
+    if scoredstreak_helper > biggest_scoredstreak:
+        biggest_scoredstreak = scoredstreak_helper
+    if ftscorestreak_helper > biggest_ftscorestreak:
+        biggest_ftscorestreak = ftscorestreak_helper
+
+
+team_record_data = [["Longest winstreak", biggest_winstreak, biggest_lossstreak],
+                    ["Most consecutive games with a win chance of at least 50%", biggest_50plus_streak, biggest_lessthan50_streak],
+                    ["Most goals scored in one match", max(gs_array), max(gc_array)],
+                    ["Biggest winning margin", max(gd_array), abs(min(gd_array))],
+                    ["Most consecutive games scored in",biggest_scoredstreak,biggest_concededstreak],
+                    ["Most consecutive games failed to score in",biggest_ftscorestreak,biggest_csstreak],
+                    ["Most shots in one match",max(our_shots_over_time),max(their_shots_over_time)],
+                    ["Most assists in one match", max(our_assists_over_time), max(their_assists_over_time)],
+                    ["Most saves in one match",max(our_saves_over_time),max(their_saves_over_time)],
+                    ["Highest xG in one match",round(max(our_xg_over_time),2),round(max(their_xg_over_time),2)],
+                    ["Lowest xG in one match", round(min(our_xg_over_time), 2), round(min(their_xg_over_time), 2)],
+                    ["Highest xG without scoring in one match (only shot-goals)",
+                     round(our_highest_xg_without_scoring, 2), round(their_highest_xg_without_scoring, 2)],
+                    ["Biggest xG overperformance in one match (only shot-goals)",
+                     str(our_biggest_xg_overperformance_goals) + "G from " + str(
+                         round(our_biggest_xg_overperformance_xg, 2)) + " xG",
+                     str(their_biggest_xg_overperformance_goals) + "G from " + str(
+                         round(their_biggest_xg_overperformance_xg, 2)) + " xG"],
+                    ["Biggest xG overperformance in one match (only shot-goals) %", "%.0f" % (((
+                                                                                                           our_biggest_xg_overperformance_goals / our_biggest_xg_overperformance_xg) * 100) - 100) + "%",
+                     "%.0f" % (((
+                                            their_biggest_xg_overperformance_goals / their_biggest_xg_overperformance_xg) * 100) - 100) + "%"],
+
+                    ["Biggest chance missed (xG)", round(our_biggest_xg_miss, 3), round(their_biggest_xg_miss, 3)],
+                    ["Unlikeliest shot-goal scored (xG)", round(our_lowest_xg_goal, 3), round(their_lowest_xg_goal, 3)],
+                    ["Furthest goal scored (m)",round(max(my_goals_distancetogoal+your_goals_distancetogoal)/100),round(max(their_goals_distancetogoal)/100)],
+                    ["Highest goal scored (m)",round(max(my_goals_z+your_goals_z)/100),round(max(their_goals_z)/100)],
+                    ["Most consecutive MVPs (no tiebreaker)", our_most_consecutive_mvp,
+                     their_most_consecutive_mvp],
+                    ["Most consecutive matches without MVP", our_most_consecutive_nomvp_in,
+                     their_most_consecutive_nomvp_in],
+                    ["Most consecutive goals from shots", our_most_consecutive_goals_from_shots,
+                     their_most_consecutive_goals_from_shots],
+                    ["Most consecutive misses from shots", our_most_consecutive_misses_from_shots,
+                     their_most_consecutive_misses_from_shots],
+                    ["Unlikeliest win scoreline vs expected scoreline", str(our_unlikeliest_win_gs)+"-"+str(our_unlikeliest_win_gc)+" ("+str(round(our_unlikeliest_win_xgs,2))+"-"+str(round(our_unlikeliest_win_xgc,2))+")",
+                     str(their_unlikeliest_win_gs)+"-"+str(their_unlikeliest_win_gc)+" ("+str(round(their_unlikeliest_win_xgs,2))+"-"+str(round(their_unlikeliest_win_xgc,2))+")"],
+                    ["Unlikeliest win % in a win","%.2f"%our_unlikeliest_win_pct_in_a_win+"%","%.2f"%their_unlikeliest_win_pct_in_a_win+"%"],
+                    ["Likeliest win scoreline vs expected scoreline",
+                     str(our_likeliest_win_gs) + "-" + str(our_likeliest_win_gc) + " (" + str(round(our_likeliest_win_xgs,
+                                                                                          2)) + "-" + str(round(
+                         our_likeliest_win_xgc, 2)) + ")",
+                     str(their_likeliest_win_gs) + "-" + str(their_likeliest_win_gc) + " (" + str(round(their_likeliest_win_xgs,
+                                                                                              2)) + "-" + str(round(
+                         their_likeliest_win_xgc, 2)) + ")"],
+                    ["Likeliest win % in a win","%.2f"%our_likeliest_win_pct_in_a_win+"%","%.2f"%their_likeliest_win_pct_in_a_win+"%"]
+                    ]
+
+content = tabulate(team_record_data, headers=["Record", "Our Team", "Opponents"], numalign="right", tablefmt="tsv")
+if not os.path.exists(path_to_tables + "player_records.tsv"):
+    open(path_to_tables + "team_records.tsv", 'w').close()
+f = open(path_to_tables + "team_records.tsv", "w")
+f.write(content)
+f.close()
 
 ###########
 fig = plt.figure(figsize=(40, 20))
@@ -1598,7 +2464,7 @@ im = ax5.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=1, y_stddev=1)),
 im.set_cmap('gist_gray_r')
 ax5.axis("off")
 
-########## 
+##########
 # positional tendencies chart
 
 ax22 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
@@ -1849,7 +2715,6 @@ for entry in range(0, len(their_shots_over_time)):
 ax9 = fig.add_subplot(spec[0, 0])  # our goals over time
 ax9.set_xlim(0.5, games_nr + 0.5)
 limit1 = min(their_shots_over_time)
-our_shots_over_time = [your_shots_over_time[x] + my_shots_over_time[x] for x in range(games_nr)]
 limit2 = max(our_shots_over_time)
 limit = max(abs(limit1), limit2)
 ax9.set_ylim(-limit, limit)
@@ -1875,7 +2740,6 @@ for entry in range(0, len(their_saves_over_time)):
 ax10 = fig.add_subplot(spec[0, 0])  # our saves over time
 ax10.set_xlim(0.5, games_nr + 0.5)
 limit1 = min(their_saves_over_time)
-our_saves_over_time = [your_saves_over_time[x] + my_saves_over_time[x] for x in range(games_nr)]
 limit2 = max(our_saves_over_time)
 limit = max(abs(limit1), limit2)
 
@@ -1901,7 +2765,6 @@ for entry in range(0, len(their_assists_over_time)):
 ax11 = fig.add_subplot(spec[0, 0])  # our assists over time
 ax11.set_xlim(0.5, games_nr + 0.5)
 limit1 = min(their_assists_over_time)
-our_assists_over_time = [your_assists_over_time[x] + my_assists_over_time[x] for x in range(games_nr)]
 limit2 = max(our_assists_over_time)
 limit = max(abs(limit1), limit2)
 ax11.set_ylim(-limit, limit)
@@ -2177,16 +3040,7 @@ ax21.set_ylabel("Games")
 ax21.tick_params(axis="x", bottom=False, top=True, labelbottom=False, labeltop=False)
 ax20.set_title("Goals Scored & Conceded Distribution")
 
-our_xg_over_time = []
-my_goals_minus_xg_over_time = []
-your_goals_minus_xg_over_time = []
-our_goals_from_shots_over_time = []
 
-for xg in range(len(my_xg_over_time)):
-    our_xg_over_time.append(my_xg_over_time[xg] + your_xg_over_time[xg])
-    my_goals_minus_xg_over_time.append(my_goals_over_time[xg] - my_xg_over_time[xg])
-    your_goals_minus_xg_over_time.append(your_goals_over_time[xg] - your_xg_over_time[xg])
-    our_goals_from_shots_over_time.append(your_goals_from_shots_over_time[xg] + my_goals_from_shots_over_time[xg])
 
 rolling_avg_window = 10
 
@@ -2413,196 +3267,7 @@ ax9.set_position([0.75, 0.155, 0.227, 0.1])  # Shots over time
 ax10.set_position([0.75, 0.26, 0.227, 0.1])  # Saves over time
 ax11.set_position([0.75, 0.365, 0.227, 0.1])  # Assists over time
 
-### Individual Records
 
-my_most_consecutive_games_scored_in_helper = 0
-my_most_consecutive_games_scored_in = 0
-for goals in my_goals_per_match:
-    if goals > 0:
-        my_most_consecutive_games_scored_in_helper += 1
-    else:
-        my_most_consecutive_games_scored_in_helper = 0
-    if my_most_consecutive_games_scored_in_helper > my_most_consecutive_games_scored_in:
-        my_most_consecutive_games_scored_in = my_most_consecutive_games_scored_in_helper
-        
-your_most_consecutive_games_scored_in_helper = 0
-your_most_consecutive_games_scored_in = 0
-for goals in your_goals_per_match:
-    if goals > 0:
-        your_most_consecutive_games_scored_in_helper += 1
-    else:
-        your_most_consecutive_games_scored_in_helper = 0
-    if your_most_consecutive_games_scored_in_helper > your_most_consecutive_games_scored_in:
-        your_most_consecutive_games_scored_in = your_most_consecutive_games_scored_in_helper
-        
-my_most_consecutive_games_fts_in_helper = 0
-my_most_consecutive_games_fts_in = 0
-for goals in my_goals_per_match:
-    if goals == 0:
-        my_most_consecutive_games_fts_in_helper += 1
-    else:
-        my_most_consecutive_games_fts_in_helper = 0
-    if my_most_consecutive_games_fts_in_helper > my_most_consecutive_games_fts_in:
-        my_most_consecutive_games_fts_in = my_most_consecutive_games_fts_in_helper
-        
-your_most_consecutive_games_fts_in_helper = 0
-your_most_consecutive_games_fts_in = 0
-for goals in your_goals_per_match:
-    if goals == 0:
-        your_most_consecutive_games_fts_in_helper += 1
-    else:
-        your_most_consecutive_games_fts_in_helper = 0
-    if your_most_consecutive_games_fts_in_helper > your_most_consecutive_games_fts_in:
-        your_most_consecutive_games_fts_in = your_most_consecutive_games_fts_in_helper
-
-my_most_consecutive_games_shot_in_helper = 0
-my_most_consecutive_games_shot_in = 0
-for shots in my_shots_over_time:
-    if shots > 0:
-        my_most_consecutive_games_shot_in_helper += 1
-    else:
-        my_most_consecutive_games_shot_in_helper = 0
-    if my_most_consecutive_games_shot_in_helper > my_most_consecutive_games_shot_in:
-        my_most_consecutive_games_shot_in = my_most_consecutive_games_shot_in_helper
-
-your_most_consecutive_games_shot_in_helper = 0
-your_most_consecutive_games_shot_in = 0
-for shots in your_shots_over_time:
-    if shots > 0:
-        your_most_consecutive_games_shot_in_helper += 1
-    else:
-        your_most_consecutive_games_shot_in_helper = 0
-    if your_most_consecutive_games_shot_in_helper > your_most_consecutive_games_shot_in:
-        your_most_consecutive_games_shot_in = your_most_consecutive_games_shot_in_helper
-
-my_most_consecutive_games_noshot_in_helper = 0
-my_most_consecutive_games_noshot_in = 0
-for shots in my_shots_over_time:
-    if shots == 0:
-        my_most_consecutive_games_noshot_in_helper += 1
-    else:
-        my_most_consecutive_games_noshot_in_helper = 0
-    if my_most_consecutive_games_noshot_in_helper > my_most_consecutive_games_noshot_in:
-        my_most_consecutive_games_noshot_in = my_most_consecutive_games_noshot_in_helper
-
-your_most_consecutive_games_noshot_in_helper = 0
-your_most_consecutive_games_noshot_in = 0
-for shots in your_shots_over_time:
-    if shots == 0:
-        your_most_consecutive_games_noshot_in_helper += 1
-    else:
-        your_most_consecutive_games_noshot_in_helper = 0
-    if your_most_consecutive_games_noshot_in_helper > your_most_consecutive_games_noshot_in:
-        your_most_consecutive_games_noshot_in = your_most_consecutive_games_noshot_in_helper
-        
-my_most_consecutive_games_assist_in_helper = 0
-my_most_consecutive_games_assist_in = 0
-for assists in my_assists_over_time:
-    if assists > 0:
-        my_most_consecutive_games_assist_in_helper += 1
-    else:
-        my_most_consecutive_games_assist_in_helper = 0
-    if my_most_consecutive_games_assist_in_helper > my_most_consecutive_games_assist_in:
-        my_most_consecutive_games_assist_in = my_most_consecutive_games_assist_in_helper
-
-your_most_consecutive_games_assist_in_helper = 0
-your_most_consecutive_games_assist_in = 0
-for assists in your_assists_over_time:
-    if assists > 0:
-        your_most_consecutive_games_assist_in_helper += 1
-    else:
-        your_most_consecutive_games_assist_in_helper = 0
-    if your_most_consecutive_games_assist_in_helper > your_most_consecutive_games_assist_in:
-        your_most_consecutive_games_assist_in = your_most_consecutive_games_assist_in_helper
-        
-my_most_consecutive_games_noassist_in_helper = 0
-my_most_consecutive_games_noassist_in = 0
-for assists in my_assists_over_time:
-    if assists == 0:
-        my_most_consecutive_games_noassist_in_helper += 1
-    else:
-        my_most_consecutive_games_noassist_in_helper = 0
-    if my_most_consecutive_games_noassist_in_helper > my_most_consecutive_games_noassist_in:
-        my_most_consecutive_games_noassist_in = my_most_consecutive_games_noassist_in_helper
-
-your_most_consecutive_games_noassist_in_helper = 0
-your_most_consecutive_games_noassist_in = 0
-for assists in your_assists_over_time:
-    if assists == 0:
-        your_most_consecutive_games_noassist_in_helper += 1
-    else:
-        your_most_consecutive_games_noassist_in_helper = 0
-    if your_most_consecutive_games_noassist_in_helper > your_most_consecutive_games_noassist_in:
-        your_most_consecutive_games_noassist_in = your_most_consecutive_games_noassist_in_helper
-
-my_most_consecutive_games_save_in_helper = 0
-my_most_consecutive_games_save_in = 0
-for saves in my_saves_over_time:
-    if saves > 0:
-        my_most_consecutive_games_save_in_helper += 1
-    else:
-        my_most_consecutive_games_save_in_helper = 0
-    if my_most_consecutive_games_save_in_helper > my_most_consecutive_games_save_in:
-        my_most_consecutive_games_save_in = my_most_consecutive_games_save_in_helper
-
-your_most_consecutive_games_save_in_helper = 0
-your_most_consecutive_games_save_in = 0
-for saves in your_saves_over_time:
-    if saves > 0:
-        your_most_consecutive_games_save_in_helper += 1
-    else:
-        your_most_consecutive_games_save_in_helper = 0
-    if your_most_consecutive_games_save_in_helper > your_most_consecutive_games_save_in:
-        your_most_consecutive_games_save_in = your_most_consecutive_games_save_in_helper
-
-my_most_consecutive_games_nosave_in_helper = 0
-my_most_consecutive_games_nosave_in = 0
-for saves in my_saves_over_time:
-    if saves == 0:
-        my_most_consecutive_games_nosave_in_helper += 1
-    else:
-        my_most_consecutive_games_nosave_in_helper = 0
-    if my_most_consecutive_games_nosave_in_helper > my_most_consecutive_games_nosave_in:
-        my_most_consecutive_games_nosave_in = my_most_consecutive_games_nosave_in_helper
-
-your_most_consecutive_games_nosave_in_helper = 0
-your_most_consecutive_games_nosave_in = 0
-for saves in your_saves_over_time:
-    if saves == 0:
-        your_most_consecutive_games_nosave_in_helper += 1
-    else:
-        your_most_consecutive_games_nosave_in_helper = 0
-    if your_most_consecutive_games_nosave_in_helper > your_most_consecutive_games_nosave_in:
-        your_most_consecutive_games_nosave_in = your_most_consecutive_games_nosave_in_helper
-        
-
-    
-individual_record_data = [["Most goals scored in one match", max(my_goals_per_match), max(your_goals_per_match)],
-                          ["Most consecutive matches scored in", my_most_consecutive_games_scored_in, your_most_consecutive_games_scored_in],
-                          ["Most consecutive matches failed to scored in", my_most_consecutive_games_fts_in, your_most_consecutive_games_fts_in],
-                          ["Most shots in one match", max(my_shots_over_time), max(your_shots_over_time)],
-                          ["Most consecutive matches shot in", my_most_consecutive_games_shot_in, your_most_consecutive_games_shot_in],
-                          ["Most consecutive matches failed to shoot in", my_most_consecutive_games_noshot_in, your_most_consecutive_games_noshot_in],
-                          ["Most assists in one match", max(my_assists_over_time), max(your_assists_over_time)],
-                          ["Most consecutive matches assisted in", my_most_consecutive_games_assist_in, your_most_consecutive_games_assist_in],
-                          ["Most consecutive matches failed to assist in", my_most_consecutive_games_noassist_in, your_most_consecutive_games_noassist_in],
-                          ["Most saves in one match", max(my_saves_over_time), max(your_saves_over_time)],
-                          ["Most consecutive matches saved in", my_most_consecutive_games_save_in,
-                           your_most_consecutive_games_save_in],
-                          ["Most consecutive matches failed to save in", my_most_consecutive_games_nosave_in,
-                           your_most_consecutive_games_nosave_in],
-                          ["Highest score in one match", max(my_scores_over_time), max(your_scores_over_time)]
-
-                          ]
-
-#TODO: add assists, saves
-
-content = tabulate(individual_record_data, headers=["Record", my_alias, your_alias], numalign="right", tablefmt="tsv")
-if not os.path.exists(path_to_tables + "player_records.tsv"):
-    open(path_to_tables + "player_records.tsv", 'w').close()
-f = open(path_to_tables + "player_records.tsv", "w")
-f.write(content)
-f.close()
 
 if save_and_crop:
     plt.savefig(path_to_charts + "full_canvas.png")
