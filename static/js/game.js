@@ -27,6 +27,8 @@ var app = new Vue({
                 }
                 e['time'] = parseInt(e['time'])
                 e['sec'] = (parseInt(e['frame'])/27.5 - 3).toFixed(2)
+                e['x_mult'] = e['is_orange'] == 1 ? -1 : 1
+                e['y_mult'] = e['is_orange'] == 1 ? 1 : -1
             })
             return shots
         }
@@ -140,17 +142,52 @@ function plot_pitch_shot() {
         // .attr("font-size", "140pt")
         .attr("color", "purple")
         .attr("stroke-width", 20)
-        .attr("stroke-dasharray", "100,20")
+        .attr("stroke-dasharray", "150,80")
         .attr("stroke-opacity", 0.04)
 
     function highlight_shot (event,d) {
         let target = d3.select(event.currentTarget)
         target.style("fill-opacity", 1)
         d3.selectAll(".xg-entry").filter(i => i !== d).style("display", "none")
+        // add all members
+        let ff = svg.append("g").attr("id","frozen_frame")
+
+        // team_mate
+        ff.append("path")
+        .style("stroke", "black")
+        .style("stroke-opacity", 1)
+        .style("stroke-width", 20)
+        .style("fill", d.is_orange == 1 ? "orange" : "blue")
+        .attr("d", d3.symbol().size(xg_size(0.5)).type(d3.symbolSquare)())
+        .attr("transform", `translate(${x(d.x_mult * d.team_mate_pos_y)},${y(d.y_mult * d.team_mate_pos_x)})`)
+        .attr("fill-opacity", 0.5)
+        .style("pointer-events", "none")
+        // opp 1
+        ff.append("path")
+        .style("stroke", "black")
+        .style("stroke-opacity", 1)
+        .style("stroke-width", 20)
+        .style("fill", d.is_orange == 1 ? "blue" : "orange")
+        .attr("d", d3.symbol().size(xg_size(0.5)).type(d3.symbolSquare)())
+        .attr("transform", `translate(${x(d.x_mult * d.opp_1_pos_y)},${y(d.y_mult * d.opp_1_pos_x)})`)
+        .attr("fill-opacity", 0.5)
+        .style("pointer-events", "none")
+        // opp 2
+        ff.append("path")
+        .style("stroke", "black")
+        .style("stroke-opacity", 1)
+        .style("stroke-width", 20)
+        .style("fill", d.is_orange == 1 ? "blue" : "orange")
+        .attr("d", d3.symbol().size(xg_size(0.5)).type(d3.symbolSquare)())
+        .attr("transform", `translate(${x(d.x_mult * d.opp_2_pos_y)},${y(d.y_mult * d.opp_2_pos_x)})`)
+        .attr("fill-opacity", 0.5)
+        .style("pointer-events", "none")
+        
     }
     function undo_higlight(event,d) {
         let target = d3.select(event.currentTarget)
         target.style("fill-opacity", 0.5)
+        d3.select("#frozen_frame").remove()
         d3.selectAll(".xg-entry").style("display", "inline")
     }
 
@@ -160,18 +197,21 @@ function plot_pitch_shot() {
         .data(data.filter(i => i.goal == "False"))
         .enter()
 
-    shots.append("circle")
+    let xg_0 = 10000
+    let xg_1 = 150000
+    let xg_size = (v) => {
+        return v * (xg_1 - xg_0) + xg_0
+    }
+
+    shots.append("path")
         .attr("class", "shot-circles xg-entry")
         .style("stroke", "black")
         .style("stroke-opacity", 1)
         .style("stroke-width", 20)
         .style("fill", (d) => d.is_orange == 1 ? "orange" : "blue")
-        .attr("r", (d) => parseFloat(d.xg)*150 + 50)
-        // .attr("cx", (d) => d.is_orange == 1 ? x(d.shot_taker_pos_y) : x(-d.shot_taker_pos_y))
-        .attr("cx", (d) => d.is_orange == 1 ? x(-d.ball_pos_y) : x(d.ball_pos_y))
-        // .attr("cy", (d) => d.is_orange == 1 ? y(-d.shot_taker_pos_x) : y(-d.shot_taker_pos_x))
-        .attr("cy", (d) => d.is_orange == 1 ? y(d.ball_pos_x) : y(-d.ball_pos_x))
-        .style("fill-opacity", 0.5)
+        .attr("d", (d) => d3.symbol().size(xg_size(d.xg)).type(d3.symbolCircle)())
+        .attr("transform", (d) => `translate(${x(d.x_mult * d.ball_pos_y)},${y(d.y_mult * d.ball_pos_x)})`)
+        .attr("fill-opacity", 0.5)
         .on("mouseover", highlight_shot)
         .on("mouseleave", undo_higlight)
 
@@ -186,22 +226,10 @@ function plot_pitch_shot() {
         .style("stroke", "black")
         .style("stroke-opacity", 1)
         .style("stroke-width", 20)
-        // .style("stroke", "gray")
         .style("fill", (d) => d.is_orange == 1 ? "orange" : "blue")
-        .attr("d", function(d) {
-            return  d3.symbol().size(d.xg*500*150 + 500*50).type(d3.symbolStar)()
-        })
-        .attr("transform", (d) => {
-            if (d.is_orange == 0) {
-                // return "translate(" + x(d.shot_taker_pos_y) + "," + y(-d.shot_taker_pos_x) + ")"
-                return "translate(" + x(d.ball_pos_y) + "," + y(-d.ball_pos_x) + ")"
-            }
-            else {
-                // return "translate(" + x(-d.shot_taker_pos_y) + "," + y(-d.shot_taker_pos_x) + ")"
-                return "translate(" + x(-d.ball_pos_y) + "," + y(d.ball_pos_x) + ")"
-            }
-        })
-        .style("fill-opacity", 0.5)
+        .attr("d", (d) => d3.symbol().size(xg_size(d.xg)).type(d3.symbolStar)())
+        .attr("transform", (d) => `translate(${x(d.x_mult * d.ball_pos_y)},${y(d.y_mult * d.ball_pos_x)})`)
+        .attr("fill-opacity", 0.5)
         .on("mouseover", highlight_shot)
         .on("mouseleave", undo_higlight)
 
