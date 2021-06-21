@@ -10,6 +10,8 @@ import platform
 
 BALLCHASING = "https://ballchasing.com/api"
 
+excluded_list = ["9e4c5030-ff84-49b5-b32f-2e4d585fd44e"]
+
 def require_token(func):
     """Make sure user has a token"""
     @functools.wraps(func)
@@ -53,6 +55,9 @@ class ReplayManager:
         print(f"Total number of games: {count}")
         game_list = self.replay_list['list']
         for game in game_list:
+            if game['id'] in excluded_list:
+                continue
+
             try:
                 replay_file_name = rf"../data/replay/{game['id']}.replay"
                 json_tracking_file_name = rf"../data/json_detailed/{game['id']}.tracking.json"
