@@ -1018,10 +1018,10 @@ for file in new_json_files:
         scoreline_data_no_colors.append(["%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, local_our_shots_att, local_our_shots_con, file.replace(".json",""),
                                round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type, local_time])
 if show_xg_scorelines:
-    print(tabulate(scoreline_data, headers=["xGF", "xGC", "GF", "GC", "Shots Att.", "Shots Con.", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome"], numalign="right"))
+    print(tabulate(scoreline_data, headers=["xGF", "xGC", "GF", "GC", "SF", "SC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome"], numalign="right"))
     print("\n")
 
-content = tabulate(scoreline_data_no_colors, headers=["xGF", "xGC", "GF", "GC", "Shots Att.", "Shots Con.", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome", "StartTime"], tablefmt="tsv")
+content = tabulate(scoreline_data_no_colors, headers=["xGF", "xGC", "GF", "GC", "SF", "SC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome", "StartTime"], tablefmt="tsv")
 if not os.path.exists(path_to_tables + "scorelines.tsv"):
     open(path_to_tables + "scorelines.tsv", 'w').close()
 f = open(path_to_tables + "scorelines.tsv", "w")

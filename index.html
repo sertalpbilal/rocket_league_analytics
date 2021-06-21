@@ -50,6 +50,8 @@
                                         <th>xGC</th>
                                         <th>GF</th>
                                         <th>GC</th>
+                                        <th>SF</th>
+                                        <th>SC</th>
                                         <th>P(Win)</th>
                                         <th>P(Score)</th>
                                         <th>Res</th>
@@ -65,6 +67,8 @@
                                         <td class="align-middle">{{ game['xGC'] }}</td>
                                         <td class="align-middle">{{ game['GF'] }}</td>
                                         <td class="align-middle">{{ game['GC'] }}</td>
+                                        <td class="align-middle">{{ game['SF'] }}</td>
+                                        <td class="align-middle">{{ game['SC'] }}</td>
                                         <td class="align-middle" :style="{'background': game['win_color']}">{{ game['P(Win)'] }}</td>
                                         <td class="align-middle">{{ game['P(Score)'] }}</td>
                                         <td class="align-middle" :style="{'background': game['outcome_color']}">{{ game['Outcome'] }}</td>
