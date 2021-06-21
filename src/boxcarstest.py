@@ -32,7 +32,7 @@ from PIL import Image
 startTime = time.time()
 
 check_new = False  # Only processes new files (in separate directory)
-show_xg_scorelines = True # Shows xG scorelines and normal scorelines and replay names of games
+show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
 save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
@@ -69,82 +69,6 @@ if not os.path.exists(path_to_tables):
 
 if not os.path.exists(path_to_charts):
     os.makedirs(path_to_charts)
-
-# Trim CSVs if there are CSVs to trim
-if len(os.listdir(path_to_untrimmed_csv)) > 0:
-    csv_files = [pos_csv for pos_csv in os.listdir(path_to_untrimmed_csv) if pos_csv.endswith('.csv')]
-
-    print("Trimming", len(csv_files), "CSV files...")
-    frames_to_skip = 20
-
-    for file in csv_files:
-        with open(path_to_untrimmed_csv + file) as f:
-            reader = csv.reader(f)
-            my_list = list(reader)
-
-        nrows = len(my_list)
-        ncols = len(my_list[0])
-
-        my_x_arr = []
-        my_y_arr = []
-        my_z_arr = []
-        your_x_arr = []
-        your_y_arr = []
-        your_z_arr = []
-        ball_x_arr = []
-        ball_y_arr = []
-        ball_z_arr = []
-        time_status = "NT"
-
-        for col in range(ncols):
-            for row in range(3, nrows, frames_to_skip):
-                if my_list[row][col] != "":
-                    if my_list[0][col] == my_name:
-                        if my_list[1][col] == "pos_x":
-                            my_x_arr.append(round(float(my_list[row][col])))
-                        elif my_list[1][col] == "pos_y":
-                            my_y_arr.append(round(float(my_list[row][col])))
-                        elif my_list[1][col] == "pos_z":
-                            my_z_arr.append(round(float(my_list[row][col])))
-
-                    elif my_list[0][col] == your_name:
-                        if my_list[1][col] == "pos_x":
-                            your_x_arr.append(round(float(my_list[row][col])))
-                        elif my_list[1][col] == "pos_y":
-                            your_y_arr.append(round(float(my_list[row][col])))
-                        elif my_list[1][col] == "pos_z":
-                            your_z_arr.append(round(float(my_list[row][col])))
-
-                    elif my_list[0][col] == "ball":
-                        if my_list[1][col] == "pos_x":
-                            ball_x_arr.append(round(float(my_list[row][col])))
-                        elif my_list[1][col] == "pos_y":
-                            ball_y_arr.append(round(float(my_list[row][col])))
-                        elif my_list[1][col] == "pos_z":
-                            ball_z_arr.append(round(float(my_list[row][col])))
-
-                    elif my_list[0][col] == "game":
-                        if my_list[1][col] == "is_overtime":
-                            time_status = "OT"
-
-        dfObj = pd.DataFrame(
-            [my_x_arr, my_y_arr, my_z_arr, your_x_arr, your_y_arr, your_z_arr, ball_x_arr, ball_y_arr, ball_z_arr]).T
-        if time_status == "OT":
-            dfObj.columns = [my_name + "_pos_x", my_name + "_pos_y", my_name + "_pos_z",
-                             your_name + "_pos_x", your_name + "_pos_y", your_name + "_pos_z",
-                             "ball_pos_x", "ball_pos_y", "ball_pos_z-GAME-WENT-OT"]
-        else:
-            dfObj.columns = [my_name + "_pos_x", my_name + "_pos_y", my_name + "_pos_z",
-                             your_name + "_pos_x", your_name + "_pos_y", your_name + "_pos_z",
-                             "ball_pos_x", "ball_pos_y", "ball_pos_z"]
-
-        # dfObj.dropna(axis=0, how='any', thresh=None, subset=None, inplace=True)
-
-        dfObj.to_csv(index=False, path_or_buf=path_to_csv + file, float_format='{:.0f}'.format)
-        os.remove(path_to_untrimmed_csv + file)
-
-    trimexecutionTime = (time.time() - startTime)
-    print('Trimming completed in ', "%.2f" % trimexecutionTime, 'seconds\n\n')
 
 json_files = [pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
 
@@ -2711,12 +2635,12 @@ for entry in range(0, len(result_array_num)):
     new_result_array_num_up = limit
     new_result_array_num_down = -limit
 
-ax8.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25, ec="grey")
-ax8.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25, ec="grey")
+ax8.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+ax8.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
-ax8.bar(range(1, games_nr + 1), my_goals_over_time, color=my_color, width=1, ec="black")
-ax8.bar(range(1, games_nr + 1), your_goals_over_time, color=your_color, bottom=my_goals_over_time, width=1, ec="black")
-ax8.bar(range(1, games_nr + 1), their_goals_over_time, color=their_color, width=1, ec="black")
+ax8.bar(range(1, games_nr + 1), my_goals_over_time, color=my_color, width=1)
+ax8.bar(range(1, games_nr + 1), your_goals_over_time, color=your_color, bottom=my_goals_over_time, width=1)
+ax8.bar(range(1, games_nr + 1), their_goals_over_time, color=their_color, width=1)
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
 ax8.set_ylabel("GOALS", rotation="horizontal", ha="center", va="center", labelpad=35)
@@ -2735,12 +2659,12 @@ for entry in range(0, len(result_array_num)):
     new_result_array_num_up = limit
     new_result_array_num_down = -limit
 
-ax9.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25, ec="grey")
-ax9.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25, ec="grey")
+ax9.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+ax9.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
-ax9.bar(range(1, games_nr + 1), my_shots_over_time, color=my_color, width=1, ec="black")
-ax9.bar(range(1, games_nr + 1), your_shots_over_time, color=your_color, bottom=my_shots_over_time, width=1, ec="black")
-ax9.bar(range(1, games_nr + 1), their_shots_over_time, color=their_color, width=1, ec="black")
+ax9.bar(range(1, games_nr + 1), my_shots_over_time, color=my_color, width=1)
+ax9.bar(range(1, games_nr + 1), your_shots_over_time, color=your_color, bottom=my_shots_over_time, width=1)
+ax9.bar(range(1, games_nr + 1), their_shots_over_time, color=their_color, width=1)
 ax9.set_xticklabels("")
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
@@ -2759,13 +2683,13 @@ for entry in range(0, len(result_array_num)):
     new_result_array_num_up = limit
     new_result_array_num_down = -limit
 
-ax10.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25, ec="grey")
-ax10.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25, ec="grey")
+ax10.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+ax10.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
 ax10.set_ylim(-limit, limit)
-ax10.bar(range(1, games_nr + 1), my_saves_over_time, color=my_color, width=1, ec="black")
-ax10.bar(range(1, games_nr + 1), your_saves_over_time, color=your_color, bottom=my_saves_over_time, width=1, ec="black")
-ax10.bar(range(1, games_nr + 1), their_saves_over_time, color=their_color, width=1, ec="black")
+ax10.bar(range(1, games_nr + 1), my_saves_over_time, color=my_color, width=1)
+ax10.bar(range(1, games_nr + 1), your_saves_over_time, color=your_color, bottom=my_saves_over_time, width=1)
+ax10.bar(range(1, games_nr + 1), their_saves_over_time, color=their_color, width=1)
 ax10.set_xticklabels("")
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
@@ -2785,13 +2709,12 @@ for entry in range(0, len(result_array_num)):
     new_result_array_num_up = limit
     new_result_array_num_down = -limit
 
-ax11.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25, ec="grey")
-ax11.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25, ec="grey")
+ax11.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+ax11.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
-ax11.bar(range(1, games_nr + 1), my_assists_over_time, color=my_color, width=1, ec="black")
-ax11.bar(range(1, games_nr + 1), your_assists_over_time, color=your_color, bottom=my_assists_over_time, width=1,
-         ec="black")
-ax11.bar(range(1, games_nr + 1), their_assists_over_time, color=their_color, width=1, ec="black")
+ax11.bar(range(1, games_nr + 1), my_assists_over_time, color=my_color, width=1)
+ax11.bar(range(1, games_nr + 1), your_assists_over_time, color=your_color, bottom=my_assists_over_time, width=1)
+ax11.bar(range(1, games_nr + 1), their_assists_over_time, color=their_color, width=1)
 ax11.set_xticklabels("")
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
@@ -3353,7 +3276,7 @@ if save_and_crop:
     # Chart 9 - goals scored & conceded distribution
     left = 1480
     top = 1115
-    right = 1965
+    right = 1955
     bottom = 1820
     img_res_9 = img.crop((left, top, right, bottom))
     img_res_9.save(path_to_charts + "gs_and_gc_distribution_chart.png")
