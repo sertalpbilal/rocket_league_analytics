@@ -25,10 +25,12 @@ Steps:
    Finally you can go to `src` and run `python boxcartest.py` to populate the dashboard.
 
 ## Screenshots:
-Considering all games:
+### Considering all games 
+#### Click [here](https://sertalpbilal.github.io/rocket_league_analytics/dashboard.html) to view in an alternative format
 ![full_canvas.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/data/charts/full_canvas.png)
 
-Considering just the games in the latest streak of games:
+### Considering the latest streak of games 
+#### Click [here](https://sertalpbilal.github.io/rocket_league_analytics/dashboard-latest-streak.html) to view in an alternative format
 ![full_canvas.png](https://raw.githubusercontent.com/sertalpbilal/rocket_league_analytics/main/data/charts/latest_streak/full_canvas.png)
 
 
