@@ -112,6 +112,21 @@ function plot_pitch_shot() {
         .attr("transform",
             "translate(" + margin.left + "," + margin.top + ")");
 
+    let arrowPoints = [[0, 0], [0, 20], [20, 10]];
+
+    svg.append('defs')
+        .append('marker')
+        .attr('id', 'arrow')
+        .attr('viewBox', [0, 0, 20, 20])
+        .attr('refX', 10)
+        .attr('refY', 10)
+        .attr('markerWidth', 20)
+        .attr('markerHeight', 20)
+        .attr('orient', 'auto-start-reverse')
+        .append('path')
+        .attr('d', d3.line()(arrowPoints))
+        .attr('stroke', 'black');
+
     let data = app.shots_combined
 
     let pitch = (context) => {
@@ -337,7 +352,18 @@ function plot_pitch_shot() {
         .attr("transform", `translate(${x(d.x_mult * d.ball_pos_y)},${y(d.y_mult * d.ball_pos_x)})`)
         .attr("fill-opacity", 0.4)
         .style("pointer-events", "none")
-        
+        // ball velocity
+        let ball_pos_now = [x(d.x_mult * d.ball_pos_y), y(d.y_mult * d.ball_pos_x)]
+        let ball_pos_next = [x(d.x_mult * (parseFloat(d.ball_pos_y) + parseFloat(d.ball_vel_y)/25)), y(d.y_mult * (parseFloat(d.ball_pos_x) + parseFloat(d.ball_vel_x)/25))]
+        debugger
+        ff
+        .append('path')
+        .attr('d', d3.line()([ball_pos_now, ball_pos_next]))
+        .attr('stroke', 'black')
+        .attr("stroke-width", 10)
+        .attr('marker-end', 'url(#arrow)')
+        .attr('fill', 'none');
+
         $("#shot-" + d.order).addClass("higlighted-row")
 
     }
