@@ -6,7 +6,9 @@ var app = new Vue({
         shots: [],
         xg_out: [],
         colors: ['#DE8892', 'white', '#9FDC7C'],
-        thresholds: [0, 0.5, 1]
+        thresholds: [0, 0.5, 1],
+        game_json: {},
+        main_player: "enpitsu"
     },
     computed: {
         shots_combined() {
@@ -32,6 +34,26 @@ var app = new Vue({
                 e['order'] = i
             })
             return shots
+        },
+        our_team() {
+            if (_.isEmpty(this.game_json)) { return {} }
+            let are_we_orange = this.game_json.players.find(i => i.name == app.main_player).isOrange
+            return are_we_orange ? "orange" : "blue"
+        },
+        c_team_name() {
+            let our_team = this.our_team
+            return {
+                'orange': our_team == "orange" ? "US" : "THEM",
+                'blue':  our_team == "blue" ? "US" : "THEM"
+            }
+        },
+        team_orange() {
+            if (_.isEmpty(this.game_json)) { return undefined }
+            return this.game_json.teams.findIndex(i => i.isOrange)
+        },
+        team_blue() {
+            if (_.isEmpty(this.game_json)) { return undefined }
+            return this.game_json.teams.findIndex(i => !i.isOrange)
         }
     },
     methods: {
@@ -118,12 +140,121 @@ function plot_pitch_shot() {
         return context;
     }
 
+    let blue_side = (context) => {
+        context.moveTo(6040, 0);
+        context.lineTo(1900, 0);
+        context.lineTo(900, 1000);
+        context.lineTo(900, 3170);
+        context.lineTo(0, 3170);
+        context.lineTo(0, 5070);
+        context.lineTo(900, 5070);
+        context.lineTo(900, 7240);
+        context.lineTo(1900, 8240);
+        context.lineTo(6040, 8240);
+        context.lineTo(6040, 0);
+        return context;
+    }
+
+    let orange_side = (context) => {
+        context.moveTo(6040, 0);
+        context.lineTo(10180,0);
+        context.lineTo(11180,1000)
+        context.lineTo(11180,3170)
+        context.lineTo(12080,3170)
+        context.lineTo(12080,5070)
+        context.lineTo(11180,5070)
+        context.lineTo(11180,7240)
+        context.lineTo(10180,8240)
+        context.lineTo(6040,8240)
+        context.lineTo(6040, 0);
+        return context;
+    }
+
+    // // pitch
+    // svg.append("path")
+    //     .style("stroke", "black")
+    //     .style("stroke-width", 50)
+    //     .style("fill", "#f3f9ff")
+    //     .attr("d", pitch(d3.path()))
+
     // pitch
-    svg.append("path")
+    let blue_team = svg.append("g")
+    blue_team.append("path")
         .style("stroke", "black")
         .style("stroke-width", 50)
-        .style("fill", "#f3f9ff")
-        .attr("d", pitch(d3.path()))
+        .style("stroke-opacity", 0.5)
+        .style("fill", "#d0e0ff78")
+        .attr("d", blue_side(d3.path()))
+    let blue_mid = (6400+900)/2
+    let team_y = 2000
+    let score_y = 4120
+    let xg_y = 6240
+    let blue_xg = app.xg_out.filter(i => i.is_orange==0).map(i => parseFloat(i.xg)).reduce((a,b) => a+b,0).toFixed(2)
+    blue_team.append("text")
+        .attr("class", "bgtext")
+        .text(app.c_team_name["blue"]) //.text("BLUE")
+        .attr("y", team_y)
+        .attr("x", blue_mid)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "lightgray")
+        .style("font-size", "900pt")
+    blue_team.append("text")
+        .attr("class", "bgtext")
+        .text(app.game_json.teams[app.team_blue].score)
+        .attr("y", score_y)
+        .attr("x", blue_mid)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "lightgray")
+        .style("font-size", "2000pt")
+    blue_team.append("text")
+        .attr("class", "bgtext")
+        .text(blue_xg)
+        .attr("y", xg_y)
+        .attr("x", blue_mid)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "lightgray")
+        .style("font-size", "900pt")
+
+    let orange_team = svg.append("g")
+    orange_team.append("path")
+        .style("stroke", "black")
+        .style("stroke-opacity", 0.5)
+        .style("stroke-width", 50)
+        .style("fill", "#ffe0a780")
+        .attr("d", orange_side(d3.path()))
+    let orange_mid = (6400+11180)/2
+    let orange_xg = app.xg_out.filter(i => i.is_orange==1).map(i => parseFloat(i.xg)).reduce((a,b) => a+b,0).toFixed(2)
+    orange_team.append("text")
+        .attr("class", "bgtext")
+        .text(app.c_team_name["orange"]) //.text("ORANGE")
+        .attr("y", team_y)
+        .attr("x", orange_mid)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "lightgray")
+        .style("font-size", "900pt")
+    orange_team.append("text")
+        .attr("class", "bgtext")
+        .text(app.game_json.teams[app.team_orange].score)
+        .attr("y", score_y)
+        .attr("x", orange_mid)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "lightgray")
+        .style("font-size", "2000pt")
+    orange_team.append("text")
+        .attr("class", "bgtext")
+        .text(orange_xg)
+        .attr("y", xg_y)
+        .attr("x", orange_mid)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "lightgray")
+        .style("font-size", "900pt")
+
 
 
     // y-axis
@@ -303,6 +434,12 @@ async function fetch_game_xg() {
     })
 }
 
+async function fetch_game_json() {
+    return fetch_local_file('data/json/' + app.game_id + '.json').then((data) => {
+        app.game_json = JSON.parse(data)
+    })
+}
+
 $(document).ready(() => {
 
     var queryDict = {}
@@ -314,7 +451,8 @@ $(document).ready(() => {
 
     Promise.all([
             fetch_game_shots(),
-            fetch_game_xg()
+            fetch_game_xg(),
+            fetch_game_json()
         ]).then(() => {
             console.log('ready')
             app.$nextTick(() => {
