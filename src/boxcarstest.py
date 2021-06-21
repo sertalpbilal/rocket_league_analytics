@@ -31,8 +31,8 @@ from PIL import Image
 
 startTime = time.time()
 
-check_new = False  # Only processes new files (in separate directory)
-show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
+check_new = True  # Only processes new files (in separate directory)
+show_xg_scorelines = True # Shows xG scorelines and normal scorelines and replay names of games
 save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
@@ -389,6 +389,9 @@ for file in new_json_files:
         your_local_goals_from_shots = 0
         their_local_goals_from_shots = 0
 
+        our_local_xg_per_shot = []
+        their_local_xg_per_shot = []
+
         for col in range(ncols):
             for row in range(0, nrows):
                 if my_list[0][col] == "shot_taker_name":
@@ -398,12 +401,14 @@ for file in new_json_files:
                                 our_shots_goal_or_miss.append(1)
                             elif my_list[row][5] == "False":
                                 our_shots_goal_or_miss.append(0)
+                            our_local_xg_per_shot.append(float(my_list[row][4]))
 
                         if my_list[row][col] != my_name and my_list[row][col] != your_name:
                             if my_list[row][5] == "True":
                                 their_shots_goal_or_miss.append(1)
                             elif my_list[row][5] == "False":
                                 their_shots_goal_or_miss.append(0)
+                            their_local_xg_per_shot.append(float(my_list[row][4]))
 
                         if my_list[row][col] == my_name:
                             my_local_xg += float(my_list[row][4])
@@ -446,6 +451,7 @@ for file in new_json_files:
                                 their_goals_from_shots += 1
                             elif my_list[row][5] == "False":
                                 their_xg_per_miss_list.append(float(my_list[row][4]))
+
 
         my_goals_from_shots_over_time.append(my_local_goals_from_shots)
         your_goals_from_shots_over_time.append(your_local_goals_from_shots)
@@ -904,6 +910,33 @@ for file in new_json_files:
             result_color.append(their_color)
             normaltime_gd_array.append(local_GS - local_GC)
 
+
+        def poisson_binomial_pmf(p):
+            """Returns the p.m.f. of the Poisson Binomial distribution.
+
+            The Poisson Binomial distribution is the sum of `len(p)` independent yes/no
+            trials, with trial `i` having success probability `p[i]`. (The special case
+            of all probabilities being equal is the Binomial distribution.)
+
+            Return value is a numpy array of length `len(p)+1`, where element `i` is the
+            chance of `i` successes.
+
+            >>> poisson_binomial_pmf([.25])
+            array([ 0.75,  0.25])
+            >>> poisson_binomial_pmf([.5, .25])
+            array([ 0.375,  0.5  ,  0.125])
+            >>> poisson_binomial_pmf([.5, .25, .125])
+            array([ 0.328125,  0.484375,  0.171875,  0.015625])
+            """
+            n = len(p)
+            pmf = np.zeros(n + 1, dtype=float)
+            pmf[0] = 1.0
+            for i in range(n):
+                success = pmf[:i + 1] * p[i]
+                pmf[:i + 2] *= (1 - p[i])  # failure
+                pmf[1:i + 2] += success
+            return pmf
+
         def poisson_probability(actual, mean):
             # iterative, to keep the components from getting too large or small:
             p = math.exp(-mean)
@@ -912,7 +945,6 @@ for file in new_json_files:
                 p /= i + 1
             return p
 
-        our_local_xg = my_local_xg + your_local_xg
         win_chance = 0
         draw_chance = 0
         loss_chance = 0
@@ -920,16 +952,31 @@ for file in new_json_files:
         our_xgc_prob = []
         local_xgf_prob = 0
         local_xgc_prob = 0
-        # our chances of scoring and conceding up to 20 goals
-        for i in range(0,21):
-            our_xgf_prob.append(poisson_probability(i, our_local_xg))
-            local_xgf_prob += poisson_probability(i, our_local_xg)
-            our_xgc_prob.append(poisson_probability(i, their_local_xg))
-            local_xgc_prob += poisson_probability(i, their_local_xg)
 
-        for i in range(0,21):
+        chance_of_missing = 1
+        chance_of_scoring = 1
+
+        # our chances of scoring up to N goals where N is the number of shots we took
+        our_xgf_prob_raw = poisson_binomial_pmf(our_local_xg_per_shot)
+        our_xgc_prob_raw = poisson_binomial_pmf(their_local_xg_per_shot)
+
+        max_possible_goals = max(len(our_xgf_prob_raw),len(our_xgc_prob_raw))
+        
+        our_xgf_prob = [0] * max_possible_goals
+        our_xgc_prob = [0] * max_possible_goals
+
+        local_our_shots_att = len(our_local_xg_per_shot)
+        local_our_shots_con = len(their_local_xg_per_shot)
+        
+        for i in range(len(our_xgf_prob_raw)):
+            our_xgf_prob[i] = our_xgf_prob_raw[i]
+            
+        for i in range(len(our_xgc_prob_raw)):
+            our_xgc_prob[i] = our_xgc_prob_raw[i]
+        
+        for i in range(0,max_possible_goals):
             draw_chance += (our_xgf_prob[i] * our_xgc_prob[i])
-            for j in range(0,21):
+            for j in range(0,max_possible_goals):
                 if i > j:
                     win_chance += (our_xgf_prob[i] * our_xgc_prob[j])
                     loss_chance += (our_xgf_prob[j] * our_xgc_prob[i])
@@ -937,7 +984,10 @@ for file in new_json_files:
         win_chance += (draw_chance/2)
         loss_chance += (draw_chance/2)
 
-        score_prob = (our_xgf_prob[local_GS] * our_xgc_prob[local_GC]) / (1 - draw_chance)
+        if local_GS < max_possible_goals and local_GC < max_possible_goals:
+            score_prob = (our_xgf_prob[local_GS] * our_xgc_prob[local_GC]) / (1 - draw_chance)
+        else:
+            score_prob = 0
 
         win_chance_per_game.append(win_chance*100)
         loss_chance_per_game.append(loss_chance*100)
@@ -963,15 +1013,15 @@ for file in new_json_files:
             color_to_add = Fore.RED
         if result_type == "L*":
             color_to_add = Fore.LIGHTRED_EX
-        scoreline_data.append([color_to_add + "%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, file.replace(".json",""),
+        scoreline_data.append([color_to_add + "%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, local_our_shots_att, local_our_shots_con, file.replace(".json",""),
                                round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type + Style.RESET_ALL])
-        scoreline_data_no_colors.append(["%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, file.replace(".json",""),
+        scoreline_data_no_colors.append(["%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, local_our_shots_att, local_our_shots_con, file.replace(".json",""),
                                round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type, local_time])
 if show_xg_scorelines:
-    print(tabulate(scoreline_data, headers=["xGF", "xGC", "GF", "GC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome"], numalign="right"))
+    print(tabulate(scoreline_data, headers=["xGF", "xGC", "GF", "GC", "Shots Att.", "Shots Con.", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome"], numalign="right"))
     print("\n")
 
-content = tabulate(scoreline_data_no_colors, headers=["xGF", "xGC", "GF", "GC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome", "StartTime"], tablefmt="tsv")
+content = tabulate(scoreline_data_no_colors, headers=["xGF", "xGC", "GF", "GC", "Shots Att.", "Shots Con.", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome", "StartTime"], tablefmt="tsv")
 if not os.path.exists(path_to_tables + "scorelines.tsv"):
     open(path_to_tables + "scorelines.tsv", 'w').close()
 f = open(path_to_tables + "scorelines.tsv", "w")
