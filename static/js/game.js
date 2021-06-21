@@ -38,7 +38,7 @@ var app = new Vue({
         init_shot_table() {
             $("#shot_list").DataTable().destroy();
             this.$nextTick(() => {
-                $("#shot_list").DataTable({
+                let shot_list = $("#shot_list").DataTable({
                     "order": [[ 2, 'asc' ]],
                     "lengthChange": false,
                     "searching": true,
@@ -52,6 +52,19 @@ var app = new Vue({
                     "scrollX": true
                 });
             })
+
+            
+
+            // need to run
+            // d3.select("#marker-7").dispatch("mouseover")
+        },
+        hover_row(e) {
+            let tm = e.currentTarget.dataset.targetMarker
+            d3.select("#"+tm).dispatch("mouseover")
+        },
+        leave_row(e) {
+            let tm = e.currentTarget.dataset.targetMarker
+            d3.select("#"+tm).dispatch("mouseleave")
         }
     }
 })
@@ -200,7 +213,7 @@ function plot_pitch_shot() {
     function undo_higlight(event,d) {
         let target = d3.select(event.currentTarget)
         target.style("fill-opacity", 0.5)
-        d3.select("#frozen_frame").remove()
+        d3.selectAll("#frozen_frame").remove()
         d3.selectAll(".xg-entry").style("display", "inline")
         $("#shot-" + d.order).removeClass("higlighted-row")
     }
