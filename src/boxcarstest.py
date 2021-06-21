@@ -11,7 +11,6 @@
 
 # TODO: Demo heatmap
 
-
 import csv
 import json
 import math
@@ -32,7 +31,7 @@ from PIL import Image
 
 startTime = time.time()
 
-check_new = False  # Only processes new files (in separate directory)
+check_new = True  # Only processes new files (in separate directory)
 show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
 save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
@@ -50,20 +49,20 @@ your_color = "mediumblue"
 our_color = "green"
 their_color = "darkred"
 
-bg_img = plt.imread("simple-pitch.png")
+bg_img = plt.imread("../simple-pitch.png")
 
 if check_new:
-    path_to_json = 'data/json_new/'
-    path_to_tables = 'data/tables/latest_streak/'
-    path_to_charts = 'data/charts/latest_streak/'
+    path_to_json = '../data/json_new/'
+    path_to_tables = '../data/tables/latest_streak/'
+    path_to_charts = '../data/charts/latest_streak/'
 else:
-    path_to_json = 'data/json/'
-    path_to_tables = 'data/tables/'
-    path_to_charts = 'data/charts/'
+    path_to_json = '../data/json/'
+    path_to_tables = '../data/tables/'
+    path_to_charts = '../data/charts/'
 
-path_to_untrimmed_csv = 'data/dataframe/'
-path_to_csv = 'data/dataframe_trimmed/'
-path_to_xg = 'data/xg_out/'
+path_to_untrimmed_csv = '../data/dataframe/'
+path_to_csv = '../data/dataframe_trimmed/'
+path_to_xg = '../data/xg_out/'
 
 if not os.path.exists(path_to_tables):
     os.makedirs(path_to_tables)
@@ -3441,4 +3440,4 @@ if save_and_crop:
 
 executionTime = (time.time() - startTime)
 print('\n\nExecution time in seconds: ', "%.2f" % executionTime)
-plt.show()
+#plt.show()
