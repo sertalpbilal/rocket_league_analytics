@@ -31,8 +31,8 @@ from PIL import Image
 
 startTime = time.time()
 
-check_new = True  # Only processes new files (in separate directory)
-show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
+check_new = False  # Only processes new files (in separate directory)
+show_xg_scorelines = True # Shows xG scorelines and normal scorelines and replay names of games
 save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
