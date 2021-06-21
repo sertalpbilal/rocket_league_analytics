@@ -31,8 +31,8 @@ from PIL import Image
 
 startTime = time.time()
 
-check_new = False  # Only processes new files (in separate directory)
-show_xg_scorelines = True # Shows xG scorelines and normal scorelines and replay names of games
+check_new = True  # Only processes new files (in separate directory)
+show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
 save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
@@ -2711,12 +2711,12 @@ for entry in range(0, len(result_array_num)):
     new_result_array_num_up = limit
     new_result_array_num_down = -limit
 
-ax8.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25, ec="grey")
-ax8.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25, ec="grey")
+ax8.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+ax8.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
-ax8.bar(range(1, games_nr + 1), my_goals_over_time, color=my_color, width=1, ec="black")
-ax8.bar(range(1, games_nr + 1), your_goals_over_time, color=your_color, bottom=my_goals_over_time, width=1, ec="black")
-ax8.bar(range(1, games_nr + 1), their_goals_over_time, color=their_color, width=1, ec="black")
+ax8.bar(range(1, games_nr + 1), my_goals_over_time, color=my_color, width=1)
+ax8.bar(range(1, games_nr + 1), your_goals_over_time, color=your_color, bottom=my_goals_over_time, width=1)
+ax8.bar(range(1, games_nr + 1), their_goals_over_time, color=their_color, width=1)
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
 ax8.set_ylabel("GOALS", rotation="horizontal", ha="center", va="center", labelpad=35)
@@ -2735,12 +2735,12 @@ for entry in range(0, len(result_array_num)):
     new_result_array_num_up = limit
     new_result_array_num_down = -limit
 
-ax9.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25, ec="grey")
-ax9.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25, ec="grey")
+ax9.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+ax9.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
-ax9.bar(range(1, games_nr + 1), my_shots_over_time, color=my_color, width=1, ec="black")
-ax9.bar(range(1, games_nr + 1), your_shots_over_time, color=your_color, bottom=my_shots_over_time, width=1, ec="black")
-ax9.bar(range(1, games_nr + 1), their_shots_over_time, color=their_color, width=1, ec="black")
+ax9.bar(range(1, games_nr + 1), my_shots_over_time, color=my_color, width=1)
+ax9.bar(range(1, games_nr + 1), your_shots_over_time, color=your_color, bottom=my_shots_over_time, width=1)
+ax9.bar(range(1, games_nr + 1), their_shots_over_time, color=their_color, width=1)
 ax9.set_xticklabels("")
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
@@ -2759,13 +2759,13 @@ for entry in range(0, len(result_array_num)):
     new_result_array_num_up = limit
     new_result_array_num_down = -limit
 
-ax10.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25, ec="grey")
-ax10.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25, ec="grey")
+ax10.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+ax10.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
 ax10.set_ylim(-limit, limit)
-ax10.bar(range(1, games_nr + 1), my_saves_over_time, color=my_color, width=1, ec="black")
-ax10.bar(range(1, games_nr + 1), your_saves_over_time, color=your_color, bottom=my_saves_over_time, width=1, ec="black")
-ax10.bar(range(1, games_nr + 1), their_saves_over_time, color=their_color, width=1, ec="black")
+ax10.bar(range(1, games_nr + 1), my_saves_over_time, color=my_color, width=1)
+ax10.bar(range(1, games_nr + 1), your_saves_over_time, color=your_color, bottom=my_saves_over_time, width=1)
+ax10.bar(range(1, games_nr + 1), their_saves_over_time, color=their_color, width=1)
 ax10.set_xticklabels("")
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
@@ -2785,13 +2785,12 @@ for entry in range(0, len(result_array_num)):
     new_result_array_num_up = limit
     new_result_array_num_down = -limit
 
-ax11.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25, ec="grey")
-ax11.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25, ec="grey")
+ax11.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+ax11.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
-ax11.bar(range(1, games_nr + 1), my_assists_over_time, color=my_color, width=1, ec="black")
-ax11.bar(range(1, games_nr + 1), your_assists_over_time, color=your_color, bottom=my_assists_over_time, width=1,
-         ec="black")
-ax11.bar(range(1, games_nr + 1), their_assists_over_time, color=their_color, width=1, ec="black")
+ax11.bar(range(1, games_nr + 1), my_assists_over_time, color=my_color, width=1)
+ax11.bar(range(1, games_nr + 1), your_assists_over_time, color=your_color, bottom=my_assists_over_time, width=1)
+ax11.bar(range(1, games_nr + 1), their_assists_over_time, color=their_color, width=1)
 ax11.set_xticklabels("")
 for streak_game_num in streak_start_games:
     plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
