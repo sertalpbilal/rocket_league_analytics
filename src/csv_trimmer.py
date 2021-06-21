@@ -13,11 +13,20 @@ your_name = "enpitsu"
 path_to_untrimmed_csv = '../data/dataframe/'
 path_to_csv = '../data/dataframe_trimmed/'
 
-# Trim CSVs if there are CSVs to trim, and then delete original CSVs
+# Trim CSVs if they haven't been trimmed before
 if len(os.listdir(path_to_untrimmed_csv)) > 0:
     csv_files = [pos_csv for pos_csv in os.listdir(path_to_untrimmed_csv) if pos_csv.endswith('.csv')]
+    new_csv_files = []
+    print("Found", len(csv_files), "CSV(s)")
 
-    print("Trimming", len(csv_files), "CSV files...")
+    # Only keep files that haven't been trimmed
+    for file in csv_files:
+        if not os.path.exists(path_to_csv + file):
+            new_csv_files.append(file)
+
+    csv_files = new_csv_files
+
+    print("Trimming", len(csv_files), "CSV(s)")
     frames_to_skip = 20
 
     for file in csv_files:
@@ -84,7 +93,9 @@ if len(os.listdir(path_to_untrimmed_csv)) > 0:
         # dfObj.dropna(axis=0, how='any', thresh=None, subset=None, inplace=True)
 
         dfObj.to_csv(index=False, path_or_buf=path_to_csv + file, float_format='{:.0f}'.format)
-        os.remove(path_to_untrimmed_csv + file)
 
     trimexecutionTime = (time.time() - startTime)
     print('Trimming completed in ', "%.2f" % trimexecutionTime, 'seconds\n\n')
+
+else:
+    print("No CSVs found in /dataframe/")
