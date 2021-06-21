@@ -3276,7 +3276,7 @@ if save_and_crop:
     # Chart 9 - goals scored & conceded distribution
     left = 1480
     top = 1115
-    right = 1965
+    right = 1955
     bottom = 1820
     img_res_9 = img.crop((left, top, right, bottom))
     img_res_9.save(path_to_charts + "gs_and_gc_distribution_chart.png")
