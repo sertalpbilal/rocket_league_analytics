@@ -1080,8 +1080,8 @@ for i in range(0, 2):
             our_xgf_prob = [0] * max_possible_goals
             our_xgc_prob = [0] * max_possible_goals
 
-            local_our_shots_att = len(our_local_xg_per_hit)
-            local_our_shots_con = len(their_local_xg_per_hit)
+            local_our_hits_att = len(our_local_xg_per_hit)
+            local_our_hits_con = len(their_local_xg_per_hit)
 
             for i in range(len(our_xgf_prob_raw)):
                 our_xgf_prob[i] = our_xgf_prob_raw[i]
@@ -1128,24 +1128,30 @@ for i in range(0, 2):
                 color_to_add = Fore.RED
             if result_type == "L*":
                 color_to_add = Fore.LIGHTRED_EX
+                
+                
+            local_goal_difference = local_GS - local_GC
+            local_xg_difference = (my_local_xg+your_local_xg) - their_local_xg
+            local_hit_difference = local_our_hits_att - local_our_hits_con
+            
             scoreline_data.append(
                 [color_to_add + "%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC,
-                 local_our_shots_att, local_our_shots_con, file.replace(".json", ""),
+                 local_our_hits_att, local_our_hits_con, "%.2f" % local_xg_difference, local_goal_difference, local_hit_difference, file.replace(".json", ""),
                  round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
                  result_type + Style.RESET_ALL])
             scoreline_data_no_colors.append(
                 ["%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC,
-                 local_our_shots_att, local_our_shots_con, file.replace(".json", ""),
+                 local_our_hits_att, local_our_hits_con, "%.2f" % local_xg_difference, local_goal_difference, local_hit_difference, file.replace(".json", ""),
                  round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
                  result_type, local_time])
     if show_xg_scorelines:
         print(tabulate(scoreline_data,
-                       headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "Replay ID", "P(Win)", "P(Result)", "P(Score)",
+                       headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "xGD", "GD", "HD", "Replay ID", "P(Win)", "P(Result)", "P(Score)",
                                 "Outcome"], numalign="right"))
         print("\n")
 
     content = tabulate(scoreline_data_no_colors,
-                       headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "Replay ID", "P(Win)", "P(Result)", "P(Score)",
+                       headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "xGD", "GD", "HD", "Replay ID", "P(Win)", "P(Result)", "P(Score)",
                                 "Outcome", "StartTime"], tablefmt="tsv")
     if not os.path.exists(path_to_tables + "scorelines.tsv"):
         open(path_to_tables + "scorelines.tsv", 'w').close()
