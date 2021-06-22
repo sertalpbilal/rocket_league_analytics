@@ -586,6 +586,7 @@ function plot_xg_timeline() {
         .attr("r", 6)
         .attr("fill", "orange")
     let score = hover_g.append("text")
+        .attr("class", "score-text")
         .text("")
         .attr("y", -4)
         .attr("x", width/2)
@@ -600,7 +601,7 @@ function plot_xg_timeline() {
         .attr("fill", "black")
     let orange_score = score.append("tspan")
         .text("ORANGE")
-        .attr("fill", "orange")
+        .attr("fill", "#ff6f00")
 
     svg.selectAll(".axis-holder .tick line")
         // .attr("font-size", "140pt")
