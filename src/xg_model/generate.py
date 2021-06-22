@@ -9,13 +9,15 @@ import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, roc_auc_score
 from xgboost import XGBClassifier
-
+from progress.bar import IncrementalBar
+from wrapt_timeout_decorator import timeout
 
 class RocketLeagueXG:
 
     def __init__(self, folder='model', swapping=True):
         self.folder = (pathlib.Path() / f"../../data/{folder}").resolve()
         self.swapping = swapping
+        self.df = None
 
     def prepare_data(self):
         "Reads and prepares raw data for the model, this step might take a while"
@@ -28,7 +30,8 @@ class RocketLeagueXG:
                 dfs = list(executor.map(self.read_single_game, all_replay_files))
         else:
             dfs = []
-            for f in all_replay_files:
+            for f in IncrementalBar('Collecting games').iter(all_replay_files[0:500]):
+            # for f in all_replay_files:
                 try:
                     dfs.append(self.read_single_game(f))
                 except:
@@ -39,7 +42,9 @@ class RocketLeagueXG:
         print(all_df.head())
         all_df.reset_index(inplace=True, drop=True)
         all_df.to_csv(self.folder / "combined.csv")
+        self.df = all_df
 
+    @timeout(45)
     def read_single_game(self, f):
         csv_name = f.replace(".replay", ".csv", 1)
         if os.path.exists(csv_name):
@@ -48,19 +53,22 @@ class RocketLeagueXG:
             return df
         print(f"Reading {f}")
         r = carball.analyze_replay_file(f)
+        print(f"Carball data is ready, processing {f}")
         tracking_data = r.get_data_frame()
         json_data = r.get_json_data()
         hit_frames = json_data['gameStats']['hits']
         players = {i['id']['id']: i for i in json_data['players']}
         player_names = [i['name'] for i in players.values()]
 
-        shots = []
+        # shots = []
         model_shots = []
         for hf in hit_frames:
-            if hf.get('shot', False):
+            print(".", end="")
+            if True: #hf.get('shot', False):
                 frame_number = hf['frameNumber']
                 shot_taker_id = hf['playerId']['id']
                 shot_taker_name = players[hf['playerId']['id']]['name']
+                is_shot = hf.get('shot', False)
                 goal = hf.get('goal', False)
                 tracking_frame = tracking_data.loc[frame_number]
                 is_overtime = tracking_frame['game'].to_dict().get('is_overtime')
@@ -72,13 +80,14 @@ class RocketLeagueXG:
                         p: tracking_frame[p].to_dict() for p in player_names
                     },
                     'ball': tracking_frame['ball'].to_dict(),
+                    'shot': is_shot,
                     'goal': goal,
                     'coll_distance': hf.get('distance'),
                     'distanceToGoal': hf.get('distanceToGoal'),
                     'shot_taker_id': shot_taker_id,
                     'shot_taker_name': shot_taker_name,
                 }
-                shots.append(single_shot)
+                # shots.append(single_shot)
                 shot_taker = tracking_frame[shot_taker_name]
                 shot_taker_team_no = players[shot_taker_id]['isOrange']
                 team_mate_name = None
@@ -100,6 +109,7 @@ class RocketLeagueXG:
                     'frame': frame_number,
                     'time': game_time,
                     'goal': goal,
+                    'shot': is_shot,
                     'is_orange': shot_taker_team_no,
                     'distanceToGoal': hf['distanceToGoal'],
                 }
@@ -138,13 +148,19 @@ class RocketLeagueXG:
                             generic_shot[key] *= -1
                 model_shots.append(generic_shot)
 
+        print(f"Done {f}")
+
         current_df = pd.DataFrame(model_shots)
         current_df.to_csv(csv_name)
         return current_df
 
     def build_model(self):
-        data = pd.read_csv(self.folder / "combined.csv")
-        data = data.rename(columns={'Unnamed: 0': 'idx'})
+        if self.df is None:
+            data = pd.read_csv(self.folder / "combined.csv")
+            data = data.rename(columns={'Unnamed: 0': 'idx'})
+        else:
+            data = self.df.reset_index().rename(columns={'index': 'idx'})
+
         if self.swapping:
             data_switch = data.copy()
             opp1_cols = [col for col in data_switch.columns if "opp_1_" in col]
@@ -155,24 +171,28 @@ class RocketLeagueXG:
             data_switch[opp2_cols] = data_switch[temp_cols]
             data_switch.drop(columns=temp_cols, inplace=True)
             data = pd.concat([data, data_switch])
-        col_list = ['idx'] + [col for col in data.columns if ("_pos_" in col or "_vel_" in col or "_rot_" in col) and "team_mate" not in col and "ball" not in col] + ['goal']
+        col_list = ['idx'] + [col for col in data.columns if ("_pos_" in col or "_vel_" in col or "_rot_" in col) and "team_mate" not in col and "ball" not in col] + ['goal']  # OR COL=SHOT?
         data_filtered = data[col_list]
         data_filtered = data_filtered.dropna()
         X = data_filtered.iloc[:, :-1].values
         y = data_filtered.iloc[:, -1].astype(int).values
+        print("Data is ready, splitting")
         from sklearn.model_selection import train_test_split
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=0.2)
         sc = StandardScaler()
         scaled_X_train = sc.fit_transform(X_train[:,1:])
         scaled_X_test = sc.transform(X_test[:,1:])
+        print("Split is ready, training")
         reg = XGBClassifier()
         reg.fit(scaled_X_train, y_train)
         y_pred = reg.predict(scaled_X_test)
+        print("Model is ready, measuring performance")
         print("Test", accuracy_score(y_pred, y_test), "Train", accuracy_score(reg.predict(scaled_X_train), y_train), "ROC AUC Score", roc_auc_score(y_test, y_pred))
         with open(self.folder / "xg.model", "wb") as f:
             pickle.dump(reg, f)
         with open(self.folder / "xg.scaler", "wb") as f:
             pickle.dump(sc, f)
+        print("Ready!")
 
 
 def generate_xg():

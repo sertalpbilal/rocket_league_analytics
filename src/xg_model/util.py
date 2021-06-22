@@ -33,10 +33,11 @@ def get_shots_from_aux(tracking_data, json_data, shots_file):
     shots = []
     model_shots = []
     for hf in hit_frames:
-        if hf.get('shot', False):
+        if True: # hf.get('shot', False):
             frame_number = hf['frameNumber']
             shot_taker_id = hf['playerId']['id']
             shot_taker_name = players[hf['playerId']['id']]['name']
+            is_shot = hf.get('shot', False)
             goal = hf.get('goal', False)
             tracking_frame = tracking_data.loc[frame_number]
             print(tracking_frame)
@@ -77,6 +78,7 @@ def get_shots_from_aux(tracking_data, json_data, shots_file):
                 'frame': frame_number,
                 'time': game_time,
                 'goal': goal,
+                'shot': is_shot,
                 'is_orange': shot_taker_team_no,
                 'distanceToGoal': hf['distanceToGoal'],
             }

@@ -55,7 +55,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="shot, idx in shots_combined" :id="'shot-' + shot['order']" @mouseover="hover_row" @mouseleave="leave_row" :data-target-marker="'marker-' + shot['order']">
+                                <tr v-for="shot, idx in shots_combined" v-if="shot.visible" :id="'shot-' + shot['order']" @mouseover="hover_row" @mouseleave="leave_row" :data-target-marker="'marker-' + shot['order']">
                                     <td>{{ shot['shot_taker_name'] }}</td>
                                     <td :style="{'color': shot['team_color']}">{{ shot['team_name'] }}</td>
                                     <td>{{ parseInt(shot['frame']) }}</td>
@@ -75,7 +75,6 @@
                         </table>
                     </div>
                 </div>
-                
             </div>
         </div>
     </main>

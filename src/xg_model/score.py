@@ -47,13 +47,14 @@ class RocketLeagueXGScorer:
 
         try:
             xg = model.predict_proba(scaler.transform(gv))[:,1]
-        except:
+        except Exception as e:
+            print(e)
             return
         shots['xg'] = xg
         print(shots)
         print(shots.groupby('shot_taker_name')['xg'].sum())
 
-        e = shots[['shot_taker_name', 'is_orange', 'time', 'xg', 'goal']].copy()
+        e = shots[['shot_taker_name', 'is_orange', 'time', 'xg', 'shot', 'goal']].copy()
         e.to_csv(self.parent / f"xg_out/{game_id}.csv")
 
         return e
@@ -93,5 +94,5 @@ def convert_all():
 
 if __name__ == "__main__":
     s = RocketLeagueXGScorer('model')
-    s.score_game("d3c7f166-6b2f-48dd-962a-9aaf53a6b327")
+    s.score_game("1edab053-ab1a-4729-ac01-a65f34ac8ba0")
     

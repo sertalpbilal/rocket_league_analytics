@@ -32,6 +32,9 @@ var app = new Vue({
                 e['x_mult'] = e['is_orange'] == 1 ? -1 : 1
                 e['y_mult'] = e['is_orange'] == 1 ? 1 : -1
                 e['order'] = i
+                e['visible'] = game_xg > 0.05 || e['goal'] == 'True'
+                e['fill'] = e['visible'] ? 0.5 : 0.1
+                
             })
             return shots
         },
@@ -369,7 +372,7 @@ function plot_pitch_shot() {
     }
     function undo_higlight(event,d) {
         let target = d3.select(event.currentTarget)
-        target.style("fill-opacity", 0.5)
+        target.style("fill-opacity", d.fill)
         d3.selectAll("#frozen_frame").remove()
         d3.selectAll(".xg-entry").style("display", "inline")
         $("#shot-" + d.order).removeClass("higlighted-row")
@@ -391,12 +394,12 @@ function plot_pitch_shot() {
         .attr("class", "shot-circles xg-entry")
         .attr("id", (d) => 'marker-' + d.order)
         .style("stroke", "black")
-        .style("stroke-opacity", 1)
+        .style("stroke-opacity", (d) => d.shot == 'True' ? 1 : 0.1)
         .style("stroke-width", 20)
         .style("fill", (d) => d.is_orange == 1 ? "orange" : "blue")
         .attr("d", (d) => d3.symbol().size(xg_size(d.xg)).type(d3.symbolCircle)())
         .attr("transform", (d) => `translate(${x(d.x_mult * d.shot_taker_pos_y)},${y(d.y_mult * d.shot_taker_pos_x)})`)
-        .attr("fill-opacity", 0.5)
+        .attr("fill-opacity", (d) => d.fill)
         .on("mouseover", highlight_shot)
         .on("mouseleave", undo_higlight)
 
@@ -415,7 +418,7 @@ function plot_pitch_shot() {
         .style("fill", (d) => d.is_orange == 1 ? "orange" : "blue")
         .attr("d", (d) => d3.symbol().size(xg_size(d.xg)).type(d3.symbolStar)())
         .attr("transform", (d) => `translate(${x(d.x_mult * d.shot_taker_pos_y)},${y(d.y_mult * d.shot_taker_pos_x)})`)
-        .attr("fill-opacity", 0.5)
+        .attr("fill-opacity", (d) => d.fill)
         .on("mouseover", highlight_shot)
         .on("mouseleave", undo_higlight)
 

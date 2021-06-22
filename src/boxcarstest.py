@@ -375,7 +375,7 @@ for file in new_json_files:
         data = json.load(f)
 
         # load corresponding xG data file
-        with open(path_to_xg + file.replace("json", "csv")) as f:
+        with open(path_to_xg + file.replace("json", "csv"), encoding="utf8") as f:
             reader = csv.reader(f)
             my_list = list(reader)
 

@@ -36,7 +36,7 @@ class ReplayManager:
     @require_token
     def get_remote_replay_list(self, player1=None, player2=None):
 
-        player_text=""
+        player_text="playlist=ranked-doubles&"
         if player1:
             player_text += f"player-name={player1}&"
         if player2:
