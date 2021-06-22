@@ -31,7 +31,7 @@ var app = new Vue({
                     "order": [[ 1, 'desc' ]],
                     "lengthChange": true,
                     "pageLength": 10,
-                    "searching": false,
+                    "searching": true,
                     "info": true,
                     "paging": true,
                     "columnDefs": [{
