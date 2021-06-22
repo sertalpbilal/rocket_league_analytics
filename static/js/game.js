@@ -495,7 +495,7 @@ function plot_xg_timeline() {
 
     // y-axis
     let min_y = 0
-    let max_y = Math.max(...data.hits.blue.map(i => i.current_sum)) + 0.5
+    let max_y = Math.max(...data.hits.blue.map(i => i.current_sum), ...data.hits.orange.map(i => i.current_sum)) + 0.5
     const y = d3.scaleLinear().domain([min_y, max_y]).range([height, 0])
     svg.append('g')
         .attr("id", "y-axis-holder")
