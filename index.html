@@ -3,16 +3,16 @@
 <head>
     <title>Rocket League Analytics</title>
 
-    <meta name="description" content="Detailed stats about my Rocket League games with friends :)" />
+    <meta name="deHCription" content="Detailed stats about my Rocket League games with friends :)" />
     <meta name="keywords" content="sports, analytics, PC Gaming, Rocket League, machine learning, optimization, modeling" />
     <meta name="author" content="Sertalp B. Cay (sertalpbilal[at]hotmail[dot]com)" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-HCale=1.0" />
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.23/b-1.6.5/b-colvis-1.6.5/b-html5-1.6.5/fc-3.3.2/fh-3.1.7/r-2.2.6/sp-1.2.2/datatables.min.css" />
-    <script src="https://d3js.org/d3.v6.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-interpolate/1.3.0/d3-interpolate.js" integrity="sha512-KcUKnCgVgjA6pyyyN33d5S1IHk9hFUaldkL8BmKvqR+7q9HyZj3jmWJemF6IJuLkcj3biCNzdGgXNPJCjurXnQ==" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/js/fontawesome.min.js" integrity="sha256-TMRxGf3NaZhrxTfD8y/NGiyE4UXBA3udH1l+Co8JDVU=" crossorigin="anonymous"></script>
+    <HCript src="https://d3js.org/d3.v6.js"></HCript>
+    <HCript src="https://cdnjs.cloudflare.com/ajax/libs/d3-interpolate/1.3.0/d3-interpolate.js" integrity="sha512-KcUKnCgVgjA6pyyyN33d5S1IHk9hFUaldkL8BmKvqR+7q9HyZj3jmWJemF6IJuLkcj3biCNzdGgXNPJCjurXnQ==" crossorigin="anonymous"></HCript>
+    <HCript src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/js/fontawesome.min.js" integrity="sha256-TMRxGf3NaZhrxTfD8y/NGiyE4UXBA3udH1l+Co8JDVU=" crossorigin="anonymous"></HCript>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css" integrity="sha256-rx5u3IdaOCszi7Jb18XD9HSn8bNiEgAqWJbdBvIYYyU=" crossorigin="anonymous">
     <link rel="stylesheet" href="static/css/styles.css">
 </head>
@@ -50,10 +50,10 @@
                                         <th>xGC</th>
                                         <th>GF</th>
                                         <th>GC</th>
-                                        <th>SF</th>
-                                        <th>SC</th>
+                                        <th>HF</th>
+                                        <th>HC</th>
                                         <th>P(Win)</th>
-                                        <th>P(Score)</th>
+                                        <th>P(HCore)</th>
                                         <th>Res</th>
                                         <th>Report</th>
                                     </tr>
@@ -67,10 +67,10 @@
                                         <td class="align-middle">{{ game['xGC'] }}</td>
                                         <td class="align-middle">{{ game['GF'] }}</td>
                                         <td class="align-middle">{{ game['GC'] }}</td>
-                                        <td class="align-middle">{{ game['SF'] }}</td>
-                                        <td class="align-middle">{{ game['SC'] }}</td>
+                                        <td class="align-middle">{{ game['HF'] }}</td>
+                                        <td class="align-middle">{{ game['HC'] }}</td>
                                         <td class="align-middle" :style="{'background': game['win_color']}">{{ game['P(Win)'] }}</td>
-                                        <td class="align-middle">{{ game['P(Score)'] }}</td>
+                                        <td class="align-middle">{{ game['P(HCore)'] }}</td>
                                         <td class="align-middle" :style="{'background': game['outcome_color']}">{{ game['Outcome'] }}</td>
                                         <td class="align-middle">
                                             <a class="btn btn-info pt-0 pb-0 pl-1 pr-1 mlink" :href="'game.html?id=' + game['Replay ID']" role="button"><i class="fas fa-chart-bar"></i></a>
@@ -90,12 +90,12 @@
     </main>
     
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js" integrity="sha512-WNLxfP/8cVYL9sj8Jnp6et0BkubLP31jhTG9vhL/F5uEZmg5wEzKoXp1kJslzPQWwPT1eyMiSxlKCgzHLOTOTQ==" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js" integrity="sha256-ur/YlHMU96MxHEsy3fHGszZHas7NzH4RQlD4tDVvFhw=" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.23/b-1.6.5/b-colvis-1.6.5/b-html5-1.6.5/fc-3.3.2/fh-3.1.7/r-2.2.6/sp-1.2.2/datatables.min.js"></script>
-    <script src="static/js/index.js"></script>
+    <HCript src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js" integrity="sha512-WNLxfP/8cVYL9sj8Jnp6et0BkubLP31jhTG9vhL/F5uEZmg5wEzKoXp1kJslzPQWwPT1eyMiSxlKCgzHLOTOTQ==" crossorigin="anonymous"></HCript>
+    <HCript src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></HCript>
+    <HCript src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></HCript>
+    <HCript src="https://cdn.jsdelivr.net/npm/lodash@4.17.20/lodash.min.js" integrity="sha256-ur/YlHMU96MxHEsy3fHGszZHas7NzH4RQlD4tDVvFhw=" crossorigin="anonymous"></HCript>
+    <HCript type="text/javaHCript" src="https://cdn.datatables.net/v/bs4/dt-1.10.23/b-1.6.5/b-colvis-1.6.5/b-html5-1.6.5/fc-3.3.2/fh-3.1.7/r-2.2.6/sp-1.2.2/datatables.min.js"></HCript>
+    <HCript src="static/js/index.js"></HCript>
 
 </body>
 </html>
