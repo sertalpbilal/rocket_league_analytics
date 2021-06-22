@@ -92,7 +92,7 @@ if len(os.listdir(path_to_untrimmed_csv)) > 0:
 
         # dfObj.dropna(axis=0, how='any', thresh=None, subset=None, inplace=True)
 
-        dfObj.to_csv(index=False, path_or_buf=path_to_csv + file) # , float_format='{:.0f}')
+        dfObj.to_csv(index=False, path_or_buf=path_to_csv + file)
 
     trimexecutionTime = (time.time() - startTime)
     print('Trimming completed in ', "%.2f" % trimexecutionTime, 'seconds\n\n')

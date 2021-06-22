@@ -10,6 +10,9 @@
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
 
 # TODO: Demo heatmap
+# TODO: Auto detect games in latest streak, clear /json-new/, and copy them to /json-new/
+# TODO: Replace SF, SC with HF, HC
+# TODO: Update records (lowest non-shot xG goal etc)
 
 import csv
 import json
@@ -32,7 +35,7 @@ from PIL import Image
 startTime = time.time()
 
 check_new = False  # Only processes new files (in separate directory)
-show_xg_scorelines = True # Shows xG scorelines and normal scorelines and replay names of games
+show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
 save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
 # Names in Rocket League
@@ -78,16 +81,18 @@ file_time = []
 
 # Only keep RANKED_DOUBLES games
 for file in json_files:
-    f = open(path_to_json + file, )
-    data = json.load(f)
+    if file != "9e4c5030-ff84-49b5-b32f-2e4d585fd44e.json":
+        f = open(path_to_json + file, )
+        data = json.load(f)
 
-    local_playlist = ""
+        local_playlist = ""
 
-    for i in data["gameMetadata"]["playlist"]:
-        local_playlist += i
+        for i in data["gameMetadata"]["playlist"]:
+            local_playlist += i
 
-    if local_playlist == "RANKED_DOUBLES":
-        json_files_2v2.append(file)
+        if local_playlist == "RANKED_DOUBLES":
+            json_files_2v2.append(file)
+
 
 # Sort files by time created - loop through jsons, get start time of match, then sort by time
 for file in json_files_2v2:
@@ -321,6 +326,14 @@ my_total_xg = 0
 your_total_xg = 0
 their_total_xg = 0
 
+my_shot_xg = 0
+your_shot_xg = 0
+their_shot_xg = 0
+
+my_nonshot_xg = 0
+your_nonshot_xg = 0
+their_nonshot_xg = 0
+
 my_goal_xg = 0
 your_goal_xg = 0
 their_goal_xg = 0
@@ -344,6 +357,10 @@ their_goals_from_shots_over_time = []
 my_goals_from_shots = 0
 your_goals_from_shots = 0
 their_goals_from_shots = 0
+
+my_goals_from_nonshots = 0
+your_goals_from_nonshots = 0
+their_goals_from_nonshots = 0
 
 scoreline_data = []
 scoreline_data_no_colors = []
@@ -390,54 +407,84 @@ for file in new_json_files:
         your_local_goals_from_shots = 0
         their_local_goals_from_shots = 0
 
-        our_local_xg_per_shot = []
-        their_local_xg_per_shot = []
+        my_local_goals_from_nonshots = 0
+        your_local_goals_from_nonshots = 0
+        their_local_goals_from_nonshots = 0
+
+        our_local_xg_per_hit = []
+        their_local_xg_per_hit = []
 
         for col in range(ncols):
             for row in range(0, nrows):
                 if my_list[0][col] == "shot_taker_name":
                     if row != 0:
                         if my_list[row][col] == my_name or my_list[row][col] == your_name:
-                            if my_list[row][5] == "True":
+                            if my_list[row][6] == "True" and my_list[row][5] == "True":
                                 our_shots_goal_or_miss.append(1)
-                            elif my_list[row][5] == "False":
+                            elif my_list[row][6] == "False" and my_list[row][5] == "True":
                                 our_shots_goal_or_miss.append(0)
-                            our_local_xg_per_shot.append(float(my_list[row][4]))
+                            our_local_xg_per_hit.append(float(my_list[row][4]))
 
                         if my_list[row][col] != my_name and my_list[row][col] != your_name:
-                            if my_list[row][5] == "True":
+                            if my_list[row][6] == "True" and my_list[row][5] == "True":
                                 their_shots_goal_or_miss.append(1)
-                            elif my_list[row][5] == "False":
+                            elif my_list[row][6] == "False" and my_list[row][5] == "True":
                                 their_shots_goal_or_miss.append(0)
-                            their_local_xg_per_shot.append(float(my_list[row][4]))
+                            their_local_xg_per_hit.append(float(my_list[row][4]))
 
                         if my_list[row][col] == my_name:
                             my_local_xg += float(my_list[row][4])
                             my_total_xg += float(my_list[row][4])
 
-
+                            # shots
                             if my_list[row][5] == "True":
+                                my_shot_xg += float(my_list[row][4])
+
+
+                            # non-shots
+                            if my_list[row][5] == "False":
+                                my_nonshot_xg += float(my_list[row][4])
+                                # Non-shot Goals
+                                if my_list[row][6] == "True":
+                                    my_goals_from_nonshots +=1
+                                    my_local_goals_from_nonshots += 1
+
+                            # Shot Goals
+                            if my_list[row][6] == "True" and my_list[row][5] == "True":
                                 my_goal_xg += float(my_list[row][4])
                                 my_xg_per_goal_list.append(float(my_list[row][4]))
                                 my_local_goals_from_shots += 1
                                 my_goals_from_shots += 1
                                 my_shots_goal_or_miss.append(1)
-                            elif my_list[row][5] == "False":
+
+                            # misses from shots
+                            elif my_list[row][6] == "False" and my_list[row][5] == "True":
                                 my_shots_goal_or_miss.append(0)
                                 my_xg_per_miss_list.append(float(my_list[row][4]))
 
                         elif my_list[row][col] == your_name:
-                            
-
                             your_local_xg += float(my_list[row][4])
                             your_total_xg += float(my_list[row][4])
+
+                            # shots
                             if my_list[row][5] == "True":
+                                your_shot_xg += float(my_list[row][4])
+
+                            # non-shots
+                            if my_list[row][5] == "False":
+                                your_nonshot_xg += float(my_list[row][4])
+                                if my_list[row][6] == "True":
+                                    your_goals_from_nonshots += 1
+                                    your_local_goals_from_nonshots += 1
+
+
+                            if my_list[row][6] == "True" and my_list[row][5] == "True":
                                 your_goal_xg += float(my_list[row][4])
                                 your_xg_per_goal_list.append(float(my_list[row][4]))
                                 your_local_goals_from_shots += 1
                                 your_goals_from_shots += 1
                                 your_shots_goal_or_miss.append(1)
-                            elif my_list[row][5] == "False":
+                            elif my_list[row][6] == "False" and my_list[row][5] == "True":
                                 your_shots_goal_or_miss.append(0)
                                 your_xg_per_miss_list.append(float(my_list[row][4]))
 
@@ -445,14 +492,25 @@ for file in new_json_files:
 
                             their_local_xg += float(my_list[row][4])
                             their_total_xg += float(my_list[row][4])
+
+                            # shots
                             if my_list[row][5] == "True":
+                                their_shot_xg += float(my_list[row][4])
+
+                            # non-shots
+                            if my_list[row][5] == "False":
+                                their_nonshot_xg += float(my_list[row][4])
+                                if my_list[row][6] == "True":
+                                    their_goals_from_nonshots += 1
+                                    their_local_goals_from_nonshots += 1
+
+                            if my_list[row][6] == "True" and my_list[row][5] == "True":
                                 their_goal_xg += float(my_list[row][4])
                                 their_xg_per_goal_list.append(float(my_list[row][4]))
                                 their_local_goals_from_shots += 1
                                 their_goals_from_shots += 1
-                            elif my_list[row][5] == "False":
+                            elif my_list[row][6] == "False" and my_list[row][5] == "True":
                                 their_xg_per_miss_list.append(float(my_list[row][4]))
-
 
         my_goals_from_shots_over_time.append(my_local_goals_from_shots)
         your_goals_from_shots_over_time.append(your_local_goals_from_shots)
@@ -915,6 +973,12 @@ for file in new_json_files:
             result_color.append(their_color)
             normaltime_gd_array.append(local_GS - local_GC)
 
+        # games where we conceded "other goals"
+        """
+        if local_GC > (their_local_goals_from_nonshots + their_local_goals_from_shots):
+            print(file)
+        """
+
         def poisson_binomial_pmf(p):
             """Returns the p.m.f. of the Poisson Binomial distribution.
 
@@ -961,16 +1025,16 @@ for file in new_json_files:
         chance_of_scoring = 1
 
         # our chances of scoring up to N goals where N is the number of shots we took
-        our_xgf_prob_raw = poisson_binomial_pmf(our_local_xg_per_shot)
-        our_xgc_prob_raw = poisson_binomial_pmf(their_local_xg_per_shot)
+        our_xgf_prob_raw = poisson_binomial_pmf(our_local_xg_per_hit)
+        our_xgc_prob_raw = poisson_binomial_pmf(their_local_xg_per_hit)
 
         max_possible_goals = max(len(our_xgf_prob_raw),len(our_xgc_prob_raw))
         
         our_xgf_prob = [0] * max_possible_goals
         our_xgc_prob = [0] * max_possible_goals
 
-        local_our_shots_att = len(our_local_xg_per_shot)
-        local_our_shots_con = len(their_local_xg_per_shot)
+        local_our_shots_att = len(our_local_xg_per_hit)
+        local_our_shots_con = len(their_local_xg_per_hit)
         
         for i in range(len(our_xgf_prob_raw)):
             our_xgf_prob[i] = our_xgf_prob_raw[i]
@@ -1081,12 +1145,15 @@ our_aerials_count = my_aerials_count + your_aerials_count
 # TODO: fix possible div by 0 bugs for following variables
 our_total_xg = my_total_xg + your_total_xg
 our_total_goals_from_shots = my_goals_from_shots + your_goals_from_shots
+our_total_goals_from_nonshots = my_goals_from_nonshots + your_goals_from_nonshots
+our_nonshot_xg = my_nonshot_xg + your_nonshot_xg
+our_shot_xg = my_shot_xg + your_shot_xg
 
-# gfs = goals from shots
-my_gfs_xg_ratio = my_goals_from_shots / my_total_xg
-your_gfs_xg_ratio = your_goals_from_shots / your_total_xg
-our_gfs_xg_ratio = our_total_goals_from_shots / our_total_xg
-their_gfs_xg_ratio = their_goals_from_shots / their_total_xg
+# gfs = Shot Goals
+my_gfs_xg_ratio = my_goals_from_shots / my_shot_xg
+your_gfs_xg_ratio = your_goals_from_shots / your_shot_xg
+our_gfs_xg_ratio = our_total_goals_from_shots / our_shot_xg
+their_gfs_xg_ratio = their_goals_from_shots / their_shot_xg
 
 if my_goal_count > 0:
     my_avg_goal_distance = "%.0f" % mean(my_goals_distancetogoal)
@@ -1160,11 +1227,22 @@ if (their_goal_count + their_miss_count) > 0:
 else:
     their_avg_shot_distance = 0
 
+my_other_goals = my_goal_count - my_goals_from_shots - my_goals_from_nonshots
+your_other_goals = your_goal_count - your_goals_from_shots - your_goals_from_nonshots
+our_goals_from_shots = my_goals_from_shots + your_goals_from_shots
+our_goals_from_nonshots = my_goals_from_nonshots + your_goals_from_nonshots
+our_other_goals = our_goal_count - our_goals_from_shots - our_goals_from_nonshots
+their_other_goals = their_goal_count - their_goals_from_shots - their_goals_from_nonshots
+
 individual_data = [["Goals", my_goal_count, your_goal_count],
-                   ["Goals from Shots", my_goals_from_shots, your_goals_from_shots],
+                   ["Shot Goals", my_goals_from_shots, your_goals_from_shots],
+                   ["Non-shot Goals", my_goals_from_nonshots, your_goals_from_nonshots],
+                   ["Other Goals", my_other_goals, your_other_goals],
                    ["xG", "%.0f" % my_total_xg, "%.0f" % your_total_xg],
+                   ["Shot xG", "%.0f" % my_shot_xg, "%.0f" % your_shot_xg],
+                   ["Non-shot xG", "%.0f" % my_nonshot_xg, "%.0f" % your_nonshot_xg],
                    ["GfS/Shot Ratio", "%.2f" % my_gs_ratio, "%.2f" % your_gs_ratio],
-                   ["GfS/xG Ratio", "%.2f" % my_gfs_xg_ratio, "%.2f" % your_gfs_xg_ratio],
+                   ["GfS/Shot xG Ratio", "%.2f" % my_gfs_xg_ratio, "%.2f" % your_gfs_xg_ratio],
                    ["Shots", my_shot_count, your_shot_count],
                    ["Misses", my_miss_count, your_miss_count],
                    ["Assists", my_assists_count, your_assists_count],
@@ -1186,10 +1264,14 @@ individual_data = [["Goals", my_goal_count, your_goal_count],
                    ]
 
 team_data = [["Goals", our_goal_count, their_goal_count],
-             ["Goals from Shots", our_total_goals_from_shots, their_goals_from_shots],
+             ["Shot Goals", our_goals_from_shots, their_goals_from_shots],
+             ["Non-shot Goals", our_goals_from_nonshots, their_goals_from_nonshots],
+             ["Other Goals", our_other_goals, their_other_goals],
              ["xG", "%.0f" % our_total_xg, "%.0f" % their_total_xg],
+             ["Shot xG", "%.0f" % our_shot_xg, "%.0f" % their_shot_xg],
+             ["Non-shot xG", "%.0f" % our_nonshot_xg, "%.0f" % their_nonshot_xg],
              ["GfS/Shot Ratio", "%.2f" % our_gs_ratio, "%.2f" % their_gs_ratio],
-             ["GfS/xG Ratio", "%.2f" % our_gfs_xg_ratio, "%.2f" % their_gfs_xg_ratio],
+             ["GfS/Shot xG Ratio", "%.2f" % our_gfs_xg_ratio, "%.2f" % their_gfs_xg_ratio],
              ["Shots", our_shot_count, their_shot_count],
              ["Misses", our_miss_count, their_miss_count],
              ["Assists", our_assists_count, their_assists_count],
@@ -2143,7 +2225,7 @@ individual_record_data = [["Most goals scored in one match", max(my_goals_per_ma
                            your_most_consecutive_mvp],
                           ["Most consecutive matches without MVP", my_most_consecutive_nomvp_in,
                            your_most_consecutive_nomvp_in],
-                          ["Most consecutive goals from shots",my_most_consecutive_goals_from_shots, your_most_consecutive_goals_from_shots],
+                          ["Most consecutive Shot Goals",my_most_consecutive_goals_from_shots, your_most_consecutive_goals_from_shots],
                           ["Most consecutive misses from shots",my_most_consecutive_misses_from_shots,your_most_consecutive_misses_from_shots],
                           ["Most goal involvements (G+A) in one match",my_most_goals_or_assists_in_one_game,your_most_goals_or_assists_in_one_game],
                           ["Most consecutive matches with a goal involvement",my_most_consecutive_games_scored_or_assisted_in,your_most_consecutive_games_scored_or_assisted_in],
@@ -2348,7 +2430,7 @@ team_record_data = [["Longest winstreak", biggest_winstreak, biggest_lossstreak]
                      their_most_consecutive_mvp],
                     ["Most consecutive matches without MVP", our_most_consecutive_nomvp_in,
                      their_most_consecutive_nomvp_in],
-                    ["Most consecutive goals from shots", our_most_consecutive_goals_from_shots,
+                    ["Most consecutive Shot Goals", our_most_consecutive_goals_from_shots,
                      their_most_consecutive_goals_from_shots],
                     ["Most consecutive misses from shots", our_most_consecutive_misses_from_shots,
                      their_most_consecutive_misses_from_shots],
@@ -2532,26 +2614,37 @@ ax22.set_title("Positional Tendencies (per game)\nMinutes:Seconds")
 
 ###########################
 
-my_stats = [my_assists_count, my_saves_count, my_goal_count, my_miss_count, my_shot_count, my_gs_ratio * games_nr,
-            my_touches_count,
-            my_demos_count, my_demos_conceded_count, my_passes_count, my_clears_count, my_score_count,
-            my_turnovers_count, my_turnovers_won_count,
-            my_dribbles_count, my_aerials_count,
-            my_total_xg, my_gfs_xg_ratio * games_nr, my_goals_from_shots, my_mvp_count]
 
-your_stats = [your_assists_count, your_saves_count, your_goal_count, your_miss_count, your_shot_count,
-              your_gs_ratio * games_nr, your_touches_count,
-              your_demos_count, your_demos_conceded_count, your_passes_count, your_clears_count, your_score_count,
-              your_turnovers_count, your_turnovers_won_count,
-              your_dribbles_count, your_aerials_count,
-              your_total_xg, your_gfs_xg_ratio * games_nr, your_goals_from_shots, your_mvp_count]
+my_stats = [my_goal_count, my_goals_from_shots, my_goals_from_nonshots, my_other_goals,
+            my_total_xg, my_shot_xg, my_nonshot_xg,
+            my_gfs_xg_ratio * games_nr, my_gs_ratio * games_nr,
+            my_shot_count, my_miss_count, my_assists_count, my_saves_count, my_touches_count,
+            my_passes_count, my_dribbles_count, my_clears_count, my_aerials_count, my_turnovers_won_count, my_turnovers_count,
+            my_demos_count, my_demos_conceded_count, my_mvp_count, my_score_count]
+
+your_stats = [your_goal_count, your_goals_from_shots, your_goals_from_nonshots, your_other_goals,
+            your_total_xg, your_shot_xg, your_nonshot_xg,
+            your_gfs_xg_ratio * games_nr, your_gs_ratio * games_nr,
+            your_shot_count, your_miss_count, your_assists_count, your_saves_count, your_touches_count,
+            your_passes_count, your_dribbles_count, your_clears_count, your_aerials_count, your_turnovers_won_count, your_turnovers_count,
+            your_demos_count, your_demos_conceded_count, your_mvp_count, your_score_count]
+
+
+my_stats.reverse()
+your_stats.reverse()
+
 
 ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
-dic = {1: "Assists", 2: "Saves", 3: "Goals", 4: "Misses", 5: "Shots", 6: "GfS/Shots", 7: "Touches",
-       8: "Demos", 9: "Demoed", 10: "Passes", 11: "Clears", 12: "Scores", 13: "Lost Ball", 14: "Won Ball",
-       15: "Dribbles", 16: "Aerials",
-       17: "xG", 18: "GfS/xG", 19: "Goals from Shots", 20: "MVPs"}
+dic = {1: "Goals", 2: "Shot Goals", 3: "Non-shot Goals", 4: "Other Goals",
+       5: "xG", 6: "Shot xG", 7: "Non-shot xG",
+       8: "GfS/xG", 9: "GfS/Shots",
+       10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
+       15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball", 20: "Lost Ball",
+       21: "Demos", 22: "Demoed", 23: "MVPs", 24: "Scores"}
+
+dic_rev = {len(dic)-i+1: v for (i,v) in dic.items()}
+dic = dic_rev
 
 ticks = []
 
@@ -2561,6 +2654,7 @@ for num in dic:
 ax6.set_yticks(ticks)
 
 labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
+labels_to_check = labels
 
 ax6.set_yticklabels(labels)
 ax6.set_xticklabels("")
@@ -2602,30 +2696,45 @@ ax6.set_title(my_alias + " - " + your_alias + " (per Game)")
 ###########################
 
 our_stats = []
+labels_to_exclude = ["Demoed", "Lost Ball", "MVPs"]
+labels_div_by_2 = ["GfS/Shots","GfS/xG"]
+
+labels_to_check.reverse()
 
 for stat in range(len(my_stats)):
     # exclude: demos_conceded, turnovers, mvp count
-    if stat != 8 and stat != 12 and stat != 20:
+    if labels_to_check[stat] not in labels_to_exclude:
         # gs ratio and gfs/xg ratio require division by 2
-        if stat == 5 or stat == 17:
+        if labels_to_check[stat] in labels_div_by_2:
             our_stats.append((my_stats[stat] + your_stats[stat]) / 2)
         else:
             our_stats.append(my_stats[stat] + your_stats[stat])
     # mvp count
-    if stat == 20:
-        our_stats.append(our_mvp_count)
+    else:
+        if labels_to_check[stat] == "MVPs":
+            our_stats.append(our_mvp_count)
 
-their_stats = [their_assists_count, their_saves_count, their_goal_count, their_miss_count, their_shot_count,
-               their_gs_ratio * games_nr, their_touches_count,
-               their_demos_count, their_passes_count, their_clears_count, their_score_count, their_turnovers_won_count,
-               their_dribbles_count, their_aerials_count,
-               their_total_xg, their_gfs_xg_ratio * games_nr, their_goals_from_shots, their_mvp_count]
+
+their_stats = [their_goal_count, their_goals_from_shots, their_goals_from_nonshots, their_other_goals,
+            their_total_xg, their_shot_xg, their_nonshot_xg,
+            their_gfs_xg_ratio * games_nr, their_gs_ratio * games_nr,
+            their_shot_count, their_miss_count, their_assists_count, their_saves_count, their_touches_count,
+            their_passes_count, their_dribbles_count, their_clears_count, their_aerials_count, their_turnovers_won_count,
+            their_demos_count, their_mvp_count, their_score_count]
+
+their_stats.reverse()
 
 ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
 
-dic = {1: "Assists", 2: "Saves", 3: "Goals", 4: "Misses", 5: "Shots", 6: "GfS/Shots", 7: "Touches",
-       8: "Demos", 9: "Passes", 10: "Clears", 11: "Scores", 12: "Won Ball", 13: "Dribbles", 14: "Aerials",
-       15: "xG", 16: "GfS/xG", 17: "Goals from Shots", 18: "MVPs"}
+dic = {1: "Goals", 2: "Shot Goals", 3: "Non-shot Goals", 4: "Other Goals",
+       5: "xG", 6: "Shot xG", 7: "Non-shot xG",
+       8: "GfS/xG", 9: "GfS/Shots",
+       10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
+       15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball",
+       20: "Demos",21: "MVPs", 22: "Scores"}
+
+dic_rev = {len(dic)-i+1: v for (i,v) in dic.items()}
+dic = dic_rev
 
 ticks = []
 
@@ -2796,7 +2905,11 @@ ax13.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y],
 im = ax13.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                  extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
 im.set_cmap('gist_gray_r')
+
+
 ax13.scatter(my_goals_x, my_goals_y, alpha=0.5, color=my_color, s=my_goal_sizes_for_scatter)
+
+
 ax13.set_xlim(pitch_min_x, pitch_max_x)
 ax13.set_ylim(pitch_min_y, pitch_max_y)
 ax13.axis("off")
@@ -2826,8 +2939,7 @@ ax15.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y],
 im = ax15.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                  extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
 im.set_cmap('gist_gray_r')
-ax15.scatter(my_goals_x + your_goals_x, my_goals_y + your_goals_y, alpha=0.5, color=our_color,
-             s=my_goal_sizes_for_scatter + your_goal_sizes_for_scatter)
+ax15.scatter(my_goals_x + your_goals_x, my_goals_y + your_goals_y, alpha=0.5, color=our_color, s=my_goal_sizes_for_scatter + your_goal_sizes_for_scatter)
 ax15.set_xlim(pitch_min_x, pitch_max_x)
 ax15.set_ylim(pitch_min_y, pitch_max_y)
 ax15.axis("off")
@@ -3158,15 +3270,16 @@ if abs(our_gd_xgd_ra_min) > our_gd_ylim:
 
 len_to_use = len(my_xg_over_time_rolling_avg)
 
-my_avg_xg_line = my_total_xg/games_nr
+
+my_avg_xg_line = my_shot_xg/games_nr
 my_avg_gfs_line = my_goals_from_shots/games_nr
-your_avg_xg_line = your_total_xg/games_nr
+your_avg_xg_line = your_shot_xg/games_nr
 your_avg_gfs_line = your_goals_from_shots/games_nr
-our_avg_xg_line = our_total_xg/games_nr
+our_avg_xg_line = our_shot_xg/games_nr
 our_avg_gfs_line = (my_goals_from_shots+your_goals_from_shots)/games_nr
-their_avg_xg_line = their_total_xg/games_nr
+their_avg_xg_line = their_shot_xg/games_nr
 their_avg_gfs_line = their_goals_from_shots/games_nr
-our_avg_xgd_line = (our_total_xg-their_total_xg)/games_nr
+our_avg_xgd_line = (our_shot_xg-their_shot_xg)/games_nr
 our_avg_gdfs_line = (my_goals_from_shots+your_goals_from_shots-their_goals_from_shots)/games_nr
 our_avg_winrate_line = (win_count/games_nr)*100
 our_avg_xwinrate_line = total_win_chance/games_nr
@@ -3177,7 +3290,7 @@ ax2.bar(range(0, len_to_use), my_goals_from_shots_over_time_rolling_avg, color=m
 ax2.plot(range(0, len_to_use), my_xg_over_time_rolling_avg, color="black", alpha=1)
 plt.axhline(y=my_avg_gfs_line, color=my_color, linestyle='dotted')
 plt.axhline(y=my_avg_xg_line, color='black', linestyle='dotted')
-ax2.set_title(my_alias + "'s goals from shots and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+ax2.set_title(my_alias + "'s Shot Goals and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
 ax2.set_ylim(0, individual_rolling_avg_max)
 ax2.set_xlim(0, len_to_use - 1)
 
@@ -3187,7 +3300,7 @@ ax23.bar(range(0, len_to_use), your_goals_from_shots_over_time_rolling_avg, colo
 ax23.plot(range(0, len_to_use), your_xg_over_time_rolling_avg, color="black", alpha=1)
 plt.axhline(y=your_avg_gfs_line, color=your_color, linestyle='dotted')
 plt.axhline(y=your_avg_xg_line, color='black', linestyle='dotted')
-ax23.set_title(your_alias + "'s goals from shots and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+ax23.set_title(your_alias + "'s Shot Goals and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
 ax23.set_ylim(0, individual_rolling_avg_max)
 ax23.set_xlim(0, len_to_use - 1)
 
