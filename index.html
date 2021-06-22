@@ -53,7 +53,7 @@
                                         <th>HF</th>
                                         <th>HC</th>
                                         <th>P(Win)</th>
-                                        <th>P(HCore)</th>
+                                        <th>P(Score)</th>
                                         <th>Res</th>
                                         <th>Report</th>
                                     </tr>
@@ -70,7 +70,7 @@
                                         <td class="align-middle">{{ game['HF'] }}</td>
                                         <td class="align-middle">{{ game['HC'] }}</td>
                                         <td class="align-middle" :style="{'background': game['win_color']}">{{ game['P(Win)'] }}</td>
-                                        <td class="align-middle">{{ game['P(HCore)'] }}</td>
+                                        <td class="align-middle">{{ game['P(Score)'] }}</td>
                                         <td class="align-middle" :style="{'background': game['outcome_color']}">{{ game['Outcome'] }}</td>
                                         <td class="align-middle">
                                             <a class="btn btn-info pt-0 pb-0 pl-1 pr-1 mlink" :href="'game.html?id=' + game['Replay ID']" role="button"><i class="fas fa-chart-bar"></i></a>
