@@ -38,6 +38,11 @@
 
                     </div>
                 </div>
+                <div class="col-12 col-md-5 mt-3 mb-3">
+                    <div id="xG_timeline">
+
+                    </div>
+                </div>
                 <div class="col-12">
                     <h5>Shots</h5>
                     <div class="text-small-mobile">
@@ -48,7 +53,6 @@
                                     <th>Team</th>
                                     <th>Frame</th>
                                     <th>Time</th>
-                                    <!-- <th>Ball Position</th> -->
                                     <th>On Target</th>
                                     <th>xG</th>
                                     <th>Goal</th>
@@ -61,11 +65,6 @@
                                     <td :style="{'color': shot['team_color']}">{{ shot['team_name'] }}</td>
                                     <td>{{ parseInt(shot['frame']) }}</td>
                                     <td>{{ parseInt(shot['time']) }}</td>
-                                    <!-- <td class="text-smaller">
-                                        {{ parseFloat(shot['ball_pos_x']).toFixed(2) }} /
-                                        {{ parseFloat(shot['ball_pos_y']).toFixed(2) }} /
-                                        {{ parseFloat(shot['ball_pos_z']).toFixed(2) }}
-                                    </td> -->
                                     <td>{{ shot['shot'] }}</td>
                                     <td :style="{'background': shot['xg_color']}">{{ parseFloat(shot['xg_info']['xg']).toFixed(3) }}</td>
                                     <td :style="{'background': shot['goal_color']}">{{ shot['goal'] }}</td>

@@ -57,6 +57,45 @@ var app = new Vue({
         team_blue() {
             if (_.isEmpty(this.game_json)) { return undefined }
             return this.game_json.teams.findIndex(i => !i.isOrange)
+        },
+        step_function_data() {
+            if (_.isEmpty(this.shots_combined)) { return {} }
+            let hits = this.shots_combined
+
+            let get_hits = (v) => {
+                let prev_time = 0;
+                let prev_sum = 0;
+                steps = []
+                v.forEach((h) => {
+                    steps.push({
+                        'past_time': prev_time,
+                        'current_time': h.time,
+                        'past_sum': prev_sum,
+                        'current_sum': prev_sum + h.xg,
+                        'value': h.xg,
+                        'ref': h
+                    })
+                    prev_time = h.time
+                    prev_sum = prev_sum + h.xg
+                })
+                steps.push({
+                    'past_time': prev_time,
+                    'current_time': this.game_json.gameMetadata.length,
+                    'past_sum': prev_sum,
+                    'current_sum': prev_sum,
+                    'value': 0,
+                    'ref': undefined
+                })
+                return steps
+            }
+
+            let blue_team_hits = hits.filter(i => i.is_orange=="0")
+            let blue_steps = get_hits(blue_team_hits)
+
+            let orange_team_hits = hits.filter(i => i.is_orange=="1")
+            let orange_steps = get_hits(orange_team_hits)
+
+            return {'hits': {'blue': blue_steps, 'orange': orange_steps}}
         }
     },
     methods: {
@@ -368,6 +407,8 @@ function plot_pitch_shot() {
 
         $("#shot-" + d.order).addClass("higlighted-row")
 
+        step_function_callback.enter(d.time)
+
     }
     function undo_higlight(event,d) {
         let target = d3.select(event.currentTarget)
@@ -375,6 +416,7 @@ function plot_pitch_shot() {
         d3.selectAll("#frozen_frame").remove()
         d3.selectAll(".xg-entry").style("display", "inline")
         $("#shot-" + d.order).removeClass("higlighted-row")
+        step_function_callback.leave()
     }
 
     let shots = svg.append('g')
@@ -421,6 +463,155 @@ function plot_pitch_shot() {
         .on("mouseover", highlight_shot)
         .on("mouseleave", undo_higlight)
 
+}
+
+let step_function_callback;
+
+function plot_xg_timeline() {
+
+    const raw_width = 500;
+    const raw_height = 350;
+
+    // 5140 y max (in svg it is x)
+    // 4100 x max (in svg it is y)
+
+    const margin = { top: 25, right: 25, bottom: 20, left: 25 },
+        width = raw_width - margin.left - margin.right,
+        height = raw_height - margin.top - margin.bottom;
+
+    const svg = d3.select("#xG_timeline")
+        .append("svg")
+        .attr("viewBox", `0 0  ${(width + margin.left + margin.right)} ${(height + margin.top + margin.bottom)}`)
+        .attr("id", "fixture_plot")
+        .attr('class', 'w-100')
+        .append('g')
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+    let data = app.step_function_data
+
+    // background
+
+    // y-axis
+    let min_y = 0
+    let max_y = Math.max(...data.hits.blue.map(i => i.current_sum)) + 0.5
+    const y = d3.scaleLinear().domain([min_y, max_y]).range([height, 0])
+    svg.append('g')
+        .attr("id", "y-axis-holder")
+        .attr("class", "axis-holder")
+        .call(
+            d3.axisLeft(y)
+            .tickSize(width)
+        )
+        .attr("transform", "translate(" + width + ",0)")
+
+    // x-axis
+    let min_x = 0
+    let max_x = app.game_json.gameMetadata.length
+    const x = d3.scaleLinear().domain([min_x, max_x]).range([0, width])
+    svg.append('g')
+        .attr("id", "x-axis-holder")
+        .attr("class", "axis-holder")
+        .call(
+            d3.axisBottom(x)
+            .tickSize(height)
+        )
+        // .attr("transform", "translate(" + width + ",0)")
+    
+
+    // bg rect and hover function
+    step_function_callback = {
+        'enter': (time) => {
+            let xv = x(time)
+            lg.attr("x1", xv)
+            lg.attr("x2", xv)
+            hover_g.attr('display', "block")
+        },
+        'leave': (e) => {
+            lg.attr("x1", 0)
+            lg.attr("x2", 0)
+            hover_g.attr('display', "none")
+        }
+    }
+    
+    let hover_g = svg.append('g').attr('id', 'hover-g')
+    let m_move = (event) => {
+        let raw_x = d3.pointer(event)[0]
+        let ctime = x.invert(raw_x)
+        let bisect = d3.bisector(function(d) { return d.current_time; }).left
+        let left_most = bisect(data.hits.orange, ctime)
+        step_function_callback.enter(ctime)
+    }
+    let m_leave = (e) => {
+        step_function_callback.leave()
+    }
+    svg.append('rect')
+            .attr('width', width)
+            .attr('height', height)
+            .attr('fill', 'none')
+            .attr('pointer-events', 'all')
+            .on('mousemove', m_move)
+            .on('mouseleave', m_leave)
+    let lg = hover_g.append("line")
+        .attr("x1", 50)
+        .attr("x2", 50)
+        .attr("y1", y(max_y))
+        .attr("y2", y(min_y))
+        .attr("stroke", "red")
+        .attr("stroke-width", 5)
+        .attr("stroke-opacity", 0.2)
+
+    svg.selectAll(".axis-holder .tick line")
+        // .attr("font-size", "140pt")
+        .attr("color", "purple")
+        .attr("stroke-width", 1)
+        .attr("stroke-dasharray", "3,1")
+        .attr("stroke-opacity", 0.2)
+
+    svg.selectAll("#y-axis-holder .domain")
+        .attr("color", "gray")
+        .attr("stroke-width", 2)
+        .attr("stroke-opacity", 1)
+        .attr("fill", '#e9f1e9')
+    
+
+    function draw_step(context, d) {
+        context.moveTo(x(d.past_time), y(d.past_sum));
+        context.lineTo(x(d.current_time), y(d.past_sum));
+        context.lineTo(x(d.current_time), y(d.current_sum));
+        return context;
+    }
+
+    let steps = svg.append('g')
+        .attr('class', 'step-holder')
+
+    var line = d3.line()
+        .curve(d3.curveStepAfter)
+        .x(function(d) { return x(d.current_time); })              
+        .y(function(d) { return y(d.current_sum); });
+
+    steps.append("path")
+        .attr("d", line(data.hits.blue))
+        .attr("stroke", "blue")
+        .attr("fill", "none")
+        .attr("stroke-width", 2)
+        .style("pointer-events", "none");
+    
+    steps.append("path")
+        .attr("d", line(data.hits.orange))
+        .attr("stroke", "orange")
+        .attr("fill", "none")
+        .attr("stroke-width", 2)
+        .style("pointer-events", "none");
+
+    svg.append("text")
+        .text("xG Timeline")
+        .attr("y", -15)
+        .attr("x", width/2)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "bottom")
+        .attr("fill", "black")
+        .style("font-size", "10pt")
 }
 
 async function fetch_local_file(file) {
@@ -486,6 +677,7 @@ $(document).ready(() => {
             app.$nextTick(() => {
                 app.init_shot_table()
                 plot_pitch_shot()
+                plot_xg_timeline()
             })
         })
 })
