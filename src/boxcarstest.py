@@ -350,6 +350,7 @@ scoreline_data_no_colors = []
 
 my_scores_over_time = []
 your_scores_over_time = []
+their_scores_over_time = []
 
 # also includes non-shot goals
 my_goals_per_match = []
@@ -685,6 +686,7 @@ for file in new_json_files:
                     elif i["id"]["id"] == local_ids[1]:
                         opp2_local_score = i["score"]
 
+
                 if "saves" in i:
                     their_saves_count += i["saves"]
                     local_their_saves += i["saves"]
@@ -703,6 +705,9 @@ for file in new_json_files:
 
         max_local_score = max(max(my_local_score,your_local_score),max(opp1_local_score,opp2_local_score))
         local_mvp_per_match = ["","","",""]
+        their_scores_over_time.append(opp1_local_score + opp2_local_score)
+
+
 
         # determine MVP - no tiebreaker (players can share MVP if they scored the same amount of pts)
         if my_local_score == max_local_score:
@@ -909,7 +914,6 @@ for file in new_json_files:
             result_array_num.append(-1)
             result_color.append(their_color)
             normaltime_gd_array.append(local_GS - local_GC)
-
 
         def poisson_binomial_pmf(p):
             """Returns the p.m.f. of the Poisson Binomial distribution.
@@ -2197,7 +2201,16 @@ their_likeliest_win_xgc = 0
 firstwin_pos = 0
 firstloss_pos = 0
 
+our_highest_total_pts = 0
+our_lowest_total_pts = my_scores_over_time[0] + your_scores_over_time[0]
+
 for result in range(len(result_array)):
+    if (my_scores_over_time[result] + your_scores_over_time[result]) > our_highest_total_pts:
+        our_highest_total_pts = (my_scores_over_time[result] + your_scores_over_time[result])
+
+    if (my_scores_over_time[result] + your_scores_over_time[result]) < our_lowest_total_pts:
+        our_lowest_total_pts = (my_scores_over_time[result] + your_scores_over_time[result])
+
     if result_array[result] == "W":
         if firstwin_pos == 0:
             firstwin_pos = result
@@ -2349,7 +2362,9 @@ team_record_data = [["Longest winstreak", biggest_winstreak, biggest_lossstreak]
                      str(their_likeliest_win_gs) + "-" + str(their_likeliest_win_gc) + " (" + str(round(their_likeliest_win_xgs,
                                                                                               2)) + "-" + str(round(
                          their_likeliest_win_xgc, 2)) + ")"],
-                    ["Likeliest win % in a win","%.2f"%our_likeliest_win_pct_in_a_win+"%","%.2f"%their_likeliest_win_pct_in_a_win+"%"]
+                    ["Likeliest win % in a win","%.2f"%our_likeliest_win_pct_in_a_win+"%","%.2f"%their_likeliest_win_pct_in_a_win+"%"],
+                    ["Highest team score",our_highest_total_pts,max(their_scores_over_time)],
+                    ["Lowest team score", our_lowest_total_pts, min(their_scores_over_time)]
                     ]
 
 content = tabulate(team_record_data, headers=["Record", "Our Team", "Opponents"], numalign="right", tablefmt="tsv")
