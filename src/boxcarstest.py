@@ -36,19 +36,21 @@ from PIL import Image
 startTime = time.time()
 
 check_new = False  # Only processes new files (in separate directory)
-show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
-save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
+show_xg_scorelines = False  # Shows xG scorelines and normal scorelines and replay names of games
+save_and_crop = True  # Saves an image of the dashboard and then crops charts into their own images
 
 # Program runs twice - once to update using all games, and another time to update using the latest streak of games
-for i in range(0,2):
+for i in range(0, 2):
     # On second iteration, only process new files
     if i == 0:
         print("Considering all games...\n")
+        goal_scatter_alpha = 0.25
 
     if i == 1:
         check_new = True
         show_xg_scorelines = True
         print("\n\n\nConsidering newest games...\n")
+        goal_scatter_alpha = 0.5
 
     # Names in Rocket League
     my_name = "games5425898691"
@@ -106,9 +108,6 @@ for i in range(0,2):
             if local_playlist == "RANKED_DOUBLES":
                 json_files_2v2.append(file)
 
-
-
-
     # Sort files by time created - loop through jsons, get start time of match, then sort by time
     for file in json_files_2v2:
         f = open(path_to_json + file, )
@@ -119,11 +118,9 @@ for i in range(0,2):
 
         file_time.append(local_time)
 
-
     file_counter = 0
     new_json_files = [x for _, x in sorted(zip(file_time, json_files_2v2))]
     new_csv_files = []
-
 
     local_time_array = []
     streak_start_games = []
@@ -347,7 +344,6 @@ for i in range(0,2):
     your_nonshot_xg = 0
     their_nonshot_xg = 0
 
-
     my_goal_xg = 0
     your_goal_xg = 0
     their_goal_xg = 0
@@ -406,7 +402,7 @@ for i in range(0,2):
     our_mvp_count = 0
     mvp_per_match = []
 
-    my_shots_goal_or_miss = [] # 0 = miss, 1 = goal
+    my_shots_goal_or_miss = []  # 0 = miss, 1 = goal
     your_shots_goal_or_miss = []
     our_shots_goal_or_miss = []
     their_shots_goal_or_miss = []
@@ -476,14 +472,13 @@ for i in range(0,2):
                                     my_shot_xg += float(my_list[row][4])
                                     my_local_shot_xg += float(my_list[row][4])
 
-
                                 # non-shots
                                 if my_list[row][5] == "False":
                                     my_nonshot_xg += float(my_list[row][4])
                                     my_local_nonshot_xg += float(my_list[row][4])
                                     # Non-shot Goals
                                     if my_list[row][6] == "True":
-                                        my_goals_from_nonshots +=1
+                                        my_goals_from_nonshots += 1
                                         my_local_goals_from_nonshots += 1
                                         my_xg_per_nonshot_goal_list.append(float(my_list[row][4]))
 
@@ -508,7 +503,6 @@ for i in range(0,2):
                                 if my_list[row][5] == "True":
                                     your_shot_xg += float(my_list[row][4])
                                     your_local_shot_xg += float(my_list[row][4])
-
 
                                 # non-shots
                                 if my_list[row][5] == "False":
@@ -548,7 +542,6 @@ for i in range(0,2):
                                         their_goals_from_nonshots += 1
                                         their_local_goals_from_nonshots += 1
                                         their_xg_per_nonshot_goal_list.append(float(my_list[row][4]))
-
 
                                 if my_list[row][6] == "True" and my_list[row][5] == "True":
                                     their_goal_xg += float(my_list[row][4])
@@ -790,7 +783,6 @@ for i in range(0,2):
                         elif i["id"]["id"] == local_ids[1]:
                             opp2_local_score = i["score"]
 
-
                     if "saves" in i:
                         their_saves_count += i["saves"]
                         local_their_saves += i["saves"]
@@ -807,19 +799,17 @@ for i in range(0,2):
                     if "totalAerials" in i["stats"]["hitCounts"]:
                         their_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
 
-            max_local_score = max(max(my_local_score,your_local_score),max(opp1_local_score,opp2_local_score))
-            local_mvp_per_match = ["","","",""]
+            max_local_score = max(max(my_local_score, your_local_score), max(opp1_local_score, opp2_local_score))
+            local_mvp_per_match = ["", "", "", ""]
             their_scores_over_time.append(opp1_local_score + opp2_local_score)
-
-
 
             # determine MVP - no tiebreaker (players can share MVP if they scored the same amount of pts)
             if my_local_score == max_local_score:
-                my_mvp_count+=1
+                my_mvp_count += 1
                 local_mvp_per_match[0] = my_alias
 
             if your_local_score == max_local_score:
-                your_mvp_count+=1
+                your_mvp_count += 1
                 local_mvp_per_match[1] = your_alias
 
             if opp1_local_score == max_local_score:
@@ -1033,6 +1023,7 @@ for i in range(0,2):
                 print(file)
             """
 
+
             def poisson_binomial_pmf(p):
                 """Returns the p.m.f. of the Poisson Binomial distribution.
 
@@ -1059,6 +1050,7 @@ for i in range(0,2):
                     pmf[1:i + 2] += success
                 return pmf
 
+
             def poisson_probability(actual, mean):
                 # iterative, to keep the components from getting too large or small:
                 p = math.exp(-mean)
@@ -1066,6 +1058,7 @@ for i in range(0,2):
                     p *= mean
                     p /= i + 1
                 return p
+
 
             win_chance = 0
             draw_chance = 0
@@ -1082,7 +1075,7 @@ for i in range(0,2):
             our_xgf_prob_raw = poisson_binomial_pmf(our_local_xg_per_hit)
             our_xgc_prob_raw = poisson_binomial_pmf(their_local_xg_per_hit)
 
-            max_possible_goals = max(len(our_xgf_prob_raw),len(our_xgc_prob_raw))
+            max_possible_goals = max(len(our_xgf_prob_raw), len(our_xgc_prob_raw))
 
             our_xgf_prob = [0] * max_possible_goals
             our_xgc_prob = [0] * max_possible_goals
@@ -1096,24 +1089,24 @@ for i in range(0,2):
             for i in range(len(our_xgc_prob_raw)):
                 our_xgc_prob[i] = our_xgc_prob_raw[i]
 
-            for i in range(0,max_possible_goals):
+            for i in range(0, max_possible_goals):
                 draw_chance += (our_xgf_prob[i] * our_xgc_prob[i])
-                for j in range(0,max_possible_goals):
+                for j in range(0, max_possible_goals):
                     if i > j:
                         win_chance += (our_xgf_prob[i] * our_xgc_prob[j])
                         loss_chance += (our_xgf_prob[j] * our_xgc_prob[i])
 
-            win_chance += (draw_chance/2)
-            loss_chance += (draw_chance/2)
+            win_chance += (draw_chance / 2)
+            loss_chance += (draw_chance / 2)
 
             if local_GS < max_possible_goals and local_GC < max_possible_goals:
                 score_prob = (our_xgf_prob[local_GS] * our_xgc_prob[local_GC]) / (1 - draw_chance)
             else:
                 score_prob = 0
 
-            win_chance_per_game.append(win_chance*100)
-            loss_chance_per_game.append(loss_chance*100)
-            total_win_chance+=(win_chance*100)
+            win_chance_per_game.append(win_chance * 100)
+            loss_chance_per_game.append(loss_chance * 100)
+            total_win_chance += (win_chance * 100)
 
             result_type = "W"
             if local_GC > local_GS:
@@ -1135,21 +1128,30 @@ for i in range(0,2):
                 color_to_add = Fore.RED
             if result_type == "L*":
                 color_to_add = Fore.LIGHTRED_EX
-            scoreline_data.append([color_to_add + "%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, local_our_shots_att, local_our_shots_con, file.replace(".json",""),
-                                   round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type + Style.RESET_ALL])
-            scoreline_data_no_colors.append(["%.2f"%(my_local_xg+your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC, local_our_shots_att, local_our_shots_con, file.replace(".json",""),
-                                   round((win_chance*100),2), round((result_fairness*100),2),  round((score_prob*100),2), result_type, local_time])
+            scoreline_data.append(
+                [color_to_add + "%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC,
+                 local_our_shots_att, local_our_shots_con, file.replace(".json", ""),
+                 round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
+                 result_type + Style.RESET_ALL])
+            scoreline_data_no_colors.append(
+                ["%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC,
+                 local_our_shots_att, local_our_shots_con, file.replace(".json", ""),
+                 round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
+                 result_type, local_time])
     if show_xg_scorelines:
-        print(tabulate(scoreline_data, headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome"], numalign="right"))
+        print(tabulate(scoreline_data,
+                       headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "Replay ID", "P(Win)", "P(Result)", "P(Score)",
+                                "Outcome"], numalign="right"))
         print("\n")
 
-    content = tabulate(scoreline_data_no_colors, headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "Replay ID","P(Win)","P(Result)", "P(Score)", "Outcome", "StartTime"], tablefmt="tsv")
+    content = tabulate(scoreline_data_no_colors,
+                       headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "Replay ID", "P(Win)", "P(Result)", "P(Score)",
+                                "Outcome", "StartTime"], tablefmt="tsv")
     if not os.path.exists(path_to_tables + "scorelines.tsv"):
         open(path_to_tables + "scorelines.tsv", 'w').close()
     f = open(path_to_tables + "scorelines.tsv", "w")
     f.write(content)
     f.close()
-
 
     your_miss_count = len(your_misses_distancetogoal)
     my_miss_count = len(my_misses_distancetogoal)
@@ -1344,7 +1346,7 @@ for i in range(0,2):
                  ["MVPs", our_mvp_count, their_mvp_count]
                  ]
 
-    content = tabulate(individual_data, headers=["Stat", my_alias, your_alias], numalign="right",tablefmt="tsv")
+    content = tabulate(individual_data, headers=["Stat", my_alias, your_alias], numalign="right", tablefmt="tsv")
     if not os.path.exists(path_to_tables + "player_comparison.tsv"):
         open(path_to_tables + "player_comparison.tsv", 'w').close()
     f = open(path_to_tables + "player_comparison.tsv", "w")
@@ -1360,7 +1362,8 @@ for i in range(0,2):
 
     # coloring output
     for i in range(len(individual_data)):
-        if individual_data[i][0] != "Misses" and individual_data[i][0] != "Demoed" and individual_data[i][0] != "Lost Ball":
+        if individual_data[i][0] != "Misses" and individual_data[i][0] != "Demoed" and individual_data[i][
+            0] != "Lost Ball":
             if individual_data[i][1] > individual_data[i][2]:
                 individual_data[i][1] = Fore.MAGENTA + str(individual_data[i][1])
                 individual_data[i][2] = Fore.CYAN + str(individual_data[i][2]) + Style.RESET_ALL
@@ -1494,13 +1497,12 @@ for i in range(0,2):
 
         res_num += 1
 
-
     # Clear json_new directory
     shutil.rmtree("../data/json_new/")
     os.makedirs("../data/json_new/")
 
     # Copy most recent streak games to /json_new/
-    for file in streak_filenames[len(streak_filenames)-1]:
+    for file in streak_filenames[len(streak_filenames) - 1]:
         src_dir = "../data/json/"
         dst_dir = "../data/json_new/"
 
@@ -1508,7 +1510,6 @@ for i in range(0,2):
         dst_filepath = dst_dir + file
 
         shutil.copyfile(src_filepath, dst_filepath)
-
 
     streak_data = []
 
@@ -1531,26 +1532,26 @@ for i in range(0,2):
         streak_data.append(
             [win_pct, streak_results[streak], streak_wins[streak] + streak_losses[streak], streak_wins[streak],
              streak_losses[streak],
-             my_goals_per_game_streak, your_goals_per_game_streak, our_goals_per_game_streak, their_goals_per_game_streak,
-             gd_per_game_streak, my_xg_per_game_streak, your_xg_per_game_streak, our_xg_per_game_streak, their_xg_per_game_streak,
+             my_goals_per_game_streak, your_goals_per_game_streak, our_goals_per_game_streak,
+             their_goals_per_game_streak,
+             gd_per_game_streak, my_xg_per_game_streak, your_xg_per_game_streak, our_xg_per_game_streak,
+             their_xg_per_game_streak,
              xgd_per_game_streak])
 
-
     content = tabulate(streak_data,
-                   headers=["Win %", "Results", "GP", "W", "L", my_alias + " GS/G", your_alias + "GS/G",
-                            "GS/G", "GC/G", "GD/G", my_alias + " xG/G", your_alias + " xG/G",
-                            "xG/G", "xGC/G", "xGD/G"], numalign="right", tablefmt="tsv")
+                       headers=["Win %", "Results", "GP", "W", "L", my_alias + " GS/G", your_alias + "GS/G",
+                                "GS/G", "GC/G", "GD/G", my_alias + " xG/G", your_alias + " xG/G",
+                                "xG/G", "xGC/G", "xGD/G"], numalign="right", tablefmt="tsv")
     if not os.path.exists(path_to_tables + "streaks.tsv"):
         open(path_to_tables + "streaks.tsv", 'w').close()
     f = open(path_to_tables + "streaks.tsv", "w")
     f.write(content)
     f.close()
 
-
     # colored output
     for i in range(len(streak_data)):
 
-        streak_win_pct = streak_data[i][0].replace("%","")
+        streak_win_pct = streak_data[i][0].replace("%", "")
 
         if int(streak_win_pct) > 50:
             streak_data[i][0] = Fore.GREEN + str(streak_data[i][0]) + Style.RESET_ALL
@@ -1570,8 +1571,8 @@ for i in range(0,2):
             streak_data[i][3] = Fore.RED + str(streak_data[i][3]) + Style.RESET_ALL
             streak_data[i][4] = Fore.RED + str(streak_data[i][4]) + Style.RESET_ALL
 
-        streak_data[i][1] = streak_data[i][1].replace("W",Fore.GREEN+"W")
-        streak_data[i][1] = streak_data[i][1].replace("L",Fore.RED+"L")
+        streak_data[i][1] = streak_data[i][1].replace("W", Fore.GREEN + "W")
+        streak_data[i][1] = streak_data[i][1].replace("L", Fore.RED + "L")
         streak_data[i][1] += Style.RESET_ALL
 
         # individual GS/G values
@@ -1586,7 +1587,7 @@ for i in range(0,2):
             streak_data[i][6] = Fore.MAGENTA + str(streak_data[i][6]) + Style.RESET_ALL
 
         # GD / G
-        gdpg_in_streak =  float(streak_data[i][9])
+        gdpg_in_streak = float(streak_data[i][9])
 
         if gdpg_in_streak > 0:
             streak_data[i][9] = Fore.GREEN + str(streak_data[i][9]) + Style.RESET_ALL
@@ -1603,9 +1604,8 @@ for i in range(0,2):
             streak_data[i][8] = Fore.RED + str(streak_data[i][8]) + Style.RESET_ALL
             streak_data[i][7] = Fore.RED + str(streak_data[i][7]) + Style.RESET_ALL
 
-
         # xGD / G
-        xgdpg_in_streak =  float(streak_data[i][14])
+        xgdpg_in_streak = float(streak_data[i][14])
 
         if xgdpg_in_streak > 0:
             streak_data[i][14] = Fore.GREEN + str(streak_data[i][14]) + Style.RESET_ALL
@@ -1640,13 +1640,11 @@ for i in range(0,2):
                             "xG/G", "xGC/G", "xGD/G"], numalign="right"))
     print("\n")
 
-
     games_nr = len(new_json_files)
     our_shots_over_time = [your_shots_over_time[x] + my_shots_over_time[x] for x in range(games_nr)]
     our_saves_over_time = [your_saves_over_time[x] + my_saves_over_time[x] for x in range(games_nr)]
     our_xg_over_time = [your_xg_over_time[x] + my_xg_over_time[x] for x in range(games_nr)]
     our_assists_over_time = [your_assists_over_time[x] + my_assists_over_time[x] for x in range(games_nr)]
-
 
     """
     scorelines_array = []
@@ -1735,9 +1733,8 @@ for i in range(0,2):
                    ["Losses", loss_count, normaltime_losses_count, overtime_losses_count]
                    ]
 
-
     content = tabulate(result_data,
-                   headers=["Stat", "Overall", "Normaltime", "Overtime"], numalign="right", tablefmt="tsv")
+                       headers=["Stat", "Overall", "Normaltime", "Overtime"], numalign="right", tablefmt="tsv")
     if not os.path.exists(path_to_tables + "streaks.tsv"):
         open(path_to_tables + "results.tsv", 'w').close()
     f = open(path_to_tables + "results.tsv", "w")
@@ -1759,7 +1756,6 @@ for i in range(0,2):
             result_data[i][1] = Fore.RED + str(result_data[i][1]) + Style.RESET_ALL
             result_data[i][2] = Fore.RED + str(result_data[i][2]) + Style.RESET_ALL
             result_data[i][3] = Fore.RED + str(result_data[i][3]) + Style.RESET_ALL
-
 
     print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime"], numalign="right"))
 
@@ -1783,8 +1779,6 @@ for i in range(0,2):
             my_most_consecutive_games_fts_in_helper = 0
         if my_most_consecutive_games_fts_in_helper > my_most_consecutive_games_fts_in:
             my_most_consecutive_games_fts_in = my_most_consecutive_games_fts_in_helper
-
-
 
     your_most_consecutive_games_scored_in_helper = 0
     your_most_consecutive_games_scored_in = 0
@@ -2044,8 +2038,8 @@ for i in range(0,2):
         if your_xg_per_miss_list[shot] > your_biggest_xg_miss:
             your_biggest_xg_miss = your_xg_per_miss_list[shot]
 
-    our_biggest_xg_miss = max(your_biggest_xg_miss,my_biggest_xg_miss)
-    our_lowest_xg_goal = min(your_lowest_xg_goal,my_lowest_xg_goal)
+    our_biggest_xg_miss = max(your_biggest_xg_miss, my_biggest_xg_miss)
+    our_lowest_xg_goal = min(your_lowest_xg_goal, my_lowest_xg_goal)
 
     their_biggest_xg_miss = 0
     their_lowest_xg_goal = 0
@@ -2059,8 +2053,6 @@ for i in range(0,2):
     for shot in range(len(their_xg_per_miss_list)):
         if their_xg_per_miss_list[shot] > their_biggest_xg_miss:
             their_biggest_xg_miss = their_xg_per_miss_list[shot]
-
-
 
     my_highest_goal_scored = 0
     my_furthest_goal_scored = 0
@@ -2155,7 +2147,6 @@ for i in range(0,2):
             their_most_consecutive_nomvp_in_helper = 0
         if their_most_consecutive_nomvp_in_helper > their_most_consecutive_nomvp_in:
             their_most_consecutive_nomvp_in = their_most_consecutive_nomvp_in_helper
-
 
     my_most_consecutive_goals_from_shots_helper = 0
     my_most_consecutive_goals_from_shots = 0
@@ -2273,7 +2264,6 @@ for i in range(0,2):
             if your_most_consecutive_games_ftsoa_in_helper > your_most_consecutive_games_ftsoa_in:
                 your_most_consecutive_games_ftsoa_in = your_most_consecutive_games_ftsoa_in_helper
 
-
     individual_record_data = [["Most goals scored in one match", max(my_goals_per_match), max(your_goals_per_match)],
                               ["Most consecutive matches scored in", my_most_consecutive_games_scored_in,
                                your_most_consecutive_games_scored_in],
@@ -2296,38 +2286,59 @@ for i in range(0,2):
                                your_most_consecutive_games_nosave_in],
                               ["Highest score in one match", max(my_scores_over_time), max(your_scores_over_time)],
                               ["Lowest score in one match", min(my_scores_over_time), min(your_scores_over_time)],
-                              ["Highest xG in one match", round(max(my_xg_over_time),2), round(max(your_xg_over_time),2)],
+                              ["Highest xG in one match", round(max(my_xg_over_time), 2),
+                               round(max(your_xg_over_time), 2)],
                               ["Highest xG without scoring in one match (only shot-goals)",
                                round(my_highest_xg_without_scoring, 2), round(your_highest_xg_without_scoring, 2)],
-                              ["Highest shot xG in one match", round(max(my_shot_xg_over_time), 2), round(max(your_shot_xg_over_time), 2)],
-                              ["Highest non-shot xG in one match", round(max(my_nonshot_xg_over_time), 2), round(max(your_nonshot_xg_over_time), 2)],
-                              ["Biggest xG overperformance in one match (only shot-goals)", str(my_biggest_xg_overperformance_goals) + "G from " + str(round(my_biggest_xg_overperformance_xg, 2)) + " xG",
-                               str(your_biggest_xg_overperformance_goals) + "G from " + str(round(your_biggest_xg_overperformance_xg, 2)) + " xG"],
-                              ["Biggest xG overperformance in one match (only shot-goals) %","%.0f"%(((my_biggest_xg_overperformance_goals/my_biggest_xg_overperformance_xg)*100)-100)+"%","%.0f"%(((your_biggest_xg_overperformance_goals/your_biggest_xg_overperformance_xg)*100)-100)+"%"],
-                              ["Biggest shot chance missed (xG)", round(my_biggest_xg_miss,3), round(your_biggest_xg_miss,3)],
-                              ["Unlikeliest shot-goal scored (xG)", round(my_lowest_xg_goal,3), round(your_lowest_xg_goal,3)],
-                              ["Furthest goal scored (m)", round(my_furthest_goal_scored/100), round(your_furthest_goal_scored/100)],
-                              ["Highest goal scored (m)", round(my_highest_goal_scored/100), round(your_highest_goal_scored/100)],
-                              ["Most consecutive matches returned in",my_most_consecutive_games_returned_in,your_most_consecutive_games_returned_in],
-                              ["Most consecutive matches blanked in", my_most_consecutive_games_blanked_in,your_most_consecutive_games_blanked_in],
+                              ["Highest shot xG in one match", round(max(my_shot_xg_over_time), 2),
+                               round(max(your_shot_xg_over_time), 2)],
+                              ["Highest non-shot xG in one match", round(max(my_nonshot_xg_over_time), 2),
+                               round(max(your_nonshot_xg_over_time), 2)],
+                              ["Biggest xG overperformance in one match (only shot-goals)",
+                               str(my_biggest_xg_overperformance_goals) + "G from " + str(
+                                   round(my_biggest_xg_overperformance_xg, 2)) + " xG",
+                               str(your_biggest_xg_overperformance_goals) + "G from " + str(
+                                   round(your_biggest_xg_overperformance_xg, 2)) + " xG"],
+                              ["Biggest xG overperformance in one match (only shot-goals) %", "%.0f" % (((
+                                                                                                                     my_biggest_xg_overperformance_goals / my_biggest_xg_overperformance_xg) * 100) - 100) + "%",
+                               "%.0f" % (((
+                                                      your_biggest_xg_overperformance_goals / your_biggest_xg_overperformance_xg) * 100) - 100) + "%"],
+                              ["Biggest shot chance missed (xG)", round(my_biggest_xg_miss, 3),
+                               round(your_biggest_xg_miss, 3)],
+                              ["Unlikeliest shot-goal scored (xG)", round(my_lowest_xg_goal, 3),
+                               round(your_lowest_xg_goal, 3)],
+                              ["Furthest goal scored (m)", round(my_furthest_goal_scored / 100),
+                               round(your_furthest_goal_scored / 100)],
+                              ["Highest goal scored (m)", round(my_highest_goal_scored / 100),
+                               round(your_highest_goal_scored / 100)],
+                              ["Most consecutive matches returned in", my_most_consecutive_games_returned_in,
+                               your_most_consecutive_games_returned_in],
+                              ["Most consecutive matches blanked in", my_most_consecutive_games_blanked_in,
+                               your_most_consecutive_games_blanked_in],
                               ["Most consecutive MVPs (no tiebreaker)", my_most_consecutive_mvp,
                                your_most_consecutive_mvp],
                               ["Most consecutive matches without MVP", my_most_consecutive_nomvp_in,
                                your_most_consecutive_nomvp_in],
-                              ["Most conescutive goals from shots",my_most_consecutive_goals_from_shots, your_most_consecutive_goals_from_shots],
-                              ["Most consecutive misses from shots",my_most_consecutive_misses_from_shots,your_most_consecutive_misses_from_shots],
-                              ["Most goal involvements (G+A) in one match",my_most_goals_or_assists_in_one_game,your_most_goals_or_assists_in_one_game],
-                              ["Most consecutive matches with a goal involvement",my_most_consecutive_games_scored_or_assisted_in,your_most_consecutive_games_scored_or_assisted_in],
-                              ["Most consecutive matches without a goal involvement",my_most_consecutive_games_ftsoa_in,your_most_consecutive_games_ftsoa_in]
+                              ["Most conescutive goals from shots", my_most_consecutive_goals_from_shots,
+                               your_most_consecutive_goals_from_shots],
+                              ["Most consecutive misses from shots", my_most_consecutive_misses_from_shots,
+                               your_most_consecutive_misses_from_shots],
+                              ["Most goal involvements (G+A) in one match", my_most_goals_or_assists_in_one_game,
+                               your_most_goals_or_assists_in_one_game],
+                              ["Most consecutive matches with a goal involvement",
+                               my_most_consecutive_games_scored_or_assisted_in,
+                               your_most_consecutive_games_scored_or_assisted_in],
+                              ["Most consecutive matches without a goal involvement",
+                               my_most_consecutive_games_ftsoa_in, your_most_consecutive_games_ftsoa_in]
                               ]
 
-    content = tabulate(individual_record_data, headers=["Record", my_alias, your_alias], numalign="right", tablefmt="tsv")
+    content = tabulate(individual_record_data, headers=["Record", my_alias, your_alias], numalign="right",
+                       tablefmt="tsv")
     if not os.path.exists(path_to_tables + "player_records.tsv"):
         open(path_to_tables + "player_records.tsv", 'w').close()
     f = open(path_to_tables + "player_records.tsv", "w")
     f.write(content)
     f.close()
-
 
     ### Team Records
     biggest_winstreak = 0
@@ -2487,17 +2498,17 @@ for i in range(0,2):
         if ftscorestreak_helper > biggest_ftscorestreak:
             biggest_ftscorestreak = ftscorestreak_helper
 
-
     team_record_data = [["Longest winstreak", biggest_winstreak, biggest_lossstreak],
-                        ["Most consecutive games with a win chance of at least 50%", biggest_50plus_streak, biggest_lessthan50_streak],
+                        ["Most consecutive games with a win chance of at least 50%", biggest_50plus_streak,
+                         biggest_lessthan50_streak],
                         ["Most goals scored in one match", max(gs_array), max(gc_array)],
                         ["Biggest winning margin", max(gd_array), abs(min(gd_array))],
-                        ["Most consecutive games scored in",biggest_scoredstreak,biggest_concededstreak],
-                        ["Most consecutive games failed to score in",biggest_ftscorestreak,biggest_csstreak],
-                        ["Most shots in one match",max(our_shots_over_time),max(their_shots_over_time)],
+                        ["Most consecutive games scored in", biggest_scoredstreak, biggest_concededstreak],
+                        ["Most consecutive games failed to score in", biggest_ftscorestreak, biggest_csstreak],
+                        ["Most shots in one match", max(our_shots_over_time), max(their_shots_over_time)],
                         ["Most assists in one match", max(our_assists_over_time), max(their_assists_over_time)],
-                        ["Most saves in one match",max(our_saves_over_time),max(their_saves_over_time)],
-                        ["Highest xG in one match",round(max(our_xg_over_time),2),round(max(their_xg_over_time),2)],
+                        ["Most saves in one match", max(our_saves_over_time), max(their_saves_over_time)],
+                        ["Highest xG in one match", round(max(our_xg_over_time), 2), round(max(their_xg_over_time), 2)],
                         ["Highest shot xG in one match", round(max(our_shot_xg_over_time), 2),
                          round(max(their_shot_xg_over_time), 2)],
                         ["Highest non-shot xG in one match", round(max(our_nonshot_xg_over_time), 2),
@@ -2511,14 +2522,19 @@ for i in range(0,2):
                          str(their_biggest_xg_overperformance_goals) + "G from " + str(
                              round(their_biggest_xg_overperformance_xg, 2)) + " xG"],
                         ["Biggest xG overperformance in one match (only shot-goals) %", "%.0f" % (((
-                                                                                                               our_biggest_xg_overperformance_goals / our_biggest_xg_overperformance_xg) * 100) - 100) + "%",
+                                                                                                           our_biggest_xg_overperformance_goals / our_biggest_xg_overperformance_xg) * 100) - 100) + "%",
                          "%.0f" % (((
-                                                their_biggest_xg_overperformance_goals / their_biggest_xg_overperformance_xg) * 100) - 100) + "%"],
+                                            their_biggest_xg_overperformance_goals / their_biggest_xg_overperformance_xg) * 100) - 100) + "%"],
 
-                        ["Biggest shot chance missed (xG)", round(our_biggest_xg_miss, 3), round(their_biggest_xg_miss, 3)],
-                        ["Unlikeliest shot-goal scored (xG)", round(our_lowest_xg_goal, 3), round(their_lowest_xg_goal, 3)],
-                        ["Furthest goal scored (m)",round(max(my_goals_distancetogoal+your_goals_distancetogoal)/100),round(max(their_goals_distancetogoal)/100)],
-                        ["Highest goal scored (m)",round(max(my_goals_z+your_goals_z)/100),round(max(their_goals_z)/100)],
+                        ["Biggest shot chance missed (xG)", round(our_biggest_xg_miss, 3),
+                         round(their_biggest_xg_miss, 3)],
+                        ["Unlikeliest shot-goal scored (xG)", round(our_lowest_xg_goal, 3),
+                         round(their_lowest_xg_goal, 3)],
+                        ["Furthest goal scored (m)",
+                         round(max(my_goals_distancetogoal + your_goals_distancetogoal) / 100),
+                         round(max(their_goals_distancetogoal) / 100)],
+                        ["Highest goal scored (m)", round(max(my_goals_z + your_goals_z) / 100),
+                         round(max(their_goals_z) / 100)],
                         ["Most consecutive MVPs (no tiebreaker)", our_most_consecutive_mvp,
                          their_most_consecutive_mvp],
                         ["Most consecutive matches without MVP", our_most_consecutive_nomvp_in,
@@ -2527,18 +2543,26 @@ for i in range(0,2):
                          their_most_consecutive_goals_from_shots],
                         ["Most consecutive misses from shots", our_most_consecutive_misses_from_shots,
                          their_most_consecutive_misses_from_shots],
-                        ["Unlikeliest win scoreline vs expected scoreline", str(our_unlikeliest_win_gs)+"-"+str(our_unlikeliest_win_gc)+" ("+str(round(our_unlikeliest_win_xgs,2))+"-"+str(round(our_unlikeliest_win_xgc,2))+")",
-                         str(their_unlikeliest_win_gs)+"-"+str(their_unlikeliest_win_gc)+" ("+str(round(their_unlikeliest_win_xgs,2))+"-"+str(round(their_unlikeliest_win_xgc,2))+")"],
-                        ["Unlikeliest win % in a win","%.2f"%our_unlikeliest_win_pct_in_a_win+"%","%.2f"%their_unlikeliest_win_pct_in_a_win+"%"],
+                        ["Unlikeliest win scoreline vs expected scoreline",
+                         str(our_unlikeliest_win_gs) + "-" + str(our_unlikeliest_win_gc) + " (" + str(
+                             round(our_unlikeliest_win_xgs, 2)) + "-" + str(round(our_unlikeliest_win_xgc, 2)) + ")",
+                         str(their_unlikeliest_win_gs) + "-" + str(their_unlikeliest_win_gc) + " (" + str(
+                             round(their_unlikeliest_win_xgs, 2)) + "-" + str(
+                             round(their_unlikeliest_win_xgc, 2)) + ")"],
+                        ["Unlikeliest win % in a win", "%.2f" % our_unlikeliest_win_pct_in_a_win + "%",
+                         "%.2f" % their_unlikeliest_win_pct_in_a_win + "%"],
                         ["Likeliest win scoreline vs expected scoreline",
-                         str(our_likeliest_win_gs) + "-" + str(our_likeliest_win_gc) + " (" + str(round(our_likeliest_win_xgs,
-                                                                                              2)) + "-" + str(round(
+                         str(our_likeliest_win_gs) + "-" + str(our_likeliest_win_gc) + " (" + str(
+                             round(our_likeliest_win_xgs,
+                                   2)) + "-" + str(round(
                              our_likeliest_win_xgc, 2)) + ")",
-                         str(their_likeliest_win_gs) + "-" + str(their_likeliest_win_gc) + " (" + str(round(their_likeliest_win_xgs,
-                                                                                                  2)) + "-" + str(round(
+                         str(their_likeliest_win_gs) + "-" + str(their_likeliest_win_gc) + " (" + str(
+                             round(their_likeliest_win_xgs,
+                                   2)) + "-" + str(round(
                              their_likeliest_win_xgc, 2)) + ")"],
-                        ["Likeliest win % in a win","%.2f"%our_likeliest_win_pct_in_a_win+"%","%.2f"%their_likeliest_win_pct_in_a_win+"%"],
-                        ["Highest team score",our_highest_total_pts,max(their_scores_over_time)],
+                        ["Likeliest win % in a win", "%.2f" % our_likeliest_win_pct_in_a_win + "%",
+                         "%.2f" % their_likeliest_win_pct_in_a_win + "%"],
+                        ["Highest team score", our_highest_total_pts, max(their_scores_over_time)],
                         ["Lowest team score", our_lowest_total_pts, min(their_scores_over_time)]
                         ]
 
@@ -2579,7 +2603,6 @@ for i in range(0,2):
     ax1.plot(range(len(gd_array)), our_xg_diff_over_time, color="black", alpha=1)
 
     plt.axhline(y=0, color='black', linestyle=':')
-
 
     for streak_game_num in streak_start_games:
         plt.axvline(x=streak_game_num - 0.5, color='grey', linestyle='-', alpha=0.25)
@@ -2707,25 +2730,24 @@ for i in range(0,2):
 
     ###########################
 
-
     my_stats = [my_goal_count, my_goals_from_shots, my_goals_from_nonshots, my_other_goals,
                 my_total_xg, my_shot_xg, my_nonshot_xg,
                 my_gfs_xg_ratio * games_nr, my_gs_ratio * games_nr,
                 my_shot_count, my_miss_count, my_assists_count, my_saves_count, my_touches_count,
-                my_passes_count, my_dribbles_count, my_clears_count, my_aerials_count, my_turnovers_won_count, my_turnovers_count,
+                my_passes_count, my_dribbles_count, my_clears_count, my_aerials_count, my_turnovers_won_count,
+                my_turnovers_count,
                 my_demos_count, my_demos_conceded_count, my_mvp_count, my_score_count]
 
     your_stats = [your_goal_count, your_goals_from_shots, your_goals_from_nonshots, your_other_goals,
-                your_total_xg, your_shot_xg, your_nonshot_xg,
-                your_gfs_xg_ratio * games_nr, your_gs_ratio * games_nr,
-                your_shot_count, your_miss_count, your_assists_count, your_saves_count, your_touches_count,
-                your_passes_count, your_dribbles_count, your_clears_count, your_aerials_count, your_turnovers_won_count, your_turnovers_count,
-                your_demos_count, your_demos_conceded_count, your_mvp_count, your_score_count]
-
+                  your_total_xg, your_shot_xg, your_nonshot_xg,
+                  your_gfs_xg_ratio * games_nr, your_gs_ratio * games_nr,
+                  your_shot_count, your_miss_count, your_assists_count, your_saves_count, your_touches_count,
+                  your_passes_count, your_dribbles_count, your_clears_count, your_aerials_count,
+                  your_turnovers_won_count, your_turnovers_count,
+                  your_demos_count, your_demos_conceded_count, your_mvp_count, your_score_count]
 
     my_stats.reverse()
     your_stats.reverse()
-
 
     ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
@@ -2736,7 +2758,7 @@ for i in range(0,2):
            15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball", 20: "Lost Ball",
            21: "Demos", 22: "Demoed", 23: "MVPs", 24: "Scores"}
 
-    dic_rev = {len(dic)-i+1: v for (i,v) in dic.items()}
+    dic_rev = {len(dic) - i + 1: v for (i, v) in dic.items()}
     dic = dic_rev
 
     ticks = []
@@ -2790,7 +2812,7 @@ for i in range(0,2):
 
     our_stats = []
     labels_to_exclude = ["Demoed", "Lost Ball", "MVPs"]
-    labels_div_by_2 = ["GfS/Shots","GfS/xG"]
+    labels_div_by_2 = ["GfS/Shots", "GfS/xG"]
 
     labels_to_check.reverse()
 
@@ -2807,13 +2829,13 @@ for i in range(0,2):
             if labels_to_check[stat] == "MVPs":
                 our_stats.append(our_mvp_count)
 
-
     their_stats = [their_goal_count, their_goals_from_shots, their_goals_from_nonshots, their_other_goals,
-                their_total_xg, their_shot_xg, their_nonshot_xg,
-                their_gfs_xg_ratio * games_nr, their_gs_ratio * games_nr,
-                their_shot_count, their_miss_count, their_assists_count, their_saves_count, their_touches_count,
-                their_passes_count, their_dribbles_count, their_clears_count, their_aerials_count, their_turnovers_won_count,
-                their_demos_count, their_mvp_count, their_score_count]
+                   their_total_xg, their_shot_xg, their_nonshot_xg,
+                   their_gfs_xg_ratio * games_nr, their_gs_ratio * games_nr,
+                   their_shot_count, their_miss_count, their_assists_count, their_saves_count, their_touches_count,
+                   their_passes_count, their_dribbles_count, their_clears_count, their_aerials_count,
+                   their_turnovers_won_count,
+                   their_demos_count, their_mvp_count, their_score_count]
 
     their_stats.reverse()
 
@@ -2824,9 +2846,9 @@ for i in range(0,2):
            8: "GfS/xG", 9: "GfS/Shots",
            10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
            15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball",
-           20: "Demos",21: "MVPs", 22: "Scores"}
+           20: "Demos", 21: "MVPs", 22: "Scores"}
 
-    dic_rev = {len(dic)-i+1: v for (i,v) in dic.items()}
+    dic_rev = {len(dic) - i + 1: v for (i, v) in dic.items()}
     dic = dic_rev
 
     ticks = []
@@ -3001,9 +3023,7 @@ for i in range(0,2):
                      extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
     im.set_cmap('gist_gray_r')
 
-
-    ax13.scatter(my_goals_x, my_goals_y, alpha=0.5, color=my_color, s=my_goal_sizes_for_scatter)
-
+    ax13.scatter(my_goals_x, my_goals_y, alpha=goal_scatter_alpha, color=my_color, s=my_goal_sizes_for_scatter)
 
     ax13.set_xlim(pitch_min_x, pitch_max_x)
     ax13.set_ylim(pitch_min_y, pitch_max_y)
@@ -3021,7 +3041,7 @@ for i in range(0,2):
     im = ax14.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                      extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
     im.set_cmap('gist_gray_r')
-    ax14.scatter(your_goals_x, your_goals_y, alpha=0.5, color=your_color, s=your_goal_sizes_for_scatter)
+    ax14.scatter(your_goals_x, your_goals_y, alpha=goal_scatter_alpha, color=your_color, s=your_goal_sizes_for_scatter)
     ax14.set_xlim(pitch_min_x, pitch_max_x)
     ax14.set_ylim(pitch_min_y, pitch_max_y)
     ax14.axis("off")
@@ -3034,7 +3054,8 @@ for i in range(0,2):
     im = ax15.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                      extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
     im.set_cmap('gist_gray_r')
-    ax15.scatter(my_goals_x + your_goals_x, my_goals_y + your_goals_y, alpha=0.5, color=our_color, s=my_goal_sizes_for_scatter + your_goal_sizes_for_scatter)
+    ax15.scatter(my_goals_x + your_goals_x, my_goals_y + your_goals_y, alpha=goal_scatter_alpha, color=our_color,
+                 s=my_goal_sizes_for_scatter + your_goal_sizes_for_scatter)
     ax15.set_xlim(pitch_min_x, pitch_max_x)
     ax15.set_ylim(pitch_min_y, pitch_max_y)
     ax15.axis("off")
@@ -3051,7 +3072,7 @@ for i in range(0,2):
     im = ax16.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                      extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
     im.set_cmap('gist_gray_r')
-    ax16.scatter(their_goals_x, their_goals_y, alpha=0.5, color=their_color, s=their_goal_sizes_for_scatter)
+    ax16.scatter(their_goals_x, their_goals_y, alpha=goal_scatter_alpha, color=their_color, s=their_goal_sizes_for_scatter)
     ax16.set_xlim(pitch_min_x, pitch_max_x)
     ax16.set_ylim(pitch_min_y, pitch_max_y)
     ax16.axis("off")
@@ -3247,26 +3268,28 @@ for i in range(0,2):
     ax21.tick_params(axis="x", bottom=False, top=True, labelbottom=False, labeltop=False)
     ax20.set_title("Goals Scored & Conceded Distribution")
 
-
-
     rolling_avg_window = 10
 
     if games_nr < 30:
         rolling_avg_window = 1
 
-    my_xg_over_time_rolling_avg = np.average(sliding_window_view(my_shot_xg_over_time, window_shape=rolling_avg_window), axis=1)
+    my_xg_over_time_rolling_avg = np.average(sliding_window_view(my_shot_xg_over_time, window_shape=rolling_avg_window),
+                                             axis=1)
     my_goals_from_shots_over_time_rolling_avg = np.average(
         sliding_window_view(my_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
-    your_xg_over_time_rolling_avg = np.average(sliding_window_view(your_shot_xg_over_time, window_shape=rolling_avg_window),
-                                               axis=1)
+    your_xg_over_time_rolling_avg = np.average(
+        sliding_window_view(your_shot_xg_over_time, window_shape=rolling_avg_window),
+        axis=1)
     your_goals_from_shots_over_time_rolling_avg = np.average(
         sliding_window_view(your_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
-    our_xg_over_time_rolling_avg = np.average(sliding_window_view(our_shot_xg_over_time, window_shape=rolling_avg_window),
-                                              axis=1)
+    our_xg_over_time_rolling_avg = np.average(
+        sliding_window_view(our_shot_xg_over_time, window_shape=rolling_avg_window),
+        axis=1)
     our_goals_from_shots_over_time_rolling_avg = np.average(
         sliding_window_view(our_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
-    their_xg_over_time_rolling_avg = np.average(sliding_window_view(their_shot_xg_over_time, window_shape=rolling_avg_window),
-                                                axis=1)
+    their_xg_over_time_rolling_avg = np.average(
+        sliding_window_view(their_shot_xg_over_time, window_shape=rolling_avg_window),
+        axis=1)
     their_goals_from_shots_over_time_rolling_avg = np.average(
         sliding_window_view(their_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
 
@@ -3276,17 +3299,20 @@ for i in range(0,2):
                               max(their_xg_over_time_rolling_avg), max(their_goals_from_shots_over_time_rolling_avg))
 
     individual_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(your_xg_over_time_rolling_avg),
-                                     max(my_goals_from_shots_over_time_rolling_avg), max(your_goals_from_shots_over_time_rolling_avg))
+                                     max(my_goals_from_shots_over_time_rolling_avg),
+                                     max(your_goals_from_shots_over_time_rolling_avg))
 
     our_results_over_time = []
-    for i in range(0,games_nr):
+    for i in range(0, games_nr):
         if gd_array[i] > 0:
             our_results_over_time.append(100)
         else:
             our_results_over_time.append(0)
 
-    our_winrate_over_time_rolling_avg = np.average(sliding_window_view(our_results_over_time, window_shape=rolling_avg_window), axis=1)
-    our_xwinrate_over_time_rolling_avg = np.average(sliding_window_view(win_chance_per_game, window_shape=rolling_avg_window), axis=1)
+    our_winrate_over_time_rolling_avg = np.average(
+        sliding_window_view(our_results_over_time, window_shape=rolling_avg_window), axis=1)
+    our_xwinrate_over_time_rolling_avg = np.average(
+        sliding_window_view(win_chance_per_game, window_shape=rolling_avg_window), axis=1)
 
     our_gd_over_time_rolling_avg = []
     our_xgd_from_shots_over_time_rolling_avg = []
@@ -3365,37 +3391,38 @@ for i in range(0,2):
 
     len_to_use = len(my_xg_over_time_rolling_avg)
 
-
-    my_avg_xg_line = my_shot_xg/games_nr
-    my_avg_gfs_line = my_goals_from_shots/games_nr
-    your_avg_xg_line = your_shot_xg/games_nr
-    your_avg_gfs_line = your_goals_from_shots/games_nr
-    our_avg_xg_line = our_shot_xg/games_nr
-    our_avg_gfs_line = (my_goals_from_shots+your_goals_from_shots)/games_nr
-    their_avg_xg_line = their_shot_xg/games_nr
-    their_avg_gfs_line = their_goals_from_shots/games_nr
-    our_avg_xgd_line = (our_shot_xg-their_shot_xg)/games_nr
-    our_avg_gdfs_line = (my_goals_from_shots+your_goals_from_shots-their_goals_from_shots)/games_nr
-    our_avg_winrate_line = (win_count/games_nr)*100
-    our_avg_xwinrate_line = total_win_chance/games_nr
+    my_avg_xg_line = my_shot_xg / games_nr
+    my_avg_gfs_line = my_goals_from_shots / games_nr
+    your_avg_xg_line = your_shot_xg / games_nr
+    your_avg_gfs_line = your_goals_from_shots / games_nr
+    our_avg_xg_line = our_shot_xg / games_nr
+    our_avg_gfs_line = (my_goals_from_shots + your_goals_from_shots) / games_nr
+    their_avg_xg_line = their_shot_xg / games_nr
+    their_avg_gfs_line = their_goals_from_shots / games_nr
+    our_avg_xgd_line = (our_shot_xg - their_shot_xg) / games_nr
+    our_avg_gdfs_line = (my_goals_from_shots + your_goals_from_shots - their_goals_from_shots) / games_nr
+    our_avg_winrate_line = (win_count / games_nr) * 100
+    our_avg_xwinrate_line = total_win_chance / games_nr
 
     ax2 = fig.add_subplot(spec[2, 0])
     ax2.bar(range(0, len_to_use), individual_rolling_avg_max, color=my_ra_bg_colors, alpha=0.1, width=1)
-    ax2.bar(range(0, len_to_use), my_goals_from_shots_over_time_rolling_avg, color=my_color, alpha=0.5,width=1)
+    ax2.bar(range(0, len_to_use), my_goals_from_shots_over_time_rolling_avg, color=my_color, alpha=0.5, width=1)
     ax2.plot(range(0, len_to_use), my_xg_over_time_rolling_avg, color="black", alpha=1)
     plt.axhline(y=my_avg_gfs_line, color=my_color, linestyle='dotted')
     plt.axhline(y=my_avg_xg_line, color='black', linestyle='dotted')
-    ax2.set_title(my_alias + "'s Shot Goals and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+    ax2.set_title(
+        my_alias + "'s Shot Goals and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
     ax2.set_ylim(0, individual_rolling_avg_max)
     ax2.set_xlim(0, len_to_use - 1)
 
     ax23 = fig.add_subplot(spec[2, 0])
     ax23.bar(range(0, len_to_use), individual_rolling_avg_max, color=your_ra_bg_colors, alpha=0.1, width=1)
-    ax23.bar(range(0, len_to_use), your_goals_from_shots_over_time_rolling_avg, color=your_color, alpha=0.5,width=1)
+    ax23.bar(range(0, len_to_use), your_goals_from_shots_over_time_rolling_avg, color=your_color, alpha=0.5, width=1)
     ax23.plot(range(0, len_to_use), your_xg_over_time_rolling_avg, color="black", alpha=1)
     plt.axhline(y=your_avg_gfs_line, color=your_color, linestyle='dotted')
     plt.axhline(y=your_avg_xg_line, color='black', linestyle='dotted')
-    ax23.set_title(your_alias + "'s Shot Goals and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+    ax23.set_title(your_alias + "'s Shot Goals and xG (black line) over time (" + str(
+        rolling_avg_window) + " game rolling average)")
     ax23.set_ylim(0, individual_rolling_avg_max)
     ax23.set_xlim(0, len_to_use - 1)
 
@@ -3406,22 +3433,23 @@ for i in range(0,2):
     ax24 = fig.add_subplot(spec[2, 0])
     ax24.bar(range(0, len_to_use), all_rolling_avg_max, color=our_ra_bg_colors, alpha=0.1, width=1)
     ax24.bar(range(0, len_to_use), -all_rolling_avg_max, color=their_ra_bg_colors, alpha=0.1, width=1)
-    ax24.bar(range(0, len_to_use), our_goals_from_shots_over_time_rolling_avg, color=our_color, alpha=0.5,width=1)
-    ax24.bar(range(0, len_to_use), their_goals_from_shots_over_time_rolling_avg, color=their_color, alpha=0.5,width=1)
+    ax24.bar(range(0, len_to_use), our_goals_from_shots_over_time_rolling_avg, color=our_color, alpha=0.5, width=1)
+    ax24.bar(range(0, len_to_use), their_goals_from_shots_over_time_rolling_avg, color=their_color, alpha=0.5, width=1)
     ax24.plot(range(0, len_to_use), their_xg_over_time_rolling_avg, color="black", alpha=1)
     ax24.plot(range(0, len_to_use), our_xg_over_time_rolling_avg, color="black", alpha=1)
     plt.axhline(y=our_avg_gfs_line, color=our_color, linestyle='dotted')
     plt.axhline(y=our_avg_xg_line, color='black', linestyle='dotted')
     plt.axhline(y=-their_avg_gfs_line, color=their_color, linestyle='dotted')
     plt.axhline(y=-their_avg_xg_line, color='black', linestyle='dotted')
-    ax24.set_title("Our goals scored & conceded from shots and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+    ax24.set_title("Our goals scored & conceded from shots and xG (black line) over time (" + str(
+        rolling_avg_window) + " game rolling average)")
     ax24.set_ylim(-all_rolling_avg_max, all_rolling_avg_max)
     ax24.set_xlim(0, len_to_use - 1)
 
     ax25 = fig.add_subplot(spec[2, 0])
     ax25.bar(range(0, len_to_use), our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
     ax25.bar(range(0, len_to_use), -our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
-    ax25.bar(range(0, len_to_use), our_gd_over_time_rolling_avg, color=our_gdiff_bar_colors, alpha=0.5,width=1)
+    ax25.bar(range(0, len_to_use), our_gd_over_time_rolling_avg, color=our_gdiff_bar_colors, alpha=0.5, width=1)
     ax25.plot(range(0, len_to_use), our_xgd_from_shots_over_time_rolling_avg, color="black", alpha=1)
     ax25.set_title("Our GD from goals that came from shots and xGD (black line) over time (" + str(
         rolling_avg_window) + " game rolling average)")
@@ -3432,14 +3460,14 @@ for i in range(0,2):
 
     ax26 = fig.add_subplot(spec[2, 0])
     ax26.bar(range(0, len_to_use), 100, color=our_winrate_bar_colors, alpha=0.1, width=1)
-    ax26.bar(range(0, len_to_use), our_winrate_over_time_rolling_avg, color=our_color, alpha=0.5,width=1)
+    ax26.bar(range(0, len_to_use), our_winrate_over_time_rolling_avg, color=our_color, alpha=0.5, width=1)
     ax26.plot(range(0, len_to_use), our_xwinrate_over_time_rolling_avg, color="black", alpha=1)
     plt.axhline(y=our_avg_winrate_line, color=our_color, linestyle='dotted')
     plt.axhline(y=our_avg_xwinrate_line, color='black', linestyle='dotted')
-    ax26.set_title("Our win rate and expected win rate (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+    ax26.set_title("Our win rate and expected win rate (black line) over time (" + str(
+        rolling_avg_window) + " game rolling average)")
     ax26.set_ylim(0, 100)
     ax26.set_xlim(0, len_to_use - 1)
-
 
     # positioning and scaling of charts
 
@@ -3474,8 +3502,6 @@ for i in range(0,2):
     ax9.set_position([0.75, 0.155, 0.227, 0.1])  # Shots over time
     ax10.set_position([0.75, 0.26, 0.227, 0.1])  # Saves over time
     ax11.set_position([0.75, 0.365, 0.227, 0.1])  # Assists over time
-
-
 
     if save_and_crop:
         plt.savefig(path_to_charts + "full_canvas.png")
