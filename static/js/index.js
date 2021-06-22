@@ -35,7 +35,7 @@ var app = new Vue({
                     "info": true,
                     "paging": true,
                     "columnDefs": [{
-                        "targets": [12],
+                        "targets": [14],
                         "orderable": false
                         }],
                     "fixedHeader": true,
