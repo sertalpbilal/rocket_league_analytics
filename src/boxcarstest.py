@@ -12,7 +12,7 @@
 # TODO: Demo heatmap
 # TODO: Auto detect games in latest streak, clear /json-new/, and copy them to /json-new/
 # TODO: Replace SF, SC with HF, HC
-# TODO: Update records (lowest non-shot xG goal etc)
+# TODO: Add corresponding matches to records.tsv
 
 import csv
 import json
@@ -34,7 +34,7 @@ from PIL import Image
 
 startTime = time.time()
 
-check_new = False  # Only processes new files (in separate directory)
+check_new = True  # Only processes new files (in separate directory)
 show_xg_scorelines = False # Shows xG scorelines and normal scorelines and replay names of games
 save_and_crop = True # Saves an image of the dashboard and then crops charts into their own images
 
@@ -334,6 +334,7 @@ my_nonshot_xg = 0
 your_nonshot_xg = 0
 their_nonshot_xg = 0
 
+
 my_goal_xg = 0
 your_goal_xg = 0
 their_goal_xg = 0
@@ -342,10 +343,23 @@ my_xg_over_time = []
 your_xg_over_time = []
 their_xg_over_time = []
 
-my_xg_per_goal_list = []
-your_xg_per_goal_list = []
-their_xg_per_goal_list = []
+my_shot_xg_over_time = []
+your_shot_xg_over_time = []
+their_shot_xg_over_time = []
 
+my_nonshot_xg_over_time = []
+your_nonshot_xg_over_time = []
+their_nonshot_xg_over_time = []
+
+my_xg_per_shot_goal_list = []
+your_xg_per_shot_goal_list = []
+their_xg_per_shot_goal_list = []
+
+my_xg_per_nonshot_goal_list = []
+your_xg_per_nonshot_goal_list = []
+their_xg_per_nonshot_goal_list = []
+
+# from shots
 my_xg_per_miss_list = []
 your_xg_per_miss_list = []
 their_xg_per_miss_list = []
@@ -402,6 +416,14 @@ for file in new_json_files:
         my_local_xg = 0
         your_local_xg = 0
         their_local_xg = 0
+        
+        my_local_shot_xg = 0
+        your_local_shot_xg = 0
+        their_local_shot_xg = 0
+        
+        my_local_nonshot_xg = 0
+        your_local_nonshot_xg = 0
+        their_local_nonshot_xg = 0
 
         my_local_goals_from_shots = 0
         your_local_goals_from_shots = 0
@@ -439,20 +461,23 @@ for file in new_json_files:
                             # shots
                             if my_list[row][5] == "True":
                                 my_shot_xg += float(my_list[row][4])
+                                my_local_shot_xg += float(my_list[row][4])
 
 
                             # non-shots
                             if my_list[row][5] == "False":
                                 my_nonshot_xg += float(my_list[row][4])
+                                my_local_nonshot_xg += float(my_list[row][4])
                                 # Non-shot Goals
                                 if my_list[row][6] == "True":
                                     my_goals_from_nonshots +=1
                                     my_local_goals_from_nonshots += 1
+                                    my_xg_per_nonshot_goal_list.append(float(my_list[row][4]))
 
                             # Shot Goals
                             if my_list[row][6] == "True" and my_list[row][5] == "True":
                                 my_goal_xg += float(my_list[row][4])
-                                my_xg_per_goal_list.append(float(my_list[row][4]))
+                                my_xg_per_shot_goal_list.append(float(my_list[row][4]))
                                 my_local_goals_from_shots += 1
                                 my_goals_from_shots += 1
                                 my_shots_goal_or_miss.append(1)
@@ -469,18 +494,22 @@ for file in new_json_files:
                             # shots
                             if my_list[row][5] == "True":
                                 your_shot_xg += float(my_list[row][4])
+                                your_local_shot_xg += float(my_list[row][4])
+
 
                             # non-shots
                             if my_list[row][5] == "False":
                                 your_nonshot_xg += float(my_list[row][4])
+                                your_local_nonshot_xg += float(my_list[row][4])
+
                                 if my_list[row][6] == "True":
                                     your_goals_from_nonshots += 1
                                     your_local_goals_from_nonshots += 1
-
+                                    your_xg_per_nonshot_goal_list.append(float(my_list[row][4]))
 
                             if my_list[row][6] == "True" and my_list[row][5] == "True":
                                 your_goal_xg += float(my_list[row][4])
-                                your_xg_per_goal_list.append(float(my_list[row][4]))
+                                your_xg_per_shot_goal_list.append(float(my_list[row][4]))
                                 your_local_goals_from_shots += 1
                                 your_goals_from_shots += 1
                                 your_shots_goal_or_miss.append(1)
@@ -496,17 +525,21 @@ for file in new_json_files:
                             # shots
                             if my_list[row][5] == "True":
                                 their_shot_xg += float(my_list[row][4])
+                                their_local_shot_xg += float(my_list[row][4])
 
                             # non-shots
                             if my_list[row][5] == "False":
                                 their_nonshot_xg += float(my_list[row][4])
+                                their_local_nonshot_xg += float(my_list[row][4])
                                 if my_list[row][6] == "True":
                                     their_goals_from_nonshots += 1
                                     their_local_goals_from_nonshots += 1
+                                    their_xg_per_nonshot_goal_list.append(float(my_list[row][4]))
+
 
                             if my_list[row][6] == "True" and my_list[row][5] == "True":
                                 their_goal_xg += float(my_list[row][4])
-                                their_xg_per_goal_list.append(float(my_list[row][4]))
+                                their_xg_per_shot_goal_list.append(float(my_list[row][4]))
                                 their_local_goals_from_shots += 1
                                 their_goals_from_shots += 1
                             elif my_list[row][6] == "False" and my_list[row][5] == "True":
@@ -931,6 +964,14 @@ for file in new_json_files:
         my_xg_over_time.append(my_local_xg)
         your_xg_over_time.append(your_local_xg)
         their_xg_over_time.append(their_local_xg)
+        
+        my_shot_xg_over_time.append(my_local_shot_xg)
+        your_shot_xg_over_time.append(your_local_shot_xg)
+        their_shot_xg_over_time.append(their_local_shot_xg)
+        
+        my_nonshot_xg_over_time.append(my_local_nonshot_xg)
+        your_nonshot_xg_over_time.append(your_local_nonshot_xg)
+        their_nonshot_xg_over_time.append(their_local_nonshot_xg)
 
         local_wentOvertime = False
 
@@ -1603,12 +1644,20 @@ our_xg_over_time = []
 my_goals_minus_xg_over_time = []
 your_goals_minus_xg_over_time = []
 our_goals_from_shots_over_time = []
+our_shot_xg_over_time = []
+our_nonshot_xg_over_time = []
 
 for xg in range(len(my_xg_over_time)):
     our_xg_over_time.append(my_xg_over_time[xg] + your_xg_over_time[xg])
     my_goals_minus_xg_over_time.append(my_goals_over_time[xg] - my_xg_over_time[xg])
     your_goals_minus_xg_over_time.append(your_goals_over_time[xg] - your_xg_over_time[xg])
     our_goals_from_shots_over_time.append(your_goals_from_shots_over_time[xg] + my_goals_from_shots_over_time[xg])
+
+for xg in range(len(my_shot_xg_over_time)):
+    our_shot_xg_over_time.append(my_shot_xg_over_time[xg] + your_shot_xg_over_time[xg])
+
+for xg in range(len(my_nonshot_xg_over_time)):
+    our_nonshot_xg_over_time.append(my_nonshot_xg_over_time[xg] + your_nonshot_xg_over_time[xg])
 
 ############
 
@@ -1935,12 +1984,12 @@ for match in range(len(my_goals_from_shots_over_time)):
 
 my_biggest_xg_miss = 0
 my_lowest_xg_goal = 0
-for shot in range(len(my_xg_per_goal_list)):
+for shot in range(len(my_xg_per_shot_goal_list)):
     if shot == 0:
-        my_lowest_xg_goal = my_xg_per_goal_list[shot]
+        my_lowest_xg_goal = my_xg_per_shot_goal_list[shot]
     else:
-        if my_xg_per_goal_list[shot] < my_lowest_xg_goal:
-            my_lowest_xg_goal = my_xg_per_goal_list[shot]
+        if my_xg_per_shot_goal_list[shot] < my_lowest_xg_goal:
+            my_lowest_xg_goal = my_xg_per_shot_goal_list[shot]
 
 for shot in range(len(my_xg_per_miss_list)):
     if my_xg_per_miss_list[shot] > my_biggest_xg_miss:
@@ -1948,12 +1997,12 @@ for shot in range(len(my_xg_per_miss_list)):
 
 your_biggest_xg_miss = 0
 your_lowest_xg_goal = 0
-for shot in range(len(your_xg_per_goal_list)):
+for shot in range(len(your_xg_per_shot_goal_list)):
     if shot == 0:
-        your_lowest_xg_goal = your_xg_per_goal_list[shot]
+        your_lowest_xg_goal = your_xg_per_shot_goal_list[shot]
     else:
-        if your_xg_per_goal_list[shot] < your_lowest_xg_goal:
-            your_lowest_xg_goal = your_xg_per_goal_list[shot]
+        if your_xg_per_shot_goal_list[shot] < your_lowest_xg_goal:
+            your_lowest_xg_goal = your_xg_per_shot_goal_list[shot]
 
 for shot in range(len(your_xg_per_miss_list)):
     if your_xg_per_miss_list[shot] > your_biggest_xg_miss:
@@ -1964,16 +2013,18 @@ our_lowest_xg_goal = min(your_lowest_xg_goal,my_lowest_xg_goal)
 
 their_biggest_xg_miss = 0
 their_lowest_xg_goal = 0
-for shot in range(len(their_xg_per_goal_list)):
+for shot in range(len(their_xg_per_shot_goal_list)):
     if shot == 0:
-        their_lowest_xg_goal = their_xg_per_goal_list[shot]
+        their_lowest_xg_goal = their_xg_per_shot_goal_list[shot]
     else:
-        if their_xg_per_goal_list[shot] < their_lowest_xg_goal:
-            their_lowest_xg_goal = their_xg_per_goal_list[shot]
+        if their_xg_per_shot_goal_list[shot] < their_lowest_xg_goal:
+            their_lowest_xg_goal = their_xg_per_shot_goal_list[shot]
 
 for shot in range(len(their_xg_per_miss_list)):
     if their_xg_per_miss_list[shot] > their_biggest_xg_miss:
         their_biggest_xg_miss = their_xg_per_miss_list[shot]
+
+
 
 my_highest_goal_scored = 0
 my_furthest_goal_scored = 0
@@ -2212,10 +2263,12 @@ individual_record_data = [["Most goals scored in one match", max(my_goals_per_ma
                           ["Highest xG in one match", round(max(my_xg_over_time),2), round(max(your_xg_over_time),2)],
                           ["Highest xG without scoring in one match (only shot-goals)",
                            round(my_highest_xg_without_scoring, 2), round(your_highest_xg_without_scoring, 2)],
+                          ["Highest shot xG in one match", round(max(my_shot_xg_over_time), 2), round(max(your_shot_xg_over_time), 2)],
+                          ["Highest non-shot xG in one match", round(max(my_nonshot_xg_over_time), 2), round(max(your_nonshot_xg_over_time), 2)],
                           ["Biggest xG overperformance in one match (only shot-goals)", str(my_biggest_xg_overperformance_goals) + "G from " + str(round(my_biggest_xg_overperformance_xg, 2)) + " xG",
                            str(your_biggest_xg_overperformance_goals) + "G from " + str(round(your_biggest_xg_overperformance_xg, 2)) + " xG"],
                           ["Biggest xG overperformance in one match (only shot-goals) %","%.0f"%(((my_biggest_xg_overperformance_goals/my_biggest_xg_overperformance_xg)*100)-100)+"%","%.0f"%(((your_biggest_xg_overperformance_goals/your_biggest_xg_overperformance_xg)*100)-100)+"%"],
-                          ["Biggest chance missed (xG)", round(my_biggest_xg_miss,3), round(your_biggest_xg_miss,3)],
+                          ["Biggest shot chance missed (xG)", round(my_biggest_xg_miss,3), round(your_biggest_xg_miss,3)],
                           ["Unlikeliest shot-goal scored (xG)", round(my_lowest_xg_goal,3), round(your_lowest_xg_goal,3)],
                           ["Furthest goal scored (m)", round(my_furthest_goal_scored/100), round(your_furthest_goal_scored/100)],
                           ["Highest goal scored (m)", round(my_highest_goal_scored/100), round(your_highest_goal_scored/100)],
@@ -2225,7 +2278,7 @@ individual_record_data = [["Most goals scored in one match", max(my_goals_per_ma
                            your_most_consecutive_mvp],
                           ["Most consecutive matches without MVP", my_most_consecutive_nomvp_in,
                            your_most_consecutive_nomvp_in],
-                          ["Most consecutive Shot Goals",my_most_consecutive_goals_from_shots, your_most_consecutive_goals_from_shots],
+                          ["Most conescutive goals from shots",my_most_consecutive_goals_from_shots, your_most_consecutive_goals_from_shots],
                           ["Most consecutive misses from shots",my_most_consecutive_misses_from_shots,your_most_consecutive_misses_from_shots],
                           ["Most goal involvements (G+A) in one match",my_most_goals_or_assists_in_one_game,your_most_goals_or_assists_in_one_game],
                           ["Most consecutive matches with a goal involvement",my_most_consecutive_games_scored_or_assisted_in,your_most_consecutive_games_scored_or_assisted_in],
@@ -2409,6 +2462,10 @@ team_record_data = [["Longest winstreak", biggest_winstreak, biggest_lossstreak]
                     ["Most assists in one match", max(our_assists_over_time), max(their_assists_over_time)],
                     ["Most saves in one match",max(our_saves_over_time),max(their_saves_over_time)],
                     ["Highest xG in one match",round(max(our_xg_over_time),2),round(max(their_xg_over_time),2)],
+                    ["Highest shot xG in one match", round(max(our_shot_xg_over_time), 2),
+                     round(max(their_shot_xg_over_time), 2)],
+                    ["Highest non-shot xG in one match", round(max(our_nonshot_xg_over_time), 2),
+                     round(max(their_nonshot_xg_over_time), 2)],
                     ["Lowest xG in one match", round(min(our_xg_over_time), 2), round(min(their_xg_over_time), 2)],
                     ["Highest xG without scoring in one match (only shot-goals)",
                      round(our_highest_xg_without_scoring, 2), round(their_highest_xg_without_scoring, 2)],
@@ -2422,7 +2479,7 @@ team_record_data = [["Longest winstreak", biggest_winstreak, biggest_lossstreak]
                      "%.0f" % (((
                                             their_biggest_xg_overperformance_goals / their_biggest_xg_overperformance_xg) * 100) - 100) + "%"],
 
-                    ["Biggest chance missed (xG)", round(our_biggest_xg_miss, 3), round(their_biggest_xg_miss, 3)],
+                    ["Biggest shot chance missed (xG)", round(our_biggest_xg_miss, 3), round(their_biggest_xg_miss, 3)],
                     ["Unlikeliest shot-goal scored (xG)", round(our_lowest_xg_goal, 3), round(their_lowest_xg_goal, 3)],
                     ["Furthest goal scored (m)",round(max(my_goals_distancetogoal+your_goals_distancetogoal)/100),round(max(their_goals_distancetogoal)/100)],
                     ["Highest goal scored (m)",round(max(my_goals_z+your_goals_z)/100),round(max(their_goals_z)/100)],
@@ -2430,7 +2487,7 @@ team_record_data = [["Longest winstreak", biggest_winstreak, biggest_lossstreak]
                      their_most_consecutive_mvp],
                     ["Most consecutive matches without MVP", our_most_consecutive_nomvp_in,
                      their_most_consecutive_nomvp_in],
-                    ["Most consecutive Shot Goals", our_most_consecutive_goals_from_shots,
+                    ["Most consecutive goals from shots", our_most_consecutive_goals_from_shots,
                      their_most_consecutive_goals_from_shots],
                     ["Most consecutive misses from shots", our_most_consecutive_misses_from_shots,
                      their_most_consecutive_misses_from_shots],
@@ -2895,8 +2952,10 @@ for streak_game_num in streak_start_games:
 ax11.set_ylabel("ASSISTS", rotation="horizontal", ha="center", va="center", labelpad=35)
 
 my_goal_sizes_for_scatter = []
-for xg in my_xg_per_goal_list:
-    my_goal_sizes_for_scatter.append(xg * 20)
+goal_size_multiplier = 160
+
+for xg in my_xg_per_shot_goal_list:
+    my_goal_sizes_for_scatter.append(xg * goal_size_multiplier)
 
 ax13 = fig.add_subplot(spec[4, 0])  # Heatmap of Allan's goals
 heatmap, xedges, yedges = np.histogram2d(my_shots_y + [pitch_min_y] + [pitch_max_y],
@@ -2916,8 +2975,8 @@ ax13.axis("off")
 ax13.set_title(my_alias + "'s Shot & Goal Heatmap")
 
 your_goal_sizes_for_scatter = []
-for xg in your_xg_per_goal_list:
-    your_goal_sizes_for_scatter.append(xg * 20)
+for xg in your_xg_per_shot_goal_list:
+    your_goal_sizes_for_scatter.append(xg * goal_size_multiplier)
 
 ax14 = fig.add_subplot(spec[4, 0])  # Heatmap of Sertalp's goals
 heatmap, xedges, yedges = np.histogram2d(your_shots_y + [pitch_min_y] + [pitch_max_y],
@@ -2946,8 +3005,8 @@ ax15.axis("off")
 ax15.set_title("Our Shot & Goal Heatmap")
 
 their_goal_sizes_for_scatter = []
-for xg in their_xg_per_goal_list:
-    their_goal_sizes_for_scatter.append(xg * 20)
+for xg in their_xg_per_shot_goal_list:
+    their_goal_sizes_for_scatter.append(xg * goal_size_multiplier)
 
 ax16 = fig.add_subplot(spec[4, 0])  # Heatmap of Sertalp's goals
 heatmap, xedges, yedges = np.histogram2d(their_shots_y + [pitch_min_y] + [pitch_max_y],
@@ -3159,18 +3218,18 @@ rolling_avg_window = 10
 if games_nr < 30:
     rolling_avg_window = 1
 
-my_xg_over_time_rolling_avg = np.average(sliding_window_view(my_xg_over_time, window_shape=rolling_avg_window), axis=1)
+my_xg_over_time_rolling_avg = np.average(sliding_window_view(my_shot_xg_over_time, window_shape=rolling_avg_window), axis=1)
 my_goals_from_shots_over_time_rolling_avg = np.average(
     sliding_window_view(my_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
-your_xg_over_time_rolling_avg = np.average(sliding_window_view(your_xg_over_time, window_shape=rolling_avg_window),
+your_xg_over_time_rolling_avg = np.average(sliding_window_view(your_shot_xg_over_time, window_shape=rolling_avg_window),
                                            axis=1)
 your_goals_from_shots_over_time_rolling_avg = np.average(
     sliding_window_view(your_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
-our_xg_over_time_rolling_avg = np.average(sliding_window_view(our_xg_over_time, window_shape=rolling_avg_window),
+our_xg_over_time_rolling_avg = np.average(sliding_window_view(our_shot_xg_over_time, window_shape=rolling_avg_window),
                                           axis=1)
 our_goals_from_shots_over_time_rolling_avg = np.average(
     sliding_window_view(our_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
-their_xg_over_time_rolling_avg = np.average(sliding_window_view(their_xg_over_time, window_shape=rolling_avg_window),
+their_xg_over_time_rolling_avg = np.average(sliding_window_view(their_shot_xg_over_time, window_shape=rolling_avg_window),
                                             axis=1)
 their_goals_from_shots_over_time_rolling_avg = np.average(
     sliding_window_view(their_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
