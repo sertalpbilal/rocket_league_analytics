@@ -520,11 +520,20 @@ function plot_xg_timeline() {
     
 
     // bg rect and hover function
+    let bisect = d3.bisector(function(d) { return d.current_time; }).right
     step_function_callback = {
         'enter': (time) => {
             let xv = x(time)
             lg.attr("x1", xv)
             lg.attr("x2", xv)
+            bcircle.attr("cx", xv)
+            ocircle.attr("cx", xv)
+            let idx = bisect(data.hits.blue, time)
+            let yv = data.hits.blue[idx].past_sum
+            bcircle.attr("cy", y(yv))
+            idx = bisect(data.hits.orange, time)
+            yv = data.hits.orange[idx].past_sum
+            ocircle.attr("cy", y(yv))
             hover_g.attr('display', "block")
         },
         'leave': (e) => {
@@ -534,11 +543,10 @@ function plot_xg_timeline() {
         }
     }
     
-    let hover_g = svg.append('g').attr('id', 'hover-g')
+    let hover_g = svg.append('g').attr('id', 'hover-g').attr("display", "none")
     let m_move = (event) => {
         let raw_x = d3.pointer(event)[0]
         let ctime = x.invert(raw_x)
-        let bisect = d3.bisector(function(d) { return d.current_time; }).left
         let left_most = bisect(data.hits.orange, ctime)
         step_function_callback.enter(ctime)
     }
@@ -560,6 +568,16 @@ function plot_xg_timeline() {
         .attr("stroke", "red")
         .attr("stroke-width", 5)
         .attr("stroke-opacity", 0.2)
+    let bcircle = hover_g.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 6)
+        .attr("fill", "blue")
+    let ocircle = hover_g.append("circle")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 6)
+        .attr("fill", "orange")
 
     svg.selectAll(".axis-holder .tick line")
         // .attr("font-size", "140pt")
