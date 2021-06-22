@@ -9,10 +9,12 @@ RUN pip install python-dotenv
 RUN pip install ipykernel
 RUN pip install xgboost
 RUN pip install scikit-learn
+RUN pip install progress
+RUN pip install wrapt_timeout_decorator
 
 WORKDIR /src
 
-CMD python3 replay.py && python3 convert.py && cd xg_model && python3 -c "from score import convert_all; convert_all()"
+CMD python3 replay.py && python3 convert.py && cd xg_model && python3 -c "from score import convert_all; convert_all()" && cd .. && python3 csv_trimmer.py
 # && python3 boxcars_dev.py
 # CMD python3 replay.py && python3 convert.py
 
