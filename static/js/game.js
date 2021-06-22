@@ -61,6 +61,7 @@ var app = new Vue({
         step_function_data() {
             if (_.isEmpty(this.shots_combined)) { return {} }
             let hits = this.shots_combined
+            let goals = this.game_json.gameMetadata.goals
 
             let get_hits = (v) => {
                 let prev_time = 0;
@@ -528,12 +529,18 @@ function plot_xg_timeline() {
             lg.attr("x2", xv)
             bcircle.attr("cx", xv)
             ocircle.attr("cx", xv)
+            
             let idx = bisect(data.hits.blue, time)
             let yv = data.hits.blue[idx].past_sum
             bcircle.attr("cy", y(yv))
+            blue_score.text(yv.toFixed(2))
+
             idx = bisect(data.hits.orange, time)
             yv = data.hits.orange[idx].past_sum
             ocircle.attr("cy", y(yv))
+            orange_score.text(yv.toFixed(2))
+
+            score.attr("x", xv)
             hover_g.attr('display', "block")
         },
         'leave': (e) => {
@@ -577,6 +584,22 @@ function plot_xg_timeline() {
         .attr("cx", 0)
         .attr("cy", 0)
         .attr("r", 6)
+        .attr("fill", "orange")
+    let score = hover_g.append("text")
+        .text("")
+        .attr("y", -4)
+        .attr("x", width/2)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "bottom")
+        .style("font-size", "8pt")
+    let blue_score = score.append("tspan")
+        .text("BLUE")
+        .attr("fill", "blue")
+    score.append("tspan")
+        .text(" - ")
+        .attr("fill", "black")
+    let orange_score = score.append("tspan")
+        .text("ORANGE")
         .attr("fill", "orange")
 
     svg.selectAll(".axis-holder .tick line")
