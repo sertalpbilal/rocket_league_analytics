@@ -1,6 +1,5 @@
 # This class populates hits data and exports final xG model
 import pandas as pd
-import carball
 from concurrent.futures import ProcessPoolExecutor
 import pathlib
 import glob
@@ -19,7 +18,7 @@ class RocketLeagueXG:
         self.swapping = swapping
         self.df = None
 
-    def prepare_data(self):
+    def prepare_data(self, collect=True):
         "Reads and prepares raw data for the model, this step might take a while"
 
         all_replay_files = glob.glob(f"{self.folder}/*.replay")
@@ -30,22 +29,27 @@ class RocketLeagueXG:
                 dfs = list(executor.map(self.read_single_game, all_replay_files))
         else:
             dfs = []
-            for f in IncrementalBar('Collecting games').iter(all_replay_files[0:500]):
+            for f in IncrementalBar('Collecting games').iter(all_replay_files):
             # for f in all_replay_files:
                 try:
-                    dfs.append(self.read_single_game(f))
+                    game_data = self.read_single_game(f)
+                    if collect:
+                        dfs.append(game_data)
                 except:
                     print("Game cannot be read properly by carball, deleting the replay")
                     os.unlink(f)
 
-        all_df = pd.concat(dfs)
-        print(all_df.head())
-        all_df.reset_index(inplace=True, drop=True)
-        all_df.to_csv(self.folder / "combined.csv")
-        self.df = all_df
+        if collect:
+            print("Saving to file")
+            all_df = pd.concat(dfs)
+            print(all_df.head())
+            all_df.reset_index(inplace=True, drop=True)
+            all_df.to_csv(self.folder / "combined.csv")
+            self.df = all_df
 
     @timeout(45)
     def read_single_game(self, f):
+        import carball
         csv_name = f.replace(".replay", ".csv", 1)
         if os.path.exists(csv_name):
             print(f"CSV exists for {f}")
@@ -161,7 +165,10 @@ class RocketLeagueXG:
         else:
             data = self.df.reset_index().rename(columns={'index': 'idx'})
 
+        print("Processing data")
+
         if self.swapping:
+            print("Swapping")
             data_switch = data.copy()
             opp1_cols = [col for col in data_switch.columns if "opp_1_" in col]
             opp2_cols = [col for col in data_switch.columns if "opp_2_" in col]
@@ -171,6 +178,7 @@ class RocketLeagueXG:
             data_switch[opp2_cols] = data_switch[temp_cols]
             data_switch.drop(columns=temp_cols, inplace=True)
             data = pd.concat([data, data_switch])
+        print("Filtering data")
         col_list = ['idx'] + [col for col in data.columns if ("_pos_" in col or "_vel_" in col or "_rot_" in col) and "team_mate" not in col and "ball" not in col] + ['goal']  # OR COL=SHOT?
         data_filtered = data[col_list]
         data_filtered = data_filtered.dropna()
@@ -197,5 +205,11 @@ class RocketLeagueXG:
 
 def generate_xg():
     r = RocketLeagueXG('model')
+    # only prep
+    # r.prepare_data(collect=False)
     r.prepare_data()
+    r.build_model()
+
+def generate_xg_cached():
+    r = RocketLeagueXG('model')
     r.build_model()
