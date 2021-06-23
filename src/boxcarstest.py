@@ -377,6 +377,11 @@ for i in range(0, 2):
     your_goals_from_shots_over_time = []
     their_goals_from_shots_over_time = []
 
+    my_hits_over_time = []
+    our_hits_over_time = []
+    your_hits_over_time = []
+    their_hits_over_time = []
+
     my_goals_from_shots = 0
     your_goals_from_shots = 0
     their_goals_from_shots = 0
@@ -406,6 +411,12 @@ for i in range(0, 2):
     your_shots_goal_or_miss = []
     our_shots_goal_or_miss = []
     their_shots_goal_or_miss = []
+
+    my_hit_count = 0
+    your_hit_count = 0
+    their_hit_count = 0
+
+
 
     for file in new_json_files:
         file_counter += 1
@@ -445,6 +456,10 @@ for i in range(0, 2):
             our_local_xg_per_hit = []
             their_local_xg_per_hit = []
 
+            my_local_hits = 0
+            your_local_hits = 0
+            their_local_hits = 0
+
             for col in range(ncols):
                 for row in range(0, nrows):
                     if my_list[0][col] == "shot_taker_name":
@@ -464,6 +479,8 @@ for i in range(0, 2):
                                 their_local_xg_per_hit.append(float(my_list[row][4]))
 
                             if my_list[row][col] == my_name:
+                                my_hit_count += 1
+                                my_local_hits += 1
                                 my_local_xg += float(my_list[row][4])
                                 my_total_xg += float(my_list[row][4])
 
@@ -496,6 +513,8 @@ for i in range(0, 2):
                                     my_xg_per_miss_list.append(float(my_list[row][4]))
 
                             elif my_list[row][col] == your_name:
+                                your_hit_count += 1
+                                your_local_hits += 1
                                 your_local_xg += float(my_list[row][4])
                                 your_total_xg += float(my_list[row][4])
 
@@ -525,7 +544,8 @@ for i in range(0, 2):
                                     your_xg_per_miss_list.append(float(my_list[row][4]))
 
                             else:
-
+                                their_hit_count += 1
+                                their_local_hits += 1
                                 their_local_xg += float(my_list[row][4])
                                 their_total_xg += float(my_list[row][4])
 
@@ -622,6 +642,8 @@ for i in range(0, 2):
             your_local_score = 0
             opp1_local_score = 0
             opp2_local_score = 0
+
+
 
             for i in data["players"]:
                 if i["id"]["id"] != my_id and i["id"]["id"] != your_id:
@@ -976,6 +998,12 @@ for i in range(0, 2):
             your_nonshot_xg_over_time.append(your_local_nonshot_xg)
             their_nonshot_xg_over_time.append(their_local_nonshot_xg)
 
+            my_hits_over_time.append(my_local_hits)
+            your_hits_over_time.append(your_local_hits)
+            our_hits_over_time.append(my_local_hits + your_local_hits)
+            their_hits_over_time.append(their_local_hits)
+
+
             local_wentOvertime = False
 
             # check if game went overtime -- only if there is 1 GD between the teams, or 0 GD (FF in OT)
@@ -1166,6 +1194,8 @@ for i in range(0, 2):
     our_goal_count = my_goal_count + your_goal_count
     our_miss_count = my_miss_count + your_miss_count
 
+    our_hit_count = my_hit_count + your_hit_count
+
     my_shot_count = len(my_shots_x)
     your_shot_count = len(your_shots_x)
     our_shot_count = my_shot_count + your_shot_count
@@ -1322,7 +1352,8 @@ for i in range(0, 2):
                        ["Lost Ball", my_turnovers_count, your_turnovers_count],
                        ["Dribbles", my_dribbles_count, your_dribbles_count],
                        ["Aerials", my_aerials_count, your_aerials_count],
-                       ["MVPs", my_mvp_count, your_mvp_count]
+                       ["MVPs", my_mvp_count, your_mvp_count],
+                       ["Hits", my_hit_count, your_hit_count]
                        ]
 
     team_data = [["Goals", our_goal_count, their_goal_count],
@@ -1349,7 +1380,8 @@ for i in range(0, 2):
                  ["Won Ball", our_turnovers_won_count, their_turnovers_won_count],
                  ["Dribbles", our_dribbles_count, their_dribbles_count],
                  ["Aerials", our_aerials_count, their_aerials_count],
-                 ["MVPs", our_mvp_count, their_mvp_count]
+                 ["MVPs", our_mvp_count, their_mvp_count],
+                 ["Hits", our_hit_count, their_hit_count]
                  ]
 
     content = tabulate(individual_data, headers=["Stat", my_alias, your_alias], numalign="right", tablefmt="tsv")
@@ -2335,8 +2367,11 @@ for i in range(0, 2):
                                my_most_consecutive_games_scored_or_assisted_in,
                                your_most_consecutive_games_scored_or_assisted_in],
                               ["Most consecutive matches without a goal involvement",
-                               my_most_consecutive_games_ftsoa_in, your_most_consecutive_games_ftsoa_in]
+                               my_most_consecutive_games_ftsoa_in, your_most_consecutive_games_ftsoa_in],
+                              ["Most hits in one match", max(my_hits_over_time), max(your_hits_over_time)],
+                              ["Least hits in one match", min(my_hits_over_time), min(your_hits_over_time)]
                               ]
+
 
     content = tabulate(individual_record_data, headers=["Record", my_alias, your_alias], numalign="right",
                        tablefmt="tsv")
@@ -2569,7 +2604,9 @@ for i in range(0, 2):
                         ["Likeliest win % in a win", "%.2f" % our_likeliest_win_pct_in_a_win + "%",
                          "%.2f" % their_likeliest_win_pct_in_a_win + "%"],
                         ["Highest team score", our_highest_total_pts, max(their_scores_over_time)],
-                        ["Lowest team score", our_lowest_total_pts, min(their_scores_over_time)]
+                        ["Lowest team score", our_lowest_total_pts, min(their_scores_over_time)],
+                        ["Most hits in one match", max(our_hits_over_time), max(their_hits_over_time)],
+                        ["Least hits in one match", min(our_hits_over_time), min(their_hits_over_time)]
                         ]
 
     content = tabulate(team_record_data, headers=["Record", "Our Team", "Opponents"], numalign="right", tablefmt="tsv")
@@ -2742,7 +2779,7 @@ for i in range(0, 2):
                 my_shot_count, my_miss_count, my_assists_count, my_saves_count, my_touches_count,
                 my_passes_count, my_dribbles_count, my_clears_count, my_aerials_count, my_turnovers_won_count,
                 my_turnovers_count,
-                my_demos_count, my_demos_conceded_count, my_mvp_count, my_score_count]
+                my_demos_count, my_demos_conceded_count, my_mvp_count, my_score_count, my_hit_count]
 
     your_stats = [your_goal_count, your_goals_from_shots, your_goals_from_nonshots, your_other_goals,
                   your_total_xg, your_shot_xg, your_nonshot_xg,
@@ -2750,7 +2787,7 @@ for i in range(0, 2):
                   your_shot_count, your_miss_count, your_assists_count, your_saves_count, your_touches_count,
                   your_passes_count, your_dribbles_count, your_clears_count, your_aerials_count,
                   your_turnovers_won_count, your_turnovers_count,
-                  your_demos_count, your_demos_conceded_count, your_mvp_count, your_score_count]
+                  your_demos_count, your_demos_conceded_count, your_mvp_count, your_score_count, your_hit_count]
 
     my_stats.reverse()
     your_stats.reverse()
@@ -2762,7 +2799,7 @@ for i in range(0, 2):
            8: "GfS/xG", 9: "GfS/Shots",
            10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
            15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball", 20: "Lost Ball",
-           21: "Demos", 22: "Demoed", 23: "MVPs", 24: "Scores"}
+           21: "Demos", 22: "Demoed", 23: "MVPs", 24: "Scores", 25: "Hits"}
 
     dic_rev = {len(dic) - i + 1: v for (i, v) in dic.items()}
     dic = dic_rev
@@ -2841,7 +2878,7 @@ for i in range(0, 2):
                    their_shot_count, their_miss_count, their_assists_count, their_saves_count, their_touches_count,
                    their_passes_count, their_dribbles_count, their_clears_count, their_aerials_count,
                    their_turnovers_won_count,
-                   their_demos_count, their_mvp_count, their_score_count]
+                   their_demos_count, their_mvp_count, their_score_count, their_hit_count]
 
     their_stats.reverse()
 
@@ -2852,7 +2889,7 @@ for i in range(0, 2):
            8: "GfS/xG", 9: "GfS/Shots",
            10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
            15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball",
-           20: "Demos", 21: "MVPs", 22: "Scores"}
+           20: "Demos", 21: "MVPs", 22: "Scores", 23: "Hits"}
 
     dic_rev = {len(dic) - i + 1: v for (i, v) in dic.items()}
     dic = dic_rev
