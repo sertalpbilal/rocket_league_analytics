@@ -1,5 +1,7 @@
 # This class populates hits data and exports final xG model
 import pandas as pd
+import numpy as np
+from math import floor
 from concurrent.futures import ProcessPoolExecutor
 import pathlib
 import glob
@@ -8,6 +10,7 @@ import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, roc_auc_score
 from xgboost import XGBClassifier
+from sklearn.neural_network import MLPClassifier
 from progress.bar import IncrementalBar
 from wrapt_timeout_decorator import timeout
 
@@ -187,6 +190,17 @@ class RocketLeagueXG:
         print("Data is ready, splitting")
         from sklearn.model_selection import train_test_split
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=0.2)
+        oversample = True
+        if oversample:
+            print("Oversampling goals")
+            not_goal_cnt = len(X_train[y_train==0])
+            goal_cnt = len(X_train[y_train==1])
+            copy_cnt = floor(not_goal_cnt / goal_cnt) + 1
+            copy_cnt = 1
+            print("Copy count: ", copy_cnt)
+            goals_filtered = X_train[y_train==1].copy()
+            X_train = np.concatenate([X_train] + [goals_filtered for _ in range(copy_cnt)])
+            y_train = np.concatenate([y_train] + [y_train[y_train==1] for _ in range(copy_cnt)])
         sc = StandardScaler()
         scaled_X_train = sc.fit_transform(X_train[:,1:])
         scaled_X_test = sc.transform(X_test[:,1:])
