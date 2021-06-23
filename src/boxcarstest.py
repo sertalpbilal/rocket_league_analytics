@@ -10,8 +10,6 @@
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
 
 # TODO: Demo heatmap
-# TODO: Auto detect games in latest streak, clear /json-new/, and copy them to /json-new/
-# TODO: Replace SF, SC with HF, HC
 # TODO: Add corresponding matches to records.tsv
 
 import csv
