@@ -44,6 +44,7 @@
                                 <thead>
                                     <tr>
                                         <!-- <th class="d-none d-md-table-cell">Order</th> -->
+                                        <th>Report</th>
                                         <th class="text-muted d-none d-md-table-cell">ID</th>
                                         <th class="d-none d-md-table-cell">Date</th>
                                         <th>xGF</th>
@@ -58,12 +59,15 @@
                                         <th>P(Win)</th>
                                         <th>P(Score)</th>
                                         <th>Res</th>
-                                        <th>Report</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="game, id in sorted_games">
+                                    <tr v-for="game, id in sorted_games" class="clickable-row" @click="send_game_page" :data-href="'game.html?id=' + game['Replay ID']">
                                         <!-- <td class="d-none d-md-table-cell">{{ id }}</td> -->
+                                        <td class="align-middle">
+                                            <a class="btn btn-info pt-0 pb-0 pl-1 pr-1 mlink" :href="'game.html?id=' + game['Replay ID']" role="button"><i class="fas fa-chart-bar"></i></a>
+                                            <!-- <a target=_blank class="btn btn-danger pt-0 pb-0 pl-1 pr-1 mlink" :href="'https://ballchasing.com/replay/' + game['Replay ID'] + '#watch'" role="button"><i class="fas fa-video"></i></a>                                             -->
+                                        </td>
                                         <td class="text-muted d-none d-md-table-cell">{{ game['Replay ID'] }}</td>
                                         <td class="d-none d-md-table-cell">{{ (new Date(game['StartTime'] * 1000)).toISOString().slice(0,16) }}</td>
                                         <td class="align-middle">{{ game['xGF'] }}</td>
@@ -78,10 +82,6 @@
                                         <td class="align-middle" :style="{'background': game['win_color']}">{{ game['P(Win)'] }}</td>
                                         <td class="align-middle">{{ game['P(Score)'] }}</td>
                                         <td class="align-middle" :style="{'background': game['outcome_color']}">{{ game['Outcome'] }}</td>
-                                        <td class="align-middle">
-                                            <a class="btn btn-info pt-0 pb-0 pl-1 pr-1 mlink" :href="'game.html?id=' + game['Replay ID']" role="button"><i class="fas fa-chart-bar"></i></a>
-                                            <!-- <a target=_blank class="btn btn-danger pt-0 pb-0 pl-1 pr-1 mlink" :href="'https://ballchasing.com/replay/' + game['Replay ID'] + '#watch'" role="button"><i class="fas fa-video"></i></a>                                             -->
-                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
