@@ -196,6 +196,7 @@ class RocketLeagueXG:
             not_goal_cnt = len(X_train[y_train==0])
             goal_cnt = len(X_train[y_train==1])
             copy_cnt = floor(not_goal_cnt / goal_cnt) + 1
+            copy_cnt = 1
             print("Copy count: ", copy_cnt)
             goals_filtered = X_train[y_train==1].copy()
             X_train = np.concatenate([X_train] + [goals_filtered for _ in range(copy_cnt)])
