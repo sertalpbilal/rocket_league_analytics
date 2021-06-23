@@ -16,9 +16,10 @@ from wrapt_timeout_decorator import timeout
 
 class RocketLeagueXG:
 
-    def __init__(self, folder='model', swapping=True):
+    def __init__(self, folder='model', swapping=True, oversample=False):
         self.folder = (pathlib.Path() / f"../../data/{folder}").resolve()
         self.swapping = swapping
+        self.oversample = oversample
         self.df = None
 
     def prepare_data(self, collect=True):
@@ -190,8 +191,8 @@ class RocketLeagueXG:
         print("Data is ready, splitting")
         from sklearn.model_selection import train_test_split
         X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=0.2)
-        oversample = True
-        if oversample:
+        
+        if self.oversample:
             print("Oversampling goals")
             not_goal_cnt = len(X_train[y_train==0])
             goal_cnt = len(X_train[y_train==1])

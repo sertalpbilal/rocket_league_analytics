@@ -28,20 +28,24 @@ var app = new Vue({
             $("#game_list").DataTable().destroy();
             this.$nextTick(() => {
                 $("#game_list").DataTable({
-                    "order": [[ 1, 'desc' ]],
+                    "order": [[ 2, 'desc' ]],
                     "lengthChange": true,
                     "pageLength": 10,
                     "searching": true,
                     "info": true,
                     "paging": true,
                     "columnDefs": [{
-                        "targets": [14],
+                        "targets": [0],
                         "orderable": false
                         }],
                     "fixedHeader": true,
                     "scrollX": true
                 });
             })
+        },
+        send_game_page(e) {
+            let tm = e.currentTarget.dataset.href
+            window.location = tm
         }
     }
 })
