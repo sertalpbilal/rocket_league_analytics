@@ -12,10 +12,11 @@ var app = new Vue({
     },
     computed: {
         shots_combined() {
-            if (_.isEmpty(this.shots) || _.isEmpty(this.xg_out)) { return [] }
+            if (_.isEmpty(this.shots) || _.isEmpty(this.xg_out) || _.isEmpty(this.game_json)) { return [] }
             let color_func = d3.scaleLinear().domain(this.thresholds).range(this.colors)
             let shots = _.cloneDeep(this.shots)
             let xg_out = _.cloneDeep(this.xg_out)
+
             shots.forEach((e, i) => {
                 e['team_name'] = e['is_orange'] == 1 ? "Orange" : "Blue"
                 e['team_color'] = e['is_orange'] == 1 ? "orange" : "blue"
@@ -34,8 +35,23 @@ var app = new Vue({
                 e['order'] = i
                 e['visible'] = game_xg > 0.05 || e['shot'] == 'True' || e['goal'] == 'True'
                 e['fill'] = e['visible'] ? 0.5 : 0.1
-                
+                e['frameNumber'] = parseFloat(e['frame'])
             })
+
+            // TODO: move goals here!!
+            // // find shots
+            // let goals = _.cloneDeep(this.game_json.gameMetadata.goals)
+            // let players = this.game_json.players
+            // let pdict = Object.fromEntries(players.map(i => [i.id.id, {'name': i.name, 'isOrange': i.isOrange}]))
+            // goals.forEach((g) => {
+            //     let p = pdict[g.playerId.id]
+            //     g['isOrange'] = p.isOrange
+            //     g['name'] = p.name
+            //     // find closest hit for each goal
+
+            // })
+
+
             return shots
         },
         our_team() {
@@ -61,7 +77,14 @@ var app = new Vue({
         step_function_data() {
             if (_.isEmpty(this.shots_combined)) { return {} }
             let hits = this.shots_combined
-            let goals = this.game_json.gameMetadata.goals
+            let goals = _.cloneDeep(this.game_json.gameMetadata.goals)
+            let players = this.game_json.players
+            let pdict = Object.fromEntries(players.map(i => [i.id.id, {'name': i.name, 'isOrange': i.isOrange}]))
+            goals.forEach((g) => {
+                let p = pdict[g.playerId.id]
+                g['isOrange'] = p.isOrange
+                g['name'] = p.name
+            })
 
             let get_hits = (v) => {
                 let prev_time = 0;
@@ -69,6 +92,7 @@ var app = new Vue({
                 steps = []
                 v.forEach((h) => {
                     steps.push({
+                        'frame': parseInt(h.frame),
                         'past_time': prev_time,
                         'current_time': h.time,
                         'past_sum': prev_sum,
@@ -96,7 +120,7 @@ var app = new Vue({
             let orange_team_hits = hits.filter(i => i.is_orange=="1")
             let orange_steps = get_hits(orange_team_hits)
 
-            return {'hits': {'blue': blue_steps, 'orange': orange_steps}}
+            return {'hits': {'blue': blue_steps, 'orange': orange_steps}, goals}
         }
     },
     methods: {
@@ -646,6 +670,34 @@ function plot_xg_timeline() {
         .attr("stroke-width", 2)
         .style("pointer-events", "none");
 
+    let goal_layer = svg.append('g')
+        .attr("id", "goal-layer")
+    let gbisect = d3.bisector((d) => d.frame).right
+    let goal_hits = data.goals
+    goal_hits.forEach((g) => {
+        if (g.isOrange == 1) {
+            let id = gbisect(data.hits.orange, g.frameNumber)
+            g.ref = data.hits.orange[id-1]
+        } else {
+            let id = gbisect(data.hits.blue, g.frameNumber)
+            g.ref = data.hits.blue[id-1]
+        }
+    })
+    
+    goal_layer.selectAll()
+        .data(goal_hits.filter(i => i.ref))
+        .enter()
+        .append("circle")
+        .attr("cx", (d) => x(d.ref.current_time))
+        .attr("cy", (d) => y(d.ref.current_sum))
+        .attr("r", 6)
+        .attr("fill", "black")
+        .attr("fill-opacity", 0.3)
+        .attr("stroke", (d) => d.isOrange ? "orange" : "blue")
+        .style("stroke-width", 2)
+        .style("pointer-events", "none")
+        
+
     svg.append("text")
         .text("xG Timeline")
         .attr("y", -15)
@@ -654,6 +706,7 @@ function plot_xg_timeline() {
         .attr("alignment-baseline", "bottom")
         .attr("fill", "black")
         .style("font-size", "10pt")
+
 }
 
 async function fetch_local_file(file) {
