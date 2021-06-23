@@ -31,11 +31,11 @@ var app = new Vue({
                     "order": [[ 1, 'desc' ]],
                     "lengthChange": true,
                     "pageLength": 10,
-                    "searching": false,
+                    "searching": true,
                     "info": true,
                     "paging": true,
                     "columnDefs": [{
-                        "targets": [9],
+                        "targets": [14],
                         "orderable": false
                         }],
                     "fixedHeader": true,
