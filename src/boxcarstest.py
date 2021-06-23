@@ -32,6 +32,8 @@ from astropy.convolution import convolve
 from numpy.lib.stride_tricks import sliding_window_view
 from colorama import Fore, Back, Style
 from PIL import Image
+import glob
+from pathlib import Path
 
 startTime = time.time()
 
@@ -1536,8 +1538,10 @@ for i in range(0, 2):
         res_num += 1
 
     # Clear json_new directory
-    shutil.rmtree("../data/json_new/")
-    os.makedirs("../data/json_new/")
+    all_files = glob.glob('../data/json_new/*.json')
+    for f in all_files:
+        os.unlink(f)
+    Path("../data/json_new").mkdir(parents=True, exist_ok=True)
 
     # Copy most recent streak games to /json_new/
     for file in streak_filenames[len(streak_filenames) - 1]:

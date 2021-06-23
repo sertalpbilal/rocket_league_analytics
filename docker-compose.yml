@@ -7,5 +7,4 @@ services:
       - LANG=C.UTF-8
     env_file: .env
     volumes:
-      - ./data:/data
-      - ./src:/src
+      - .:/app

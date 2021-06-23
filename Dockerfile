@@ -4,6 +4,7 @@ RUN apt-get update
 RUN apt install -y python3 python3-pip
 
 RUN pip install carball
+RUN pip install numpy==1.20.3
 RUN pip install requests
 RUN pip install python-dotenv
 RUN pip install ipykernel
@@ -11,8 +12,9 @@ RUN pip install xgboost
 RUN pip install scikit-learn
 RUN pip install progress
 RUN pip install wrapt_timeout_decorator
+RUN pip install matplotlib tabulate astropy colorama
 
-WORKDIR /src
+WORKDIR /app/src
 
 CMD python3 replay.py && python3 convert.py && cd xg_model && python3 -c "from score import convert_all; convert_all()" && cd .. && python3 csv_trimmer.py && python3 boxcarstest.py
 # && python3 boxcars_dev.py
