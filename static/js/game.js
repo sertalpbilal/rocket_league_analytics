@@ -683,7 +683,7 @@ function plot_xg_timeline() {
 
     let goal_layer = svg.append('g')
         .attr("id", "goal-layer")
-    let gbisect = d3.bisector((d) => d.frame).right
+    let gbisect = d3.bisector((d) => d.frame).left
     let goal_hits = data.goals
     goal_hits.forEach((g) => {
         if (g.isOrange == 1) {
