@@ -11,8 +11,6 @@
 
 # TODO: Add frames to record TSVs where applicable ---> need frames in /xg_out/ files
 # TODO: Link dashboard match URLs next to where replays are added
-# TODO: Add average expected win % to streak files
-# TODO: Add luck % (win % - expected win %)
 # TODO: Make game records file (e.g. "highest total xG in one game [both sides together]")
 
 import csv
