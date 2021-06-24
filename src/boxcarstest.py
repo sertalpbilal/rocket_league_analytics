@@ -2300,6 +2300,14 @@ for i in range(0, 2):
         our_lowest_xg_goal_from_shot_file = your_lowest_xg_goal_from_shot_file
     if our_lowest_xg_goal_from_shot == my_lowest_xg_goal_from_shot:
         our_lowest_xg_goal_from_shot_file = my_lowest_xg_goal_from_shot_file
+        
+    if my_goals_from_shots > 0 and your_goals_from_shots == 0:
+        our_lowest_xg_goal_from_shot_file = my_lowest_xg_goal_from_shot_file
+        our_lowest_xg_goal_from_shot = my_lowest_xg_goal_from_shot
+
+    elif my_goals_from_shots == 0 and your_goals_from_shots > 0:
+        our_lowest_xg_goal_from_shot_file = your_lowest_xg_goal_from_shot_file
+        our_lowest_xg_goal_from_shot = your_lowest_xg_goal_from_shot
     
     their_biggest_xg_miss_from_shot = 0
     their_lowest_xg_goal_from_shot = 0
@@ -2364,11 +2372,22 @@ for i in range(0, 2):
     if our_biggest_xg_miss_from_nonshot == my_biggest_xg_miss_from_nonshot:
         our_biggest_xg_miss_from_nonshot_file = my_biggest_xg_miss_from_nonshot_file
 
+    # TODO: if my misses from nonshots > 0...
+
     our_lowest_xg_goal_from_nonshot_file = ""
     if our_lowest_xg_goal_from_nonshot == your_lowest_xg_goal_from_nonshot:
         our_lowest_xg_goal_from_nonshot_file = your_lowest_xg_goal_from_nonshot_file
     if our_lowest_xg_goal_from_nonshot == my_lowest_xg_goal_from_nonshot:
         our_lowest_xg_goal_from_nonshot_file = my_lowest_xg_goal_from_nonshot_file
+
+    if my_goals_from_nonshots > 0 and your_goals_from_nonshots == 0:
+        our_lowest_xg_goal_from_nonshot_file = my_lowest_xg_goal_from_nonshot_file
+        our_lowest_xg_goal_from_nonshot = my_lowest_xg_goal_from_nonshot
+
+    elif my_goals_from_nonshots == 0 and your_goals_from_nonshots > 0:
+        our_lowest_xg_goal_from_nonshot_file = your_lowest_xg_goal_from_nonshot_file
+        our_lowest_xg_goal_from_nonshot = your_lowest_xg_goal_from_nonshot
+
 
     their_biggest_xg_miss_from_nonshot = 0
     their_lowest_xg_goal_from_nonshot = 0
