@@ -58,6 +58,7 @@
                                         <th>HD</th>
                                         <th>P(Win)</th>
                                         <th>P(Score)</th>
+                                        <th>Luck %</th>
                                         <th>Res</th>
                                     </tr>
                                 </thead>
@@ -81,6 +82,7 @@
                                         <td class="align-middle">{{ game['HD'] }}</td>
                                         <td class="align-middle" :style="{'background': game['win_color']}">{{ game['P(Win)'] }}</td>
                                         <td class="align-middle">{{ game['P(Score)'] }}</td>
+                                        <td class="align-middle">{{ game['Luck %'] }}</td>
                                         <td class="align-middle" :style="{'background': game['outcome_color']}">{{ game['Outcome'] }}</td>
                                     </tr>
                                 </tbody>

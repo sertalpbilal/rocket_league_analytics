@@ -1240,6 +1240,12 @@ for i in range(0, 2):
             if result_type == "L*":
                 color_to_add = Fore.LIGHTRED_EX
 
+            if result_type == "W" or result_type == "W*":
+                result_luck = 1 - win_chance
+
+            if result_type == "L" or result_type == "L*":
+                result_luck = 0 - win_chance
+
             local_goal_difference = local_GS - local_GC
             local_xg_difference = (my_local_xg + your_local_xg) - their_local_xg
             local_hit_difference = local_our_hits_att - local_our_hits_con
@@ -1249,23 +1255,25 @@ for i in range(0, 2):
                  local_our_hits_att, local_our_hits_con, "%.2f" % local_xg_difference, local_goal_difference,
                  local_hit_difference, file.replace(".json", ""),
                  round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
+                 round((result_luck * 100), 2),
                  result_type + Style.RESET_ALL])
             scoreline_data_no_colors.append(
                 ["%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC,
                  local_our_hits_att, local_our_hits_con, "%.2f" % local_xg_difference, local_goal_difference,
                  local_hit_difference, file.replace(".json", ""),
                  round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
+                 round((result_luck * 100), 2),
                  result_type, local_time])
     if show_xg_scorelines:
         print(tabulate(scoreline_data,
                        headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "xGD", "GD", "HD", "Replay ID", "P(Win)",
-                                "P(Result)", "P(Score)",
-                                "Outcome"], numalign="right"))
+                                "P(Result)", "P(Score)", "Luck %",
+                                "Outcome"], numalign="right", stralign="right"))
         print("\n")
 
     content = tabulate(scoreline_data_no_colors,
                        headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "xGD", "GD", "HD", "Replay ID", "P(Win)",
-                                "P(Result)", "P(Score)",
+                                "P(Result)", "P(Score)", "Luck %",
                                 "Outcome", "StartTime"], tablefmt="tsv")
     if not os.path.exists(path_to_tables + "scorelines.tsv"):
         open(path_to_tables + "scorelines.tsv", 'w').close()
@@ -1537,6 +1545,7 @@ for i in range(0, 2):
     res_num = 0
     local_wins_in_streak = 0
     local_losses_in_streak = 0
+    local_xwins_in_streak = 0
 
     streak_end_games = []
     for streak in streak_start_games:
@@ -1546,6 +1555,7 @@ for i in range(0, 2):
 
     streak_wins = []
     streak_losses = []
+    streak_xwins = []
 
     streak_results = []
     local_streak_results = ""
@@ -1577,6 +1587,8 @@ for i in range(0, 2):
         elif result_array[result] == "L":
             local_losses_in_streak += 1
 
+        local_xwins_in_streak += (win_chance_per_game[result]/100)
+
         local_my_goals_in_streak += my_goals_over_time[result]
         local_your_goals_in_streak += your_goals_over_time[result]
 
@@ -1595,6 +1607,7 @@ for i in range(0, 2):
         if res_num in streak_end_games:
             streak_wins.append(local_wins_in_streak)
             streak_losses.append(local_losses_in_streak)
+            streak_xwins.append(local_xwins_in_streak)
             streak_results.append(local_streak_results)
             streak_num_games.append(local_wins_in_streak + local_losses_in_streak)
             streak_goals.append(local_our_goals_in_streak)
@@ -1608,6 +1621,7 @@ for i in range(0, 2):
             streak_filenames.append(local_filenames_in_streak)
             local_wins_in_streak = 0
             local_losses_in_streak = 0
+            local_xwins_in_streak = 0
             local_streak_results = ""
             local_our_goals_in_streak = 0
             local_my_goals_in_streak = 0
@@ -1644,6 +1658,10 @@ for i in range(0, 2):
         num_games_in_streak = streak_wins[streak] + streak_losses[streak]
         win_rate = streak_wins[streak] / num_games_in_streak
         win_pct = "%.0f" % (win_rate * 100) + "%"
+        xwin_rate = streak_xwins[streak] / num_games_in_streak
+        xwin_pct = "%.0f" % (xwin_rate * 100) + "%"
+        luck_rate = win_rate - xwin_rate
+        luck_pct = "%.0f" % (luck_rate * 100) + "%"
         our_goals_per_game_streak = "%.1f" % (streak_goals[streak] / num_games_in_streak)
         my_goals_per_game_streak = "%.1f" % (streak_my_goals[streak] / num_games_in_streak)
         your_goals_per_game_streak = "%.1f" % (streak_your_goals[streak] / num_games_in_streak)
@@ -1662,12 +1680,14 @@ for i in range(0, 2):
              their_goals_per_game_streak,
              gd_per_game_streak, my_xg_per_game_streak, your_xg_per_game_streak, our_xg_per_game_streak,
              their_xg_per_game_streak,
-             xgd_per_game_streak])
+             xgd_per_game_streak, xwin_pct, luck_pct])
+
+
 
     content = tabulate(streak_data,
                        headers=["Win %", "Results", "GP", "W", "L", my_alias + " GS/G", your_alias + "GS/G",
                                 "GS/G", "GC/G", "GD/G", my_alias + " xG/G", your_alias + " xG/G",
-                                "xG/G", "xGC/G", "xGD/G"], numalign="right", tablefmt="tsv")
+                                "xG/G", "xGC/G", "xGD/G", "xWin %", "Luck %"], numalign="right", tablefmt="tsv")
     if not os.path.exists(path_to_tables + "streaks.tsv"):
         open(path_to_tables + "streaks.tsv", 'w').close()
     f = open(path_to_tables + "streaks.tsv", "w")
@@ -1676,8 +1696,9 @@ for i in range(0, 2):
 
     # colored output
     for i in range(len(streak_data)):
-
         streak_win_pct = streak_data[i][0].replace("%", "")
+        streak_xwin_pct = streak_data[i][15].replace("%", "")
+        streak_luck_pct = streak_data[i][16].replace("%", "")
 
         if int(streak_win_pct) > 50:
             streak_data[i][0] = Fore.GREEN + str(streak_data[i][0]) + Style.RESET_ALL
@@ -1696,6 +1717,24 @@ for i in range(0, 2):
             streak_data[i][2] = Fore.RED + str(streak_data[i][2]) + Style.RESET_ALL
             streak_data[i][3] = Fore.RED + str(streak_data[i][3]) + Style.RESET_ALL
             streak_data[i][4] = Fore.RED + str(streak_data[i][4]) + Style.RESET_ALL
+
+        if int(streak_xwin_pct) > 50:
+            streak_data[i][15] = Fore.GREEN + str(streak_data[i][15]) + Style.RESET_ALL
+
+        if int(streak_xwin_pct) == 50:
+            streak_data[i][15] = Fore.YELLOW + str(streak_data[i][15]) + Style.RESET_ALL
+
+        if int(streak_xwin_pct) < 50:
+            streak_data[i][15] = Fore.RED + str(streak_data[i][15]) + Style.RESET_ALL
+            
+        if int(streak_luck_pct) > 0:
+            streak_data[i][16] = Fore.GREEN + str(streak_data[i][16]) + Style.RESET_ALL
+
+        if int(streak_luck_pct) == 0:
+            streak_data[i][16] = Fore.YELLOW + str(streak_data[i][16]) + Style.RESET_ALL
+
+        if int(streak_luck_pct) < 0:
+            streak_data[i][16] = Fore.RED + str(streak_data[i][16]) + Style.RESET_ALL
 
         streak_data[i][1] = streak_data[i][1].replace("W", Fore.GREEN + "W")
         streak_data[i][1] = streak_data[i][1].replace("L", Fore.RED + "L")
@@ -1763,7 +1802,7 @@ for i in range(0, 2):
     print(tabulate(streak_data,
                    headers=["Win %", "Results", "GP", "W", "L", my_alias + " GS/G", your_alias + " GS/G",
                             "GS/G", "GC/G", "GD/G", my_alias + " xG/G", your_alias + " xG/G",
-                            "xG/G", "xGC/G", "xGD/G"], numalign="right"))
+                            "xG/G", "xGC/G", "xGD/G", "xWin %", "Luck %"], numalign="right"))
     print("\n")
 
     games_nr = len(new_json_files)
