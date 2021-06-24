@@ -11,7 +11,6 @@
 
 # TODO: Add frames to record TSVs where applicable ---> need frames in /xg_out/ files
 # TODO: Link dashboard match URLs next to where replays are added
-# TODO: Make game records file (e.g. "highest total xG in one game [both sides together]")
 
 import csv
 import json
@@ -165,17 +164,25 @@ for i in range(0, 2):
         new_csv_files.append(file.replace(".json", ".csv"))
         file_pos += 1
 
-    my_misses_distancetogoal = []
-    your_misses_distancetogoal = []
-    their_misses_distancetogoal = []
+    my_shot_misses_distancetogoal = []
+    your_shot_misses_distancetogoal = []
+    their_shot_misses_distancetogoal = []
 
-    my_goals_distancetogoal = []
-    your_goals_distancetogoal = []
-    their_goals_distancetogoal = []
+    my_shot_goals_distancetogoal = []
+    your_shot_goals_distancetogoal = []
+    their_shot_goals_distancetogoal = []
 
-    my_goals_distancetogoal_file_list = []
-    your_goals_distancetogoal_file_list = []
-    their_goals_distancetogoal_file_list = []
+    my_shot_goals_distancetogoal_file_list = []
+    your_shot_goals_distancetogoal_file_list = []
+    their_shot_goals_distancetogoal_file_list = []
+    
+    my_nonshot_goals_distancetogoal = []
+    your_nonshot_goals_distancetogoal = []
+    their_nonshot_goals_distancetogoal = []
+
+    my_nonshot_goals_distancetogoal_file_list = []
+    your_nonshot_goals_distancetogoal_file_list = []
+    their_nonshot_goals_distancetogoal_file_list = []
 
     my_shots_distancetogoal = []
     your_shots_distancetogoal = []
@@ -204,17 +211,29 @@ for i in range(0, 2):
     all_shots_y = []
     all_shots_z = []
 
-    my_goals_x = []
-    my_goals_y = []
-    my_goals_z = []
+    my_shot_goals_x = []
+    my_shot_goals_y = []
+    my_shot_goals_z = []
 
-    your_goals_x = []
-    your_goals_y = []
-    your_goals_z = []
+    your_shot_goals_x = []
+    your_shot_goals_y = []
+    your_shot_goals_z = []
 
-    their_goals_x = []
-    their_goals_y = []
-    their_goals_z = []
+    their_shot_goals_x = []
+    their_shot_goals_y = []
+    their_shot_goals_z = []
+    
+    my_nonshot_goals_x = []
+    my_nonshot_goals_y = []
+    my_nonshot_goals_z = []
+
+    your_nonshot_goals_x = []
+    your_nonshot_goals_y = []
+    your_nonshot_goals_z = []
+
+    their_nonshot_goals_x = []
+    their_nonshot_goals_y = []
+    their_nonshot_goals_z = []
 
     my_touches_x = []
     my_touches_y = []
@@ -224,17 +243,17 @@ for i in range(0, 2):
     your_touches_y = []
     your_touches_z = []
 
-    my_misses_x = []
-    my_misses_y = []
-    my_misses_z = []
+    my_shot_misses_x = []
+    my_shot_misses_y = []
+    my_shot_misses_z = []
 
-    your_misses_x = []
-    your_misses_y = []
-    your_misses_z = []
+    your_shot_misses_x = []
+    your_shot_misses_y = []
+    your_shot_misses_z = []
 
-    their_misses_x = []
-    their_misses_y = []
-    their_misses_z = []
+    their_shot_misses_x = []
+    their_shot_misses_y = []
+    their_shot_misses_z = []
 
     my_touches_count = 0
     your_touches_count = 0
@@ -978,45 +997,69 @@ for i in range(0, 2):
 
                         if "goal" in i:
                             if i["playerId"]["id"] == my_id:
-                                my_goals_x.append(i["ballData"]["posX"] * local_multiplier)
-                                my_goals_y.append(i["ballData"]["posY"] * local_multiplier)
-                                my_goals_z.append(i["ballData"]["posZ"])
+                                my_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                                my_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                                my_shot_goals_z.append(i["ballData"]["posZ"])
                                 local_my_shots += 1
                             else:
-                                your_goals_x.append(i["ballData"]["posX"] * local_multiplier)
-                                your_goals_y.append(i["ballData"]["posY"] * local_multiplier)
-                                your_goals_z.append(i["ballData"]["posZ"])
+                                your_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                                your_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                                your_shot_goals_z.append(i["ballData"]["posZ"])
                                 local_your_shots += 1
 
                         else:
                             if i["playerId"]["id"] == my_id:
-                                my_misses_x.append(i["ballData"]["posX"] * local_multiplier)
-                                my_misses_y.append(i["ballData"]["posY"] * local_multiplier)
-                                my_misses_z.append(i["ballData"]["posZ"])
+                                my_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
+                                my_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
+                                my_shot_misses_z.append(i["ballData"]["posZ"])
                                 local_my_shots += 1
                             else:
-                                your_misses_x.append(i["ballData"]["posX"] * local_multiplier)
-                                your_misses_y.append(i["ballData"]["posY"] * local_multiplier)
-                                your_misses_z.append(i["ballData"]["posZ"])
+                                your_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
+                                your_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
+                                your_shot_misses_z.append(i["ballData"]["posZ"])
                                 local_your_shots += 1
 
                     else:
                         local_their_shots += 1
 
                         if "goal" in i:
-                            their_goals_x.append(i["ballData"]["posX"] * local_multiplier)
-                            their_goals_y.append(i["ballData"]["posY"] * local_multiplier)
-                            their_goals_z.append(i["ballData"]["posZ"])
-                            their_goals_distancetogoal.append(i["distanceToGoal"])
-                            their_goals_distancetogoal_file_list.append(file)
+                            their_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                            their_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                            their_shot_goals_z.append(i["ballData"]["posZ"])
+                            their_shot_goals_distancetogoal.append(i["distanceToGoal"])
+                            their_shot_goals_distancetogoal_file_list.append(file)
 
 
                         else:
-                            their_misses_x.append(i["ballData"]["posX"] * local_multiplier)
-                            their_misses_y.append(i["ballData"]["posY"] * local_multiplier)
-                            their_misses_z.append(i["ballData"]["posZ"])
-                            their_misses_distancetogoal.append(i["distanceToGoal"])
+                            their_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
+                            their_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
+                            their_shot_misses_z.append(i["ballData"]["posZ"])
+                            their_shot_misses_distancetogoal.append(i["distanceToGoal"])
+                
+                if "shot" not in i:
+                    if i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id:
 
+                        if "goal" in i:
+                            if i["playerId"]["id"] == my_id:
+                                my_nonshot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                                my_nonshot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                                my_nonshot_goals_z.append(i["ballData"]["posZ"])
+                            if i["playerId"]["id"] == your_id:
+                                your_nonshot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                                your_nonshot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                                your_nonshot_goals_z.append(i["ballData"]["posZ"])
+
+                    else:
+
+                        if "goal" in i:
+                            their_nonshot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                            their_nonshot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                            their_nonshot_goals_z.append(i["ballData"]["posZ"])
+                            their_nonshot_goals_distancetogoal.append(i["distanceToGoal"])
+                            their_nonshot_goals_distancetogoal_file_list.append(file)
+
+
+                
                 if i["playerId"]["id"] == my_id and "shot" in i:
                     my_shots_distancetogoal.append(i["distanceToGoal"])
                     my_shots_x.append(i["ballData"]["posX"] * local_multiplier)
@@ -1024,10 +1067,10 @@ for i in range(0, 2):
                     my_shots_z.append(i["ballData"]["posZ"])
 
                     if "goal" in i:
-                        my_goals_distancetogoal.append(i["distanceToGoal"])
-                        my_goals_distancetogoal_file_list.append(file)
+                        my_shot_goals_distancetogoal.append(i["distanceToGoal"])
+                        my_shot_goals_distancetogoal_file_list.append(file)
                     else:
-                        my_misses_distancetogoal.append(i["distanceToGoal"])
+                        my_shot_misses_distancetogoal.append(i["distanceToGoal"])
 
                 if i["playerId"]["id"] == your_id and "shot" in i:
                     your_shots_distancetogoal.append(i["distanceToGoal"])
@@ -1035,15 +1078,28 @@ for i in range(0, 2):
                     your_shots_y.append(i["ballData"]["posY"] * local_multiplier)
                     your_shots_z.append(i["ballData"]["posZ"])
                     if "goal" in i:
-                        your_goals_distancetogoal.append(i["distanceToGoal"])
-                        your_goals_distancetogoal_file_list.append(file)
+                        your_shot_goals_distancetogoal.append(i["distanceToGoal"])
+                        your_shot_goals_distancetogoal_file_list.append(file)
                     else:
-                        your_misses_distancetogoal.append(i["distanceToGoal"])
+                        your_shot_misses_distancetogoal.append(i["distanceToGoal"])
 
                 if (i["playerId"]["id"] != my_id and i["playerId"]["id"] != your_id) and "shot" in i:
                     their_shots_x.append(i["ballData"]["posX"] * local_multiplier)
                     their_shots_y.append(i["ballData"]["posY"] * local_multiplier)
                     their_shots_z.append(i["ballData"]["posZ"])
+
+                # non shots
+                
+                if i["playerId"]["id"] == my_id and "shot" not in i:
+                    if "goal" in i:
+                        my_nonshot_goals_distancetogoal.append(i["distanceToGoal"])
+                        my_nonshot_goals_distancetogoal_file_list.append(file)
+
+                if i["playerId"]["id"] == your_id and "shot" not in i:
+                    if "goal" in i:
+                        your_nonshot_goals_distancetogoal.append(i["distanceToGoal"])
+                        your_nonshot_goals_distancetogoal_file_list.append(file)
+
 
             # print(file, local_GS, local_GC, local_our_shots, local_their_shots)
 
@@ -1279,9 +1335,9 @@ for i in range(0, 2):
     f.write(content)
     f.close()
 
-    your_miss_count = len(your_misses_distancetogoal)
-    my_miss_count = len(my_misses_distancetogoal)
-    their_miss_count = len(their_misses_distancetogoal)
+    your_miss_count = len(your_shot_misses_distancetogoal)
+    my_miss_count = len(my_shot_misses_distancetogoal)
+    their_miss_count = len(their_shot_misses_distancetogoal)
 
     our_goal_count = my_goal_count + your_goal_count
     our_miss_count = my_miss_count + your_miss_count
@@ -1340,24 +1396,24 @@ for i in range(0, 2):
     their_gfs_xg_ratio = their_goals_from_shots / their_shot_xg
 
     if my_goal_count > 0:
-        my_avg_goal_distance = "%.0f" % mean(my_goals_distancetogoal)
+        my_avg_shot_goal_distance = "%.0f" % mean(my_shot_goals_distancetogoal)
     else:
-        my_avg_goal_distance = 0
+        my_avg_shot_goal_distance = 0
 
     if your_goal_count > 0:
-        your_avg_goal_distance = "%.0f" % mean(your_goals_distancetogoal)
+        your_avg_shot_goal_distance = "%.0f" % mean(your_shot_goals_distancetogoal)
     else:
-        your_avg_goal_distance = 0
+        your_avg_shot_goal_distance = 0
 
     if my_miss_count > 0:
-        my_avg_miss_distance = "%.0f" % mean(my_misses_distancetogoal)
+        my_avg_shot_miss_distance = "%.0f" % mean(my_shot_misses_distancetogoal)
     else:
-        my_avg_miss_distance = 0
+        my_avg_shot_miss_distance = 0
 
     if your_miss_count > 0:
-        your_avg_miss_distance = "%.0f" % mean(your_misses_distancetogoal)
+        your_avg_shot_miss_distance = "%.0f" % mean(your_shot_misses_distancetogoal)
     else:
-        your_avg_miss_distance = 0
+        your_avg_shot_miss_distance = 0
 
     if (my_goal_count + my_miss_count) > 0:
         my_avg_shot_distance = "%.0f" % mean(my_shots_distancetogoal)
@@ -1370,22 +1426,22 @@ for i in range(0, 2):
         your_avg_shot_distance = 0
 
     if my_goal_count > 0 and your_goal_count == 0:
-        our_avg_goal_distance = my_avg_goal_distance
+        our_avg_shot_goal_distance = my_avg_shot_goal_distance
     if my_goal_count == 0 and your_goal_count > 0:
-        our_avg_goal_distance = your_avg_goal_distance
+        our_avg_shot_goal_distance = your_avg_shot_goal_distance
     if my_goal_count == 0 and your_goal_count == 0:
-        our_avg_goal_distance = 0
+        our_avg_shot_goal_distance = 0
     if my_goal_count > 0 and your_goal_count > 0:
-        our_avg_goal_distance = "%.0f" % mean(my_goals_distancetogoal + your_goals_distancetogoal)
+        our_avg_shot_goal_distance = "%.0f" % mean(my_shot_goals_distancetogoal + your_shot_goals_distancetogoal)
 
     if my_miss_count > 0 and your_miss_count == 0:
-        our_avg_miss_distance = my_avg_miss_distance
+        our_avg_shot_miss_distance = my_avg_shot_miss_distance
     if my_miss_count == 0 and your_miss_count > 0:
-        our_avg_miss_distance = your_avg_miss_distance
+        our_avg_shot_miss_distance = your_avg_shot_miss_distance
     if my_miss_count == 0 and your_miss_count == 0:
-        our_avg_miss_distance = 0
+        our_avg_shot_miss_distance = 0
     if my_miss_count > 0 and your_miss_count > 0:
-        our_avg_miss_distance = "%.0f" % mean(my_misses_distancetogoal + your_misses_distancetogoal)
+        our_avg_shot_miss_distance = "%.0f" % mean(my_shot_misses_distancetogoal + your_shot_misses_distancetogoal)
 
     if my_shot_count > 0 and your_shot_count == 0:
         our_avg_shot_distance = my_avg_shot_distance
@@ -1397,17 +1453,17 @@ for i in range(0, 2):
         our_avg_shot_distance = "%.0f" % mean(my_shots_distancetogoal + your_shots_distancetogoal)
 
     if their_goal_count > 0:
-        their_avg_goal_distance = "%.0f" % mean(their_goals_distancetogoal)
+        their_avg_shot_goal_distance = "%.0f" % mean(their_shot_goals_distancetogoal)
     else:
-        their_avg_goal_distance = 0
+        their_avg_shot_goal_distance = 0
 
     if their_miss_count > 0:
-        their_avg_miss_distance = "%.0f" % mean(their_misses_distancetogoal)
+        their_avg_shot_miss_distance = "%.0f" % mean(their_shot_misses_distancetogoal)
     else:
-        their_avg_miss_distance = 0
+        their_avg_shot_miss_distance = 0
 
     if (their_goal_count + their_miss_count) > 0:
-        their_avg_shot_distance = "%.0f" % mean(their_goals_distancetogoal + their_misses_distancetogoal)
+        their_avg_shot_distance = "%.0f" % mean(their_shot_goals_distancetogoal + their_shot_misses_distancetogoal)
     else:
         their_avg_shot_distance = 0
 
@@ -1437,15 +1493,14 @@ for i in range(0, 2):
                        ["Passes", my_passes_count, your_passes_count],
                        ["Clears", my_clears_count, your_clears_count],
                        ["Touches", my_touches_count, your_touches_count],
-                       ["Goal Distance", my_avg_goal_distance, your_avg_goal_distance],
-                       ["Miss Distance", my_avg_miss_distance, your_avg_miss_distance],
+                       ["Goal Distance", my_avg_shot_goal_distance, your_avg_shot_goal_distance],
+                       ["Miss Distance", my_avg_shot_miss_distance, your_avg_shot_miss_distance],
                        ["Shot Distance", my_avg_shot_distance, your_avg_shot_distance],
                        ["Won Ball", my_turnovers_won_count, your_turnovers_won_count],
                        ["Lost Ball", my_turnovers_count, your_turnovers_count],
                        ["Dribbles", my_dribbles_count, your_dribbles_count],
                        ["Aerials", my_aerials_count, your_aerials_count],
-                       ["MVPs", my_mvp_count, your_mvp_count],
-                       ["Hits", my_hit_count, your_hit_count]
+                       ["MVPs", my_mvp_count, your_mvp_count]
                        ]
 
     team_data = [["Goals", our_goal_count, their_goal_count],
@@ -1466,14 +1521,13 @@ for i in range(0, 2):
                  ["Passes", our_passes_count, their_passes_count],
                  ["Clears", our_clears_count, their_clears_count],
                  ["Touches", our_touches_count, their_touches_count],
-                 ["Goal Distance", our_avg_goal_distance, their_avg_goal_distance],
-                 ["Miss Distance", our_avg_miss_distance, their_avg_miss_distance],
+                 ["Goal Distance", our_avg_shot_goal_distance, their_avg_shot_goal_distance],
+                 ["Miss Distance", our_avg_shot_miss_distance, their_avg_shot_miss_distance],
                  ["Shot Distance", our_avg_shot_distance, their_avg_shot_distance],
                  ["Won Ball", our_turnovers_won_count, their_turnovers_won_count],
                  ["Dribbles", our_dribbles_count, their_dribbles_count],
                  ["Aerials", our_aerials_count, their_aerials_count],
-                 ["MVPs", our_mvp_count, their_mvp_count],
-                 ["Hits", our_hit_count, their_hit_count]
+                 ["MVPs", our_mvp_count, their_mvp_count]
                  ]
 
     content = tabulate(individual_data, headers=["Stat", my_alias, your_alias], numalign="right", tablefmt="tsv")
@@ -2246,6 +2300,14 @@ for i in range(0, 2):
         our_lowest_xg_goal_from_shot_file = your_lowest_xg_goal_from_shot_file
     if our_lowest_xg_goal_from_shot == my_lowest_xg_goal_from_shot:
         our_lowest_xg_goal_from_shot_file = my_lowest_xg_goal_from_shot_file
+        
+    if my_goals_from_shots > 0 and your_goals_from_shots == 0:
+        our_lowest_xg_goal_from_shot_file = my_lowest_xg_goal_from_shot_file
+        our_lowest_xg_goal_from_shot = my_lowest_xg_goal_from_shot
+
+    elif my_goals_from_shots == 0 and your_goals_from_shots > 0:
+        our_lowest_xg_goal_from_shot_file = your_lowest_xg_goal_from_shot_file
+        our_lowest_xg_goal_from_shot = your_lowest_xg_goal_from_shot
     
     their_biggest_xg_miss_from_shot = 0
     their_lowest_xg_goal_from_shot = 0
@@ -2310,11 +2372,22 @@ for i in range(0, 2):
     if our_biggest_xg_miss_from_nonshot == my_biggest_xg_miss_from_nonshot:
         our_biggest_xg_miss_from_nonshot_file = my_biggest_xg_miss_from_nonshot_file
 
+    # TODO: if my misses from nonshots > 0...
+
     our_lowest_xg_goal_from_nonshot_file = ""
     if our_lowest_xg_goal_from_nonshot == your_lowest_xg_goal_from_nonshot:
         our_lowest_xg_goal_from_nonshot_file = your_lowest_xg_goal_from_nonshot_file
     if our_lowest_xg_goal_from_nonshot == my_lowest_xg_goal_from_nonshot:
         our_lowest_xg_goal_from_nonshot_file = my_lowest_xg_goal_from_nonshot_file
+
+    if my_goals_from_nonshots > 0 and your_goals_from_nonshots == 0:
+        our_lowest_xg_goal_from_nonshot_file = my_lowest_xg_goal_from_nonshot_file
+        our_lowest_xg_goal_from_nonshot = my_lowest_xg_goal_from_nonshot
+
+    elif my_goals_from_nonshots == 0 and your_goals_from_nonshots > 0:
+        our_lowest_xg_goal_from_nonshot_file = your_lowest_xg_goal_from_nonshot_file
+        our_lowest_xg_goal_from_nonshot = your_lowest_xg_goal_from_nonshot
+
 
     their_biggest_xg_miss_from_nonshot = 0
     their_lowest_xg_goal_from_nonshot = 0
@@ -2335,47 +2408,90 @@ for i in range(0, 2):
             their_biggest_xg_miss_from_nonshot_file = their_xg_per_miss_from_nonshot_file_list[nonshot]
 
     #TODO: Add frames
-    my_highest_goal_scored = 0
-    my_furthest_goal_scored = 0
-    their_highest_goal_scored = 0
-    their_furthest_goal_scored = 0
-    my_highest_goal_scored_file = ""
-    their_highest_goal_scored_file = ""
-    my_furthest_goal_scored_file = ""
-    their_furthest_goal_scored_file = ""
-    for distance in range(len(my_goals_distancetogoal)):
-        if my_goals_distancetogoal[distance] > my_furthest_goal_scored:
-            my_furthest_goal_scored = my_goals_distancetogoal[distance]
-            my_furthest_goal_scored_file = my_goals_distancetogoal_file_list[distance]
+    my_highest_shot_goal_scored = 0
+    my_furthest_shot_goal_scored = 0
+    their_highest_shot_goal_scored = 0
+    their_furthest_shot_goal_scored = 0
+    my_highest_shot_goal_scored_file = ""
+    their_highest_shot_goal_scored_file = ""
+    my_furthest_shot_goal_scored_file = ""
+    their_furthest_shot_goal_scored_file = ""
+    for distance in range(len(my_shot_goals_distancetogoal)):
+        if my_shot_goals_distancetogoal[distance] > my_furthest_shot_goal_scored:
+            my_furthest_shot_goal_scored = my_shot_goals_distancetogoal[distance]
+            my_furthest_shot_goal_scored_file = my_shot_goals_distancetogoal_file_list[distance]
             
-    for z in range(len(my_goals_z)):
-        if my_goals_z[z] > my_highest_goal_scored:
-            my_highest_goal_scored = my_goals_z[z]
-            my_highest_goal_scored_file = my_goals_distancetogoal_file_list[z]
+    for z in range(len(my_shot_goals_z)):
+        if my_shot_goals_z[z] > my_highest_shot_goal_scored:
+            my_highest_shot_goal_scored = my_shot_goals_z[z]
+            my_highest_shot_goal_scored_file = my_shot_goals_distancetogoal_file_list[z]
 
-    for distance in range(len(their_goals_distancetogoal)):
-        if their_goals_distancetogoal[distance] > their_furthest_goal_scored:
-            their_furthest_goal_scored = their_goals_distancetogoal[distance]
-            their_furthest_goal_scored_file = their_goals_distancetogoal_file_list[distance]
+    for distance in range(len(their_shot_goals_distancetogoal)):
+        if their_shot_goals_distancetogoal[distance] > their_furthest_shot_goal_scored:
+            their_furthest_shot_goal_scored = their_shot_goals_distancetogoal[distance]
+            their_furthest_shot_goal_scored_file = their_shot_goals_distancetogoal_file_list[distance]
 
-    for z in range(len(their_goals_z)):
-        if their_goals_z[z] > their_highest_goal_scored:
-            their_highest_goal_scored = their_goals_z[z]
-            their_highest_goal_scored_file = their_goals_distancetogoal_file_list[z]
+    for z in range(len(their_shot_goals_z)):
+        if their_shot_goals_z[z] > their_highest_shot_goal_scored:
+            their_highest_shot_goal_scored = their_shot_goals_z[z]
+            their_highest_shot_goal_scored_file = their_shot_goals_distancetogoal_file_list[z]
 
-    your_highest_goal_scored = 0
-    your_furthest_goal_scored = 0
-    your_highest_goal_scored_file = ""
-    your_furthest_goal_scored_file = ""
-    for distance in range(len(your_goals_distancetogoal)):
-        if your_goals_distancetogoal[distance] > your_furthest_goal_scored:
-            your_furthest_goal_scored = your_goals_distancetogoal[distance]
-            your_furthest_goal_scored_file = your_goals_distancetogoal_file_list[distance]
+    your_highest_shot_goal_scored = 0
+    your_furthest_shot_goal_scored = 0
+    your_highest_shot_goal_scored_file = ""
+    your_furthest_shot_goal_scored_file = ""
+    for distance in range(len(your_shot_goals_distancetogoal)):
+        if your_shot_goals_distancetogoal[distance] > your_furthest_shot_goal_scored:
+            your_furthest_shot_goal_scored = your_shot_goals_distancetogoal[distance]
+            your_furthest_shot_goal_scored_file = your_shot_goals_distancetogoal_file_list[distance]
 
-    for z in range(len(your_goals_z)):
-        if your_goals_z[z] > your_highest_goal_scored:
-            your_highest_goal_scored = your_goals_z[z]
-            your_highest_goal_scored_file = your_goals_distancetogoal_file_list[z]
+    for z in range(len(your_shot_goals_z)):
+        if your_shot_goals_z[z] > your_highest_shot_goal_scored:
+            your_highest_shot_goal_scored = your_shot_goals_z[z]
+            your_highest_shot_goal_scored_file = your_shot_goals_distancetogoal_file_list[z]
+            
+    # non shot goals
+    my_highest_nonshot_goal_scored = 0
+    my_furthest_nonshot_goal_scored = 0
+    their_highest_nonshot_goal_scored = 0
+    their_furthest_nonshot_goal_scored = 0
+    my_highest_nonshot_goal_scored_file = ""
+    their_highest_nonshot_goal_scored_file = ""
+    my_furthest_nonshot_goal_scored_file = ""
+    their_furthest_nonshot_goal_scored_file = ""
+    for distance in range(len(my_nonshot_goals_distancetogoal)):
+        if my_nonshot_goals_distancetogoal[distance] > my_furthest_nonshot_goal_scored:
+            my_furthest_nonshot_goal_scored = my_nonshot_goals_distancetogoal[distance]
+            my_furthest_nonshot_goal_scored_file = my_nonshot_goals_distancetogoal_file_list[distance]
+
+    for z in range(len(my_nonshot_goals_z)):
+        if my_nonshot_goals_z[z] > my_highest_nonshot_goal_scored:
+            my_highest_nonshot_goal_scored = my_nonshot_goals_z[z]
+            my_highest_nonshot_goal_scored_file = my_nonshot_goals_distancetogoal_file_list[z]
+
+    for distance in range(len(their_nonshot_goals_distancetogoal)):
+        if their_nonshot_goals_distancetogoal[distance] > their_furthest_nonshot_goal_scored:
+            their_furthest_nonshot_goal_scored = their_nonshot_goals_distancetogoal[distance]
+            their_furthest_nonshot_goal_scored_file = their_nonshot_goals_distancetogoal_file_list[distance]
+
+    for z in range(len(their_nonshot_goals_z)):
+        if their_nonshot_goals_z[z] > their_highest_nonshot_goal_scored:
+            their_highest_nonshot_goal_scored = their_nonshot_goals_z[z]
+            their_highest_nonshot_goal_scored_file = their_nonshot_goals_distancetogoal_file_list[z]
+
+    your_highest_nonshot_goal_scored = 0
+    your_furthest_nonshot_goal_scored = 0
+    your_highest_nonshot_goal_scored_file = ""
+    your_furthest_nonshot_goal_scored_file = ""
+    for distance in range(len(your_nonshot_goals_distancetogoal)):
+        if your_nonshot_goals_distancetogoal[distance] > your_furthest_nonshot_goal_scored:
+            your_furthest_nonshot_goal_scored = your_nonshot_goals_distancetogoal[distance]
+            your_furthest_nonshot_goal_scored_file = your_nonshot_goals_distancetogoal_file_list[distance]
+
+    for z in range(len(your_nonshot_goals_z)):
+        if your_nonshot_goals_z[z] > your_highest_nonshot_goal_scored:
+            your_highest_nonshot_goal_scored = your_nonshot_goals_z[z]
+            your_highest_nonshot_goal_scored_file = your_nonshot_goals_distancetogoal_file_list[z]
 
     my_most_consecutive_mvp_helper = 0
     my_most_consecutive_mvp = 0
@@ -2639,10 +2755,18 @@ for i in range(0, 2):
                                round(your_biggest_xg_miss_from_nonshot, 6), link_replay(my_biggest_xg_miss_from_nonshot_file,0, False),link_replay(your_biggest_xg_miss_from_nonshot_file,0, False)],
                               ["Unlikeliest non-shot-goal scored (xG)", round(my_lowest_xg_goal_from_nonshot, 6),
                                round(your_lowest_xg_goal_from_nonshot, 6), link_replay(my_lowest_xg_goal_from_nonshot_file,0, False),link_replay(your_lowest_xg_goal_from_nonshot_file,0, False)],
-                              ["Furthest shot-goal scored (m)", round(my_furthest_goal_scored / 100),
-                               round(your_furthest_goal_scored / 100), link_replay(my_furthest_goal_scored_file,0,False), link_replay(your_furthest_goal_scored_file,0,False)],
-                              ["Highest shot-goal scored (m)", round(my_highest_goal_scored / 100),
-                               round(your_highest_goal_scored / 100), link_replay(my_highest_goal_scored_file,0,False), link_replay(your_highest_goal_scored_file,0,False)],
+                              ["Furthest shot-goal scored (m)", round(my_furthest_shot_goal_scored / 100),
+                               round(your_furthest_shot_goal_scored / 100), link_replay(my_furthest_shot_goal_scored_file,0,False), link_replay(your_furthest_shot_goal_scored_file,0,False)],
+                              ["Furthest non-shot-goal scored (m)", round(my_furthest_nonshot_goal_scored / 100),
+                               round(your_furthest_nonshot_goal_scored / 100),
+                               link_replay(my_furthest_nonshot_goal_scored_file, 0, False),
+                               link_replay(your_furthest_nonshot_goal_scored_file, 0, False)],
+                              ["Highest shot-goal scored (m)", round(my_highest_shot_goal_scored / 100),
+                               round(your_highest_shot_goal_scored / 100), link_replay(my_highest_shot_goal_scored_file,0,False), link_replay(your_highest_shot_goal_scored_file,0,False)],
+                              ["Highest non-shot-goal scored (m)", round(my_highest_nonshot_goal_scored / 100),
+                               round(your_highest_nonshot_goal_scored / 100),
+                               link_replay(my_highest_nonshot_goal_scored_file, 0, False),
+                               link_replay(your_highest_nonshot_goal_scored_file, 0, False)],
                               ["Most consecutive matches returned in", my_most_consecutive_games_returned_in,
                                your_most_consecutive_games_returned_in, "N/A", "N/A"],
                               ["Most consecutive matches blanked in", my_most_consecutive_games_blanked_in,
@@ -2862,15 +2986,25 @@ for i in range(0, 2):
         if ftscorestreak_helper > biggest_ftscorestreak:
             biggest_ftscorestreak = ftscorestreak_helper
             
-        if my_furthest_goal_scored == max(my_furthest_goal_scored,your_furthest_goal_scored):
-            our_furthest_goal_scored_file = my_furthest_goal_scored_file
+        if my_furthest_shot_goal_scored == max(my_furthest_shot_goal_scored,your_furthest_shot_goal_scored):
+            our_furthest_shot_goal_scored_file = my_furthest_shot_goal_scored_file
         else:
-            our_furthest_goal_scored_file = your_furthest_goal_scored_file
+            our_furthest_shot_goal_scored_file = your_furthest_shot_goal_scored_file
             
-        if my_highest_goal_scored == max(my_highest_goal_scored,your_highest_goal_scored):
-            our_highest_goal_scored_file = my_highest_goal_scored_file
+        if my_highest_shot_goal_scored == max(my_highest_shot_goal_scored,your_highest_shot_goal_scored):
+            our_highest_shot_goal_scored_file = my_highest_shot_goal_scored_file
         else:
-            our_highest_goal_scored_file = your_highest_goal_scored_file
+            our_highest_shot_goal_scored_file = your_highest_shot_goal_scored_file
+
+        if my_furthest_nonshot_goal_scored == max(my_furthest_nonshot_goal_scored, your_furthest_nonshot_goal_scored):
+            our_furthest_nonshot_goal_scored_file = my_furthest_nonshot_goal_scored_file
+        else:
+            our_furthest_nonshot_goal_scored_file = your_furthest_nonshot_goal_scored_file
+
+        if my_highest_nonshot_goal_scored == max(my_highest_nonshot_goal_scored, your_highest_nonshot_goal_scored):
+            our_highest_nonshot_goal_scored_file = my_highest_nonshot_goal_scored_file
+        else:
+            our_highest_nonshot_goal_scored_file = your_highest_nonshot_goal_scored_file
 
     team_record_data = [["Longest winstreak", biggest_winstreak, biggest_lossstreak, "N/A", "N/A"],
                         ["Most consecutive games with a win chance of at least 50%", biggest_50plus_streak,
@@ -2922,10 +3056,19 @@ for i in range(0, 2):
                         ["Unlikeliest non-shot-goal scored (xG)", round(our_lowest_xg_goal_from_nonshot, 6),
                          round(their_lowest_xg_goal_from_nonshot, 6), link_replay(our_lowest_xg_goal_from_nonshot_file,0,False), link_replay(their_lowest_xg_goal_from_nonshot_file,0,False)],
                         ["Furthest shot-goal scored (m)",
-                         round(max(my_goals_distancetogoal + your_goals_distancetogoal) / 100),
-                         round(their_furthest_goal_scored / 100), link_replay(our_furthest_goal_scored_file,0,False), link_replay(their_furthest_goal_scored_file,0,False)],
-                        ["Highest shot-goal scored (m)", round(max(my_goals_z + your_goals_z) / 100),
-                         round(their_highest_goal_scored / 100), link_replay(our_highest_goal_scored_file,0,False), link_replay(their_highest_goal_scored_file,0,False)],
+                         round(max(my_shot_goals_distancetogoal + your_shot_goals_distancetogoal) / 100),
+                         round(their_furthest_shot_goal_scored / 100), link_replay(our_furthest_shot_goal_scored_file,0,False), link_replay(their_furthest_shot_goal_scored_file,0,False)],
+                        ["Furthest non-shot-goal scored (m)",
+                         round(max(my_nonshot_goals_distancetogoal + your_nonshot_goals_distancetogoal) / 100),
+                         round(their_furthest_nonshot_goal_scored / 100),
+                         link_replay(our_furthest_nonshot_goal_scored_file, 0, False),
+                         link_replay(their_furthest_nonshot_goal_scored_file, 0, False)],
+                        ["Highest shot-goal scored (m)", round(max(my_shot_goals_z + your_shot_goals_z) / 100),
+                         round(their_highest_shot_goal_scored / 100), link_replay(our_highest_shot_goal_scored_file,0,False), link_replay(their_highest_shot_goal_scored_file,0,False)],
+                        ["Highest non-shot-goal scored (m)", round(max(my_nonshot_goals_z + your_nonshot_goals_z) / 100),
+                         round(their_highest_nonshot_goal_scored / 100),
+                         link_replay(our_highest_nonshot_goal_scored_file, 0, False),
+                         link_replay(their_highest_nonshot_goal_scored_file, 0, False)],
                         ["Most consecutive MVPs (no tiebreaker)", our_most_consecutive_mvp,
                          their_most_consecutive_mvp, "N/A", "N/A"],
                         ["Most consecutive matches without MVP", our_most_consecutive_nomvp_in,
@@ -2967,6 +3110,169 @@ for i in range(0, 2):
     f = open(path_to_tables + "team_records.tsv", "w")
     f.write(content)
     f.close()
+    
+    # game records
+    game_most_shots = 0
+    game_least_shots = 0
+    game_most_goals = 0
+    game_most_xg = 0
+    game_least_xg = 0
+    game_most_saves = 0
+    game_most_assists = 0
+    game_highest_scores = 0
+    game_lowest_scores = 0
+    game_most_hits = 0
+    game_least_hits = 0
+    
+    game_most_shots_file = ""
+    game_least_shots_file = new_json_files[0]
+    game_most_goals_file = ""
+    game_most_xg_file = ""
+    game_least_xg_file = new_json_files[0]
+    game_most_saves_file = ""
+    game_most_assists_file = ""
+    game_highest_scores_file = ""
+    game_lowest_scores_file = new_json_files[0]
+    game_most_hits_file = ""
+    game_least_hits_file = new_json_files[0]
+    
+    all_shots_per_game = []
+    for game in range(len(my_shots_over_time)):
+        local_all_shots_pg = my_shots_over_time[game] + your_shots_over_time[game] + their_shots_over_time[game]
+        all_shots_per_game.append(local_all_shots_pg)
+        if local_all_shots_pg > game_most_shots:
+            game_most_shots = local_all_shots_pg
+            game_most_shots_file = new_json_files[game]
+        if game == 0:
+            game_least_shots = local_all_shots_pg
+            game_least_shots_file = new_json_files[game]
+        else:
+            if local_all_shots_pg < game_least_shots:
+                game_least_shots = local_all_shots_pg
+                game_least_shots_file = new_json_files[game]
+                
+    all_goals_per_game = []
+    for game in range(len(my_goals_over_time)):
+        local_all_goals_pg = my_goals_over_time[game] + your_goals_over_time[game] + their_goals_over_time[game]
+        all_goals_per_game.append(local_all_goals_pg)
+        if local_all_goals_pg > game_most_goals:
+            game_most_goals = local_all_goals_pg
+            game_most_goals_file = new_json_files[game]
+            
+    all_xg_per_game = []
+    for game in range(len(my_xg_over_time)):
+        local_all_xg_pg = my_xg_over_time[game] + your_xg_over_time[game] + their_xg_over_time[game]
+        all_xg_per_game.append(local_all_xg_pg)
+        if local_all_xg_pg > game_most_xg:
+            game_most_xg = local_all_xg_pg
+            game_most_xg_file = new_json_files[game]
+        if game == 0:
+            game_least_xg = local_all_xg_pg
+            game_least_xg_file = new_json_files[game]
+        else:
+            if local_all_xg_pg < game_least_xg:
+                game_least_xg = local_all_xg_pg
+                game_least_xg_file = new_json_files[game]
+                
+    all_saves_per_game = []
+    for game in range(len(my_saves_over_time)):
+        local_all_saves_pg = my_saves_over_time[game] + your_saves_over_time[game] + their_saves_over_time[game]
+        all_saves_per_game.append(local_all_saves_pg)
+        if local_all_saves_pg > game_most_saves:
+            game_most_saves = local_all_saves_pg
+            game_most_saves_file = new_json_files[game]
+            
+    all_assists_per_game = []
+    for game in range(len(my_assists_over_time)):
+        local_all_assists_pg = my_assists_over_time[game] + your_assists_over_time[game] + their_assists_over_time[game]
+        all_assists_per_game.append(local_all_assists_pg)
+        if local_all_assists_pg > game_most_assists:
+            game_most_assists = local_all_assists_pg
+            game_most_assists_file = new_json_files[game]
+            
+    all_scores_per_game = []
+    for game in range(len(my_scores_over_time)):
+        local_all_scores_pg = my_scores_over_time[game] + your_scores_over_time[game] + their_scores_over_time[game]
+        all_scores_per_game.append(local_all_scores_pg)
+        if local_all_scores_pg > game_highest_scores:
+            game_highest_scores = local_all_scores_pg
+            game_highest_scores_file = new_json_files[game]
+        if game == 0:
+            game_lowest_scores = local_all_scores_pg
+            game_lowest_scores_file = new_json_files[game]
+        else:
+            if local_all_scores_pg < game_lowest_scores:
+                game_lowest_scores = local_all_scores_pg
+                game_lowest_scores_file = new_json_files[game]
+                
+    all_hits_per_game = []
+    for game in range(len(my_hits_over_time)):
+        local_all_hits_pg = my_hits_over_time[game] + your_hits_over_time[game] + their_hits_over_time[game]
+        all_hits_per_game.append(local_all_hits_pg)
+        if local_all_hits_pg > game_most_hits:
+            game_most_hits = local_all_hits_pg
+            game_most_hits_file = new_json_files[game]
+        if game == 0:
+            game_least_hits = local_all_hits_pg
+            game_least_hits_file = new_json_files[game]
+        else:
+            if local_all_hits_pg < game_least_hits:
+                game_least_hits = local_all_hits_pg
+                game_least_hits_file = new_json_files[game]
+
+    game_biggest_xg_overperformance_pct = 0
+    game_biggest_xg_overperformance_xg = 0
+    game_biggest_xg_overperformance_goals = 0
+    game_biggest_xg_overperformance_file = ""
+
+    if all_xg_per_game[0] > 0:
+        game_biggest_xg_underperformance_pct = all_goals_per_game[0] / all_xg_per_game[0]
+        game_biggest_xg_underperformance_xg = all_xg_per_game[0]
+        game_biggest_xg_underperformance_goals = all_goals_per_game[0]
+        game_biggest_xg_underperformance_file = new_json_files[0]
+    
+    for game in range(len(all_xg_per_game)):
+        if all_xg_per_game[game] > 0:
+            local_xg_overperformance_pct = all_goals_per_game[game] / all_xg_per_game[game]
+            if local_xg_overperformance_pct > game_biggest_xg_overperformance_pct:
+                game_biggest_xg_overperformance_pct = local_xg_overperformance_pct
+                game_biggest_xg_overperformance_xg = all_xg_per_game[game]
+                game_biggest_xg_overperformance_goals = all_goals_per_game[game]
+                game_biggest_xg_overperformance_file = new_json_files[game]
+            if local_xg_overperformance_pct < game_biggest_xg_underperformance_pct:
+                game_biggest_xg_underperformance_pct = local_xg_overperformance_pct
+                game_biggest_xg_underperformance_xg = all_xg_per_game[game]
+                game_biggest_xg_underperformance_goals = all_goals_per_game[game]
+                game_biggest_xg_underperformance_file = new_json_files[game]
+
+    game_biggest_xg_overperformance_pct -= 1
+    game_biggest_xg_underperformance_pct -= 1
+
+    game_record_data = [["Most shots", game_most_shots, link_replay(game_most_shots_file,0,False)],
+                        ["Least shots", game_least_shots, link_replay(game_least_shots_file, 0, False)],
+                        ["Most goals", game_most_goals, link_replay(game_most_goals_file, 0, False)],
+                        ["Most xG", round(game_most_xg,2), link_replay(game_most_xg_file, 0, False)],
+                        ["Least xG", round(game_least_xg,2), link_replay(game_least_xg_file, 0, False)],
+                        ["Most saves", game_most_saves, link_replay(game_most_saves_file, 0, False)],
+                        ["Most assists", game_most_assists, link_replay(game_most_assists_file, 0, False)],
+                        ["Highest scores", game_highest_scores, link_replay(game_highest_scores_file, 0, False)],
+                        ["Lowest scores", game_lowest_scores, link_replay(game_lowest_scores_file, 0, False)],
+                        ["Most hits", game_most_hits, link_replay(game_most_hits_file, 0, False)],
+                        ["Least hits", game_least_hits, link_replay(game_least_hits_file, 0, False)],
+                        ["Biggest xG overperformance", str(game_biggest_xg_overperformance_goals) + "G from " + str(round(game_biggest_xg_overperformance_xg,2)) + " xG", link_replay(game_biggest_xg_overperformance_file, 0, False)],
+                        ["Biggest xG overperformance %", str(round(game_biggest_xg_overperformance_pct*100,0))+"%",link_replay(game_biggest_xg_overperformance_file, 0, False)],
+                        ["Biggest xG underperformance", str(game_biggest_xg_underperformance_goals) + "G from " + str(round(game_biggest_xg_underperformance_xg, 2)) + " xG",link_replay(game_biggest_xg_underperformance_file, 0, False)],
+                        ["Biggest xG underperformance %",str(round(game_biggest_xg_underperformance_pct * 100,0)) + "%",link_replay(game_biggest_xg_underperformance_file, 0, False)]]
+    
+    content = tabulate(game_record_data, headers=["Record in one game", "Value", "First replay"], numalign="right", tablefmt="tsv")
+    if not os.path.exists(path_to_tables + "game_records.tsv"):
+        open(path_to_tables + "game_records.tsv", 'w').close()
+    f = open(path_to_tables + "game_records.tsv", "w")
+    f.write(content)
+    f.close()
+                
+    
+
 
     ###########
     fig = plt.figure(figsize=(40, 20))
@@ -3131,7 +3437,7 @@ for i in range(0, 2):
                 my_shot_count, my_miss_count, my_assists_count, my_saves_count, my_touches_count,
                 my_passes_count, my_dribbles_count, my_clears_count, my_aerials_count, my_turnovers_won_count,
                 my_turnovers_count,
-                my_demos_count, my_demos_conceded_count, my_mvp_count, my_score_count, my_hit_count]
+                my_demos_count, my_demos_conceded_count, my_mvp_count, my_score_count]
 
     your_stats = [your_goal_count, your_goals_from_shots, your_goals_from_nonshots, your_other_goals,
                   your_total_xg, your_shot_xg, your_nonshot_xg,
@@ -3139,7 +3445,7 @@ for i in range(0, 2):
                   your_shot_count, your_miss_count, your_assists_count, your_saves_count, your_touches_count,
                   your_passes_count, your_dribbles_count, your_clears_count, your_aerials_count,
                   your_turnovers_won_count, your_turnovers_count,
-                  your_demos_count, your_demos_conceded_count, your_mvp_count, your_score_count, your_hit_count]
+                  your_demos_count, your_demos_conceded_count, your_mvp_count, your_score_count]
 
     my_stats.reverse()
     your_stats.reverse()
@@ -3151,7 +3457,7 @@ for i in range(0, 2):
            8: "GfS/xG", 9: "GfS/Shots",
            10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
            15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball", 20: "Lost Ball",
-           21: "Demos", 22: "Demoed", 23: "MVPs", 24: "Scores", 25: "Hits"}
+           21: "Demos", 22: "Demoed", 23: "MVPs", 24: "Scores"}
 
     dic_rev = {len(dic) - i + 1: v for (i, v) in dic.items()}
     dic = dic_rev
@@ -3230,7 +3536,7 @@ for i in range(0, 2):
                    their_shot_count, their_miss_count, their_assists_count, their_saves_count, their_touches_count,
                    their_passes_count, their_dribbles_count, their_clears_count, their_aerials_count,
                    their_turnovers_won_count,
-                   their_demos_count, their_mvp_count, their_score_count, their_hit_count]
+                   their_demos_count, their_mvp_count, their_score_count]
 
     their_stats.reverse()
 
@@ -3241,7 +3547,7 @@ for i in range(0, 2):
            8: "GfS/xG", 9: "GfS/Shots",
            10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
            15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball",
-           20: "Demos", 21: "MVPs", 22: "Scores", 23: "Hits"}
+           20: "Demos", 21: "MVPs", 22: "Scores"}
 
     dic_rev = {len(dic) - i + 1: v for (i, v) in dic.items()}
     dic = dic_rev
@@ -3418,7 +3724,7 @@ for i in range(0, 2):
                      extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
     im.set_cmap('gist_gray_r')
 
-    ax13.scatter(my_goals_x, my_goals_y, alpha=goal_scatter_alpha, color=my_color, s=my_goal_sizes_for_scatter)
+    ax13.scatter(my_shot_goals_x, my_shot_goals_y, alpha=goal_scatter_alpha, color=my_color, s=my_goal_sizes_for_scatter)
 
     ax13.set_xlim(pitch_min_x, pitch_max_x)
     ax13.set_ylim(pitch_min_y, pitch_max_y)
@@ -3436,7 +3742,7 @@ for i in range(0, 2):
     im = ax14.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                      extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
     im.set_cmap('gist_gray_r')
-    ax14.scatter(your_goals_x, your_goals_y, alpha=goal_scatter_alpha, color=your_color, s=your_goal_sizes_for_scatter)
+    ax14.scatter(your_shot_goals_x, your_shot_goals_y, alpha=goal_scatter_alpha, color=your_color, s=your_goal_sizes_for_scatter)
     ax14.set_xlim(pitch_min_x, pitch_max_x)
     ax14.set_ylim(pitch_min_y, pitch_max_y)
     ax14.axis("off")
@@ -3449,7 +3755,7 @@ for i in range(0, 2):
     im = ax15.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                      extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
     im.set_cmap('gist_gray_r')
-    ax15.scatter(my_goals_x + your_goals_x, my_goals_y + your_goals_y, alpha=goal_scatter_alpha, color=our_color,
+    ax15.scatter(my_shot_goals_x + your_shot_goals_x, my_shot_goals_y + your_shot_goals_y, alpha=goal_scatter_alpha, color=our_color,
                  s=my_goal_sizes_for_scatter + your_goal_sizes_for_scatter)
     ax15.set_xlim(pitch_min_x, pitch_max_x)
     ax15.set_ylim(pitch_min_y, pitch_max_y)
@@ -3467,7 +3773,7 @@ for i in range(0, 2):
     im = ax16.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
                      extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
     im.set_cmap('gist_gray_r')
-    ax16.scatter(their_goals_x, their_goals_y, alpha=goal_scatter_alpha, color=their_color,
+    ax16.scatter(their_shot_goals_x, their_shot_goals_y, alpha=goal_scatter_alpha, color=their_color,
                  s=their_goal_sizes_for_scatter)
     ax16.set_xlim(pitch_min_x, pitch_max_x)
     ax16.set_ylim(pitch_min_y, pitch_max_y)
