@@ -44,8 +44,8 @@
                 </div>
                 <div class="col-12 row">
                     <!-- {{ navigation.this_game }} -->
-                    <div class="col g-cols" v-for="tag in display_tags">
-                        <div class="d-flex flex-column">
+                    <div class="col-2 col-sm g-cols" v-for="tag in display_tags">
+                        <div class="d-flex flex-column pl-2 pr-2">
                             <div class="p-0 g-title text-center">{{ tag }}</div>
                             <div class="p-0 g-value text-center">{{ navigation.this_game[tag] }}</div>
                         </div>
