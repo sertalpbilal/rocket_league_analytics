@@ -29,7 +29,7 @@
     <main id="app">
         
         <div class="container mb-3">
-            <div class="row justify-content-center">
+            <div class="row justify-content-center" v-if="!_.isEmpty(navigation)">
                 <div class="col-2 text-center nav_game">
                     <a v-if="navigation.prev" :href="'game.html?id='+navigation.prev['Replay ID']"><i class="fas fa-chevron-circle-left"></i></a>
                     <i class="fas fa-chevron-circle-left" v-else></i>

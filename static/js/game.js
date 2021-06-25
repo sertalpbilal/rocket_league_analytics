@@ -182,12 +182,12 @@ var app = new Vue({
 function plot_pitch_shot() {
 
     const raw_width = 12080+20;
-    const raw_height = 8240+20;
+    const raw_height = 8240+20+580;
 
     // 5140 y max (in svg it is x)
     // 4100 x max (in svg it is y)
 
-    const margin = { top: 10, right: 10, bottom: 10, left: 10 },
+    const margin = { top: 10, right: 10, bottom: 10+580, left: 10 },
         width = raw_width - margin.left - margin.right,
         height = raw_height - margin.top - margin.bottom;
 
@@ -509,6 +509,40 @@ function plot_pitch_shot() {
         .on("mouseover", highlight_shot)
         .on("mouseleave", undo_higlight)
 
+    let legened = svg.append("g")
+    legened.append("path")
+        .style("stroke", "black")
+        .style("stroke-opacity", 1)
+        .style("stroke-width", 20)
+        .style("fill", "black")
+        .attr("d", d3.symbol().size(xg_size(0.5)).type(d3.symbolStar)())
+        .attr("transform", `translate(${width/2+500},${height+350})`)
+        .attr("fill-opacity", 0.5)
+    legened.append("text")
+        .text("Goal")
+        .attr("y", height+380)
+        .attr("x", width/2+1300)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "black")
+        .style("font-size", "230pt")
+    legened.append("path")
+        .style("stroke", "black")
+        .style("stroke-opacity", 1)
+        .style("stroke-width", 20)
+        .style("fill", "black")
+        .attr("d", d3.symbol().size(xg_size(0.5)).type(d3.symbolCircle)())
+        .attr("transform", `translate(${width/2-1500},${height+350})`)
+        .attr("fill-opacity", 0.5)
+    legened.append("text")
+        .text("Shot")
+        .attr("y", height+380)
+        .attr("x", width/2-800)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "black")
+        .style("font-size", "230pt")
+
 }
 
 let step_function_callback;
@@ -521,7 +555,7 @@ function plot_xg_timeline() {
     // 5140 y max (in svg it is x)
     // 4100 x max (in svg it is y)
 
-    const margin = { top: 25, right: 25, bottom: 20, left: 25 },
+    const margin = { top: 25, right: 25, bottom: 35, left: 40 },
         width = raw_width - margin.left - margin.right,
         height = raw_height - margin.top - margin.bottom;
 
@@ -731,6 +765,44 @@ function plot_xg_timeline() {
         .attr("alignment-baseline", "bottom")
         .attr("fill", "black")
         .style("font-size", "10pt")
+
+    svg.append("text")
+        .text("Cumulative xG")
+        // .attr("y", height/2)
+        // .attr("x", 200)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "bottom")
+        .attr("fill", "black")
+        .style("font-size", "10pt")
+        .attr("transform", `translate(-25, ${height/2}) rotate(-90)`)
+    
+    svg.append("text")
+        .text("Time (secs)")
+        // .attr("y", height/2)
+        // .attr("x", 200)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "hanging")
+        .attr("fill", "black")
+        .style("font-size", "10pt")
+        .attr("transform", `translate(${width/2}, ${height+20})`)
+
+    let legened = svg.append("g")
+    legened.append("circle")
+        .attr("cx", width/2+150)
+        .attr("cy", height+25)
+        .attr("r", 4)
+        .attr("fill", "white")
+        .attr("fill-opacity", 0.9)
+        .attr("stroke", "gray")
+        .style("stroke-width", 2)
+        .style("pointer-events", "none")
+    legened.append("text")
+        .text("Goal")
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "gray")
+        .style("font-size", "10pt")
+        .attr("transform", `translate(${width/2+175}, ${height+26})`)
 
 }
 
