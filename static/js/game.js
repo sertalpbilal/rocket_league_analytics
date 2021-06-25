@@ -16,7 +16,10 @@ var app = new Vue({
         thresholds: [0, 0.5, 1],
         game_json: {},
         main_player: "enpitsu",
-        game_list: []
+        game_list: [],
+        display_tags: [
+            "xGF", "xGC", "xGD", "HF", "HC", "HD", "P(Win)", "P(Result)", "P(Score)", "Luck %", "Outcome"
+        ]
     },
     computed: {
         shots_combined() {
