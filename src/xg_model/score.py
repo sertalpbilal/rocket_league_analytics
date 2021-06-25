@@ -54,7 +54,7 @@ class RocketLeagueXGScorer:
         # print(shots)
         print(shots.groupby('shot_taker_name')['xg'].sum())
 
-        e = shots[['shot_taker_name', 'is_orange', 'time', 'xg', 'shot', 'goal']].copy()
+        e = shots[['shot_taker_name', 'is_orange', 'time', 'xg', 'shot', 'goal', 'frame']].copy()
         e.to_csv(self.parent / f"xg_out/{game_id}.csv")
 
         return e

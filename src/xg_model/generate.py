@@ -16,10 +16,11 @@ from wrapt_timeout_decorator import timeout
 
 class RocketLeagueXG:
 
-    def __init__(self, folder='model', swapping=True, oversample=False):
+    def __init__(self, folder='model', swapping=True, oversample=False, copy=1):
         self.folder = (pathlib.Path() / f"../../data/{folder}").resolve()
         self.swapping = swapping
         self.oversample = oversample
+        self.copy = copy
         self.df = None
 
     def prepare_data(self, collect=True):
@@ -27,9 +28,10 @@ class RocketLeagueXG:
 
         all_replay_files = glob.glob(f"{self.folder}/*.replay")
         parallel = False
+        print("Preparing data")
 
         if parallel:
-            with ProcessPoolExecutor(max_workers=16) as executor:
+            with ProcessPoolExecutor(max_workers=8) as executor:
                 dfs = list(executor.map(self.read_single_game, all_replay_files))
         else:
             dfs = []
@@ -40,7 +42,7 @@ class RocketLeagueXG:
                     if collect:
                         dfs.append(game_data)
                 except:
-                    print("Game cannot be read properly by carball, deleting the replay")
+                    print(f"***\nWARNING: Game {f} cannot be read properly by carball, deleting the replay\n***")
                     os.unlink(f)
 
         if collect:
@@ -196,8 +198,8 @@ class RocketLeagueXG:
             print("Oversampling goals")
             not_goal_cnt = len(X_train[y_train==0])
             goal_cnt = len(X_train[y_train==1])
-            copy_cnt = floor(not_goal_cnt / goal_cnt) + 1
-            copy_cnt = 1
+            # copy_cnt = floor(not_goal_cnt / goal_cnt) + 1
+            copy_cnt = self.copy
             print("Copy count: ", copy_cnt)
             goals_filtered = X_train[y_train==1].copy()
             X_train = np.concatenate([X_train] + [goals_filtered for _ in range(copy_cnt)])
@@ -219,9 +221,9 @@ class RocketLeagueXG:
 
 
 def generate_xg():
-    r = RocketLeagueXG('model')
+    r = RocketLeagueXG('model', oversample=True, copy=1)
     # only prep
-    # r.prepare_data(collect=False)
+    r.prepare_data(collect=False)
     r.prepare_data()
     r.build_model()
 
