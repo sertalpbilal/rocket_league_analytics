@@ -8,7 +8,6 @@
 # TODO: decide whether to plot "non-shot" goals in the 4 goal heatmaps
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
-# TODO: Link dashboard match URLs next to where replays are added
 
 import csv
 import glob
@@ -38,22 +37,22 @@ show_xg_scorelines = False  # Shows xG scorelines and normal scorelines and repl
 save_and_crop = True  # Saves an image of the dashboard and then crops charts into their own images
 
 
-def link_replay(match_id, frame, show_timestamp):
+def link_replay(game_id, frame, show_timestamp):
     replay_base_url = "https://ballchasing.com/replay/"
     notimestamp_text = "#watch"
     timestamp_text = "#watch?t="
 
-    if ".json" in match_id:
-        match_id = match_id.replace(".json", "")
+    if ".json" in game_id:
+        game_id = game_id.replace(".json", "")
 
-    if ".csv" in match_id:
-        match_id = match_id.replace(".csv", "")
+    if ".csv" in game_id:
+        game_id = game_id.replace(".csv", "")
 
     if show_timestamp:
         converted_time = round((int(frame) / 27.5 - 3), 2)
-        return replay_base_url + match_id + timestamp_text + str(converted_time) + "s"
+        return replay_base_url + game_id + timestamp_text + str(converted_time) + "s"
     else:
-        return replay_base_url + match_id + notimestamp_text
+        return replay_base_url + game_id + notimestamp_text
 
 
 # Program runs twice - once to update using all games, and another time to update using the latest streak of games
@@ -122,7 +121,7 @@ for i in range(0, 2):
             if local_playlist == "RANKED_DOUBLES":
                 json_files_2v2.append(file)
 
-    # Sort files by time created - loop through jsons, get start time of match, then sort by time
+    # Sort files by time created - loop through jsons, get start time of game, then sort by time
     for file in json_files_2v2:
         f = open(path_to_json + file, )
         data = json.load(f)
@@ -525,14 +524,14 @@ for i in range(0, 2):
     their_scores_over_time = []
 
     # also includes non-shot goals
-    my_goals_per_match = []
-    your_goals_per_match = []
+    my_goals_per_game = []
+    your_goals_per_game = []
 
     my_mvp_count = 0
     your_mvp_count = 0
     their_mvp_count = 0
     our_mvp_count = 0
-    mvp_per_match = []
+    mvp_per_game = []
 
     my_shots_goal_or_miss = []  # 0 = miss, 1 = goal
     your_shots_goal_or_miss = []
@@ -816,8 +815,8 @@ for i in range(0, 2):
                     local_their_goals += 1
                     their_goal_count += 1
 
-            my_goals_per_match.append(local_my_goals)
-            your_goals_per_match.append(local_your_goals)
+            my_goals_per_game.append(local_my_goals)
+            your_goals_per_game.append(local_your_goals)
 
             my_local_score = 0
             your_local_score = 0
@@ -1058,31 +1057,31 @@ for i in range(0, 2):
             game_balls_lost_over_time.append(my_local_balls_lost + your_local_balls_lost + their_local_balls_lost)
 
             max_local_score = max(max(my_local_score, your_local_score), max(opp1_local_score, opp2_local_score))
-            local_mvp_per_match = ["", "", "", ""]
+            local_mvp_per_game = ["", "", "", ""]
             their_scores_over_time.append(opp1_local_score + opp2_local_score)
 
             # determine MVP - no tiebreaker (players can share MVP if they scored the same amount of pts)
             if my_local_score == max_local_score:
                 my_mvp_count += 1
-                local_mvp_per_match[0] = my_alias
+                local_mvp_per_game[0] = my_alias
 
             if your_local_score == max_local_score:
                 your_mvp_count += 1
-                local_mvp_per_match[1] = your_alias
+                local_mvp_per_game[1] = your_alias
 
             if opp1_local_score == max_local_score:
-                local_mvp_per_match[2] = "Opponent1"
+                local_mvp_per_game[2] = "Opponent1"
 
             if opp2_local_score == max_local_score:
-                local_mvp_per_match[3] = "Opponent2"
+                local_mvp_per_game[3] = "Opponent2"
 
-            if my_alias in local_mvp_per_match or your_alias in local_mvp_per_match:
+            if my_alias in local_mvp_per_game or your_alias in local_mvp_per_game:
                 our_mvp_count += 1
 
-            if "Opponent1" in local_mvp_per_match or "Opponent2" in local_mvp_per_match:
+            if "Opponent1" in local_mvp_per_game or "Opponent2" in local_mvp_per_game:
                 their_mvp_count += 1
 
-            mvp_per_match.append(local_mvp_per_match)
+            mvp_per_game.append(local_mvp_per_game)
 
             my_local_demos = 0
             your_local_demos = 0
@@ -2207,7 +2206,7 @@ for i in range(0, 2):
     my_most_consecutive_games_scored_in = 0
     my_most_consecutive_games_fts_in_helper = 0
     my_most_consecutive_games_fts_in = 0
-    for goals in my_goals_per_match:
+    for goals in my_goals_per_game:
         if goals > 0:
             my_most_consecutive_games_scored_in_helper += 1
         else:
@@ -2226,7 +2225,7 @@ for i in range(0, 2):
     your_most_consecutive_games_scored_in = 0
     your_most_consecutive_games_fts_in_helper = 0
     your_most_consecutive_games_fts_in = 0
-    for goals in your_goals_per_match:
+    for goals in your_goals_per_game:
         if goals > 0:
             your_most_consecutive_games_scored_in_helper += 1
         else:
@@ -2359,15 +2358,15 @@ for i in range(0, 2):
     my_most_consecutive_games_returned_in = 0
     my_most_consecutive_games_blanked_in_helper = 0
     my_most_consecutive_games_blanked_in = 0
-    for match in range(len(my_saves_over_time)):
-        if my_saves_over_time[match] > 0 or my_goals_over_time[match] > 0 or my_assists_over_time[match] > 0:
+    for game in range(len(my_saves_over_time)):
+        if my_saves_over_time[game] > 0 or my_goals_over_time[game] > 0 or my_assists_over_time[game] > 0:
             my_most_consecutive_games_returned_in_helper += 1
         else:
             my_most_consecutive_games_returned_in_helper = 0
         if my_most_consecutive_games_returned_in_helper > my_most_consecutive_games_returned_in:
             my_most_consecutive_games_returned_in = my_most_consecutive_games_returned_in_helper
 
-        if my_saves_over_time[match] == 0 and my_goals_over_time[match] == 0 and my_assists_over_time[match] == 0:
+        if my_saves_over_time[game] == 0 and my_goals_over_time[game] == 0 and my_assists_over_time[game] == 0:
             my_most_consecutive_games_blanked_in_helper += 1
         else:
             my_most_consecutive_games_blanked_in_helper = 0
@@ -2378,15 +2377,15 @@ for i in range(0, 2):
     your_most_consecutive_games_returned_in = 0
     your_most_consecutive_games_blanked_in_helper = 0
     your_most_consecutive_games_blanked_in = 0
-    for match in range(len(your_saves_over_time)):
-        if your_saves_over_time[match] > 0 or your_goals_over_time[match] > 0 or your_assists_over_time[match] > 0:
+    for game in range(len(your_saves_over_time)):
+        if your_saves_over_time[game] > 0 or your_goals_over_time[game] > 0 or your_assists_over_time[game] > 0:
             your_most_consecutive_games_returned_in_helper += 1
         else:
             your_most_consecutive_games_returned_in_helper = 0
         if your_most_consecutive_games_returned_in_helper > your_most_consecutive_games_returned_in:
             your_most_consecutive_games_returned_in = your_most_consecutive_games_returned_in_helper
 
-        if your_saves_over_time[match] == 0 and your_goals_over_time[match] == 0 and your_assists_over_time[match] == 0:
+        if your_saves_over_time[game] == 0 and your_goals_over_time[game] == 0 and your_assists_over_time[game] == 0:
             your_most_consecutive_games_blanked_in_helper += 1
         else:
             your_most_consecutive_games_blanked_in_helper = 0
@@ -2428,54 +2427,54 @@ for i in range(0, 2):
     our_biggest_xg_overperformance_nonshot_game = ""
     their_biggest_xg_overperformance_nonshot_game = ""
 
-    for match in range(len(my_goals_from_shots_over_time)):
-        if my_xg_over_time[match] != 0:
-            if my_goals_from_shots_over_time[match] / my_xg_over_time[match] > my_biggest_xg_overperformance:
-                my_biggest_xg_overperformance = my_goals_from_shots_over_time[match] / my_xg_over_time[match]
-                my_biggest_xg_overperformance_goals = my_goals_from_shots_over_time[match]
-                my_biggest_xg_overperformance_xg = my_xg_over_time[match]
-                my_biggest_xg_overperformance_shot_game = match
+    for game in range(len(my_goals_from_shots_over_time)):
+        if my_xg_over_time[game] != 0:
+            if my_goals_from_shots_over_time[game] / my_xg_over_time[game] > my_biggest_xg_overperformance:
+                my_biggest_xg_overperformance = my_goals_from_shots_over_time[game] / my_xg_over_time[game]
+                my_biggest_xg_overperformance_goals = my_goals_from_shots_over_time[game]
+                my_biggest_xg_overperformance_xg = my_xg_over_time[game]
+                my_biggest_xg_overperformance_shot_game = game
 
-        if your_xg_over_time[match] != 0:
-            if your_goals_from_shots_over_time[match] / your_xg_over_time[match] > your_biggest_xg_overperformance:
-                your_biggest_xg_overperformance = your_goals_from_shots_over_time[match] / your_xg_over_time[match]
-                your_biggest_xg_overperformance_goals = your_goals_from_shots_over_time[match]
-                your_biggest_xg_overperformance_xg = your_xg_over_time[match]
-                your_biggest_xg_overperformance_shot_game = match
+        if your_xg_over_time[game] != 0:
+            if your_goals_from_shots_over_time[game] / your_xg_over_time[game] > your_biggest_xg_overperformance:
+                your_biggest_xg_overperformance = your_goals_from_shots_over_time[game] / your_xg_over_time[game]
+                your_biggest_xg_overperformance_goals = your_goals_from_shots_over_time[game]
+                your_biggest_xg_overperformance_xg = your_xg_over_time[game]
+                your_biggest_xg_overperformance_shot_game = game
 
-        if our_xg_over_time[match] != 0:
-            if our_goals_from_shots_over_time[match] / our_xg_over_time[match] > our_biggest_xg_overperformance:
-                our_biggest_xg_overperformance = our_goals_from_shots_over_time[match] / our_xg_over_time[match]
-                our_biggest_xg_overperformance_goals = our_goals_from_shots_over_time[match]
-                our_biggest_xg_overperformance_xg = our_xg_over_time[match]
-                our_biggest_xg_overperformance_shot_game = new_json_files[match]
+        if our_xg_over_time[game] != 0:
+            if our_goals_from_shots_over_time[game] / our_xg_over_time[game] > our_biggest_xg_overperformance:
+                our_biggest_xg_overperformance = our_goals_from_shots_over_time[game] / our_xg_over_time[game]
+                our_biggest_xg_overperformance_goals = our_goals_from_shots_over_time[game]
+                our_biggest_xg_overperformance_xg = our_xg_over_time[game]
+                our_biggest_xg_overperformance_shot_game = new_json_files[game]
 
-        if their_xg_over_time[match] != 0:
-            if their_goals_from_shots_over_time[match] / their_xg_over_time[match] > their_biggest_xg_overperformance:
-                their_biggest_xg_overperformance = their_goals_from_shots_over_time[match] / their_xg_over_time[match]
-                their_biggest_xg_overperformance_goals = their_goals_from_shots_over_time[match]
-                their_biggest_xg_overperformance_xg = their_xg_over_time[match]
-                their_biggest_xg_overperformance_shot_game = new_json_files[match]
+        if their_xg_over_time[game] != 0:
+            if their_goals_from_shots_over_time[game] / their_xg_over_time[game] > their_biggest_xg_overperformance:
+                their_biggest_xg_overperformance = their_goals_from_shots_over_time[game] / their_xg_over_time[game]
+                their_biggest_xg_overperformance_goals = their_goals_from_shots_over_time[game]
+                their_biggest_xg_overperformance_xg = their_xg_over_time[game]
+                their_biggest_xg_overperformance_shot_game = new_json_files[game]
 
-        if my_goals_from_shots_over_time[match] == 0:
-            if my_xg_over_time[match] > my_highest_xg_without_scoring:
-                my_highest_xg_without_scoring = my_xg_over_time[match]
-                my_highest_xg_without_scoring_game = match
+        if my_goals_from_shots_over_time[game] == 0:
+            if my_xg_over_time[game] > my_highest_xg_without_scoring:
+                my_highest_xg_without_scoring = my_xg_over_time[game]
+                my_highest_xg_without_scoring_game = game
 
-        if your_goals_from_shots_over_time[match] == 0:
-            if your_xg_over_time[match] > your_highest_xg_without_scoring:
-                your_highest_xg_without_scoring = your_xg_over_time[match]
-                your_highest_xg_without_scoring_game = match
+        if your_goals_from_shots_over_time[game] == 0:
+            if your_xg_over_time[game] > your_highest_xg_without_scoring:
+                your_highest_xg_without_scoring = your_xg_over_time[game]
+                your_highest_xg_without_scoring_game = game
 
-        if our_goals_from_shots_over_time[match] == 0:
-            if our_xg_over_time[match] > our_highest_xg_without_scoring:
-                our_highest_xg_without_scoring = our_xg_over_time[match]
-                our_highest_xg_without_scoring_game = new_json_files[match]
+        if our_goals_from_shots_over_time[game] == 0:
+            if our_xg_over_time[game] > our_highest_xg_without_scoring:
+                our_highest_xg_without_scoring = our_xg_over_time[game]
+                our_highest_xg_without_scoring_game = new_json_files[game]
 
-        if their_goals_from_shots_over_time[match] == 0:
-            if their_xg_over_time[match] > their_highest_xg_without_scoring:
-                their_highest_xg_without_scoring = their_xg_over_time[match]
-                their_highest_xg_without_scoring_game = new_json_files[match]
+        if their_goals_from_shots_over_time[game] == 0:
+            if their_xg_over_time[game] > their_highest_xg_without_scoring:
+                their_highest_xg_without_scoring = their_xg_over_time[game]
+                their_highest_xg_without_scoring_game = new_json_files[game]
 
     my_biggest_xg_miss_from_shot = 0
     my_lowest_xg_goal_from_shot = 0
@@ -2795,57 +2794,57 @@ for i in range(0, 2):
     their_most_consecutive_mvp = 0
     their_most_consecutive_nomvp_in_helper = 0
     their_most_consecutive_nomvp_in = 0
-    for match in range(len(mvp_per_match)):
-        if my_alias in mvp_per_match[match]:
+    for game in range(len(mvp_per_game)):
+        if my_alias in mvp_per_game[game]:
             my_most_consecutive_mvp_helper += 1
         else:
             my_most_consecutive_mvp_helper = 0
         if my_most_consecutive_mvp_helper > my_most_consecutive_mvp:
             my_most_consecutive_mvp = my_most_consecutive_mvp_helper
 
-        if my_alias not in mvp_per_match[match]:
+        if my_alias not in mvp_per_game[game]:
             my_most_consecutive_nomvp_in_helper += 1
         else:
             my_most_consecutive_nomvp_in_helper = 0
         if my_most_consecutive_nomvp_in_helper > my_most_consecutive_nomvp_in:
             my_most_consecutive_nomvp_in = my_most_consecutive_nomvp_in_helper
 
-        if your_alias in mvp_per_match[match]:
+        if your_alias in mvp_per_game[game]:
             your_most_consecutive_mvp_helper += 1
         else:
             your_most_consecutive_mvp_helper = 0
         if your_most_consecutive_mvp_helper > your_most_consecutive_mvp:
             your_most_consecutive_mvp = your_most_consecutive_mvp_helper
 
-        if your_alias not in mvp_per_match[match]:
+        if your_alias not in mvp_per_game[game]:
             your_most_consecutive_nomvp_in_helper += 1
         else:
             your_most_consecutive_nomvp_in_helper = 0
         if your_most_consecutive_nomvp_in_helper > your_most_consecutive_nomvp_in:
             your_most_consecutive_nomvp_in = your_most_consecutive_nomvp_in_helper
 
-        if (my_alias in mvp_per_match[match]) or (your_alias in mvp_per_match[match]):
+        if (my_alias in mvp_per_game[game]) or (your_alias in mvp_per_game[game]):
             our_most_consecutive_mvp_helper += 1
         else:
             our_most_consecutive_mvp_helper = 0
         if our_most_consecutive_mvp_helper > our_most_consecutive_mvp:
             our_most_consecutive_mvp = our_most_consecutive_mvp_helper
 
-        if (my_alias not in mvp_per_match[match]) and (your_alias not in mvp_per_match[match]):
+        if (my_alias not in mvp_per_game[game]) and (your_alias not in mvp_per_game[game]):
             our_most_consecutive_nomvp_in_helper += 1
         else:
             our_most_consecutive_nomvp_in_helper = 0
         if our_most_consecutive_nomvp_in_helper > our_most_consecutive_nomvp_in:
             our_most_consecutive_nomvp_in = our_most_consecutive_nomvp_in_helper
 
-        if ("Opponent1" in mvp_per_match[match]) or ("Opponent2" in mvp_per_match[match]):
+        if ("Opponent1" in mvp_per_game[game]) or ("Opponent2" in mvp_per_game[game]):
             their_most_consecutive_mvp_helper += 1
         else:
             their_most_consecutive_mvp_helper = 0
         if their_most_consecutive_mvp_helper > their_most_consecutive_mvp:
             their_most_consecutive_mvp = their_most_consecutive_mvp_helper
 
-        if ("Opponent1" not in mvp_per_match[match]) and ("Opponent2" not in mvp_per_match[match]):
+        if ("Opponent1" not in mvp_per_game[game]) and ("Opponent2" not in mvp_per_game[game]):
             their_most_consecutive_nomvp_in_helper += 1
         else:
             their_most_consecutive_nomvp_in_helper = 0
@@ -2934,17 +2933,17 @@ for i in range(0, 2):
     my_most_consecutive_games_ftsoa_in = 0
     my_most_goals_or_assists_in_one_game = 0
     my_most_goals_or_assists_in_one_game_file = ""
-    for match in range(len(my_goals_over_time)):
-        if my_goals_over_time[match] > 0 or my_assists_over_time[match] > 0:
+    for game in range(len(my_goals_over_time)):
+        if my_goals_over_time[game] > 0 or my_assists_over_time[game] > 0:
             my_most_consecutive_games_ftsoa_in_helper = 0
             my_most_consecutive_games_scored_or_assisted_in_helper += 1
-            if my_goals_over_time[match] + my_assists_over_time[match] > my_most_goals_or_assists_in_one_game:
-                my_most_goals_or_assists_in_one_game = my_goals_over_time[match] + my_assists_over_time[match]
-                my_most_goals_or_assists_in_one_game_file = new_json_files[match]
+            if my_goals_over_time[game] + my_assists_over_time[game] > my_most_goals_or_assists_in_one_game:
+                my_most_goals_or_assists_in_one_game = my_goals_over_time[game] + my_assists_over_time[game]
+                my_most_goals_or_assists_in_one_game_file = new_json_files[game]
             if my_most_consecutive_games_scored_or_assisted_in_helper > my_most_consecutive_games_scored_or_assisted_in:
                 my_most_consecutive_games_scored_or_assisted_in = my_most_consecutive_games_scored_or_assisted_in_helper
 
-        if my_goals_over_time[match] == 0 and my_assists_over_time[match] == 0:
+        if my_goals_over_time[game] == 0 and my_assists_over_time[game] == 0:
             my_most_consecutive_games_scored_or_assisted_in_helper = 0
             my_most_consecutive_games_ftsoa_in_helper += 1
             if my_most_consecutive_games_ftsoa_in_helper > my_most_consecutive_games_ftsoa_in:
@@ -2956,25 +2955,25 @@ for i in range(0, 2):
     your_most_consecutive_games_ftsoa_in = 0
     your_most_goals_or_assists_in_one_game = 0
     your_most_goals_or_assists_in_one_game_file = ""
-    for match in range(len(your_goals_over_time)):
-        if your_goals_over_time[match] > 0 or your_assists_over_time[match] > 0:
+    for game in range(len(your_goals_over_time)):
+        if your_goals_over_time[game] > 0 or your_assists_over_time[game] > 0:
             your_most_consecutive_games_ftsoa_in_helper = 0
             your_most_consecutive_games_scored_or_assisted_in_helper += 1
-            if your_goals_over_time[match] + your_assists_over_time[match] > your_most_goals_or_assists_in_one_game:
-                your_most_goals_or_assists_in_one_game = your_goals_over_time[match] + your_assists_over_time[match]
-                your_most_goals_or_assists_in_one_game_file = new_json_files[match]
+            if your_goals_over_time[game] + your_assists_over_time[game] > your_most_goals_or_assists_in_one_game:
+                your_most_goals_or_assists_in_one_game = your_goals_over_time[game] + your_assists_over_time[game]
+                your_most_goals_or_assists_in_one_game_file = new_json_files[game]
             if your_most_consecutive_games_scored_or_assisted_in_helper > your_most_consecutive_games_scored_or_assisted_in:
                 your_most_consecutive_games_scored_or_assisted_in = your_most_consecutive_games_scored_or_assisted_in_helper
 
-        if your_goals_over_time[match] == 0 and your_assists_over_time[match] == 0:
+        if your_goals_over_time[game] == 0 and your_assists_over_time[game] == 0:
             your_most_consecutive_games_scored_or_assisted_in_helper = 0
             your_most_consecutive_games_ftsoa_in_helper += 1
             if your_most_consecutive_games_ftsoa_in_helper > your_most_consecutive_games_ftsoa_in:
                 your_most_consecutive_games_ftsoa_in = your_most_consecutive_games_ftsoa_in_helper
 
-    individual_record_data = [["Most goals scored in one game", max(my_goals_per_match), max(your_goals_per_match),
-                               link_replay(new_json_files[my_goals_per_match.index(max(my_goals_per_match))], 0, False),
-                               link_replay(new_json_files[your_goals_per_match.index(max(your_goals_per_match))], 0,
+    individual_record_data = [["Most goals scored in one game", max(my_goals_per_game), max(your_goals_per_game),
+                               link_replay(new_json_files[my_goals_per_game.index(max(my_goals_per_game))], 0, False),
+                               link_replay(new_json_files[your_goals_per_game.index(max(your_goals_per_game))], 0,
                                            False)],
                               ["Most consecutive games scored in", my_most_consecutive_games_scored_in,
                                your_most_consecutive_games_scored_in, "-", "-"],
