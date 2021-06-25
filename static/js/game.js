@@ -170,10 +170,12 @@ var app = new Vue({
         },
         hover_row(e) {
             let tm = e.currentTarget.dataset.targetMarker
+            d3.select("#pitch_g_holder").dispatch("clearMessage")
             d3.select("#"+tm).dispatch("mouseover")
         },
         leave_row(e) {
             let tm = e.currentTarget.dataset.targetMarker
+            d3.select("#pitch_g_holder").dispatch("clearMessage")
             d3.select("#"+tm).dispatch("mouseleave")
         }
     }
@@ -197,10 +199,21 @@ function plot_pitch_shot() {
         .attr("id", "fixture_plot")
         .attr('class', 'w-100')
         .append('g')
+        .attr("id", "pitch_g_holder")
         .attr("transform",
             "translate(" + margin.left + "," + margin.top + ")");
 
     let arrowPoints = [[0, 0], [0, 20], [20, 10]];
+
+    let clearfrozen = (e) => {
+        let perms = $(".perm")
+        perms.each(function() {
+            $(this).removeClass("perm")
+            d3.select(this).dispatch("mouseleave")
+        });
+        
+        $(".perm").removeClass("perm")
+    }
 
     svg.append('defs')
         .append('marker')
@@ -213,7 +226,9 @@ function plot_pitch_shot() {
         .attr('orient', 'auto-start-reverse')
         .append('path')
         .attr('d', d3.line()(arrowPoints))
-        .attr('stroke', 'black');
+        .attr('stroke', 'black')
+        
+    svg.on("clearMessage", clearfrozen);
 
     let data = app.shots_combined
 
@@ -288,6 +303,7 @@ function plot_pitch_shot() {
         .style("stroke-opacity", 0.5)
         .style("fill", "#d0e0ff78")
         .attr("d", blue_side(d3.path()))
+        .on("click", clearfrozen)
     let blue_mid = (6400+900)/2
     let team_y = 2000
     let score_y = 4120
@@ -328,6 +344,7 @@ function plot_pitch_shot() {
         .style("stroke-width", 50)
         .style("fill", "#ffe0a780")
         .attr("d", orange_side(d3.path()))
+        .on("click", clearfrozen)
     let orange_mid = (6400+11180)/2
     let orange_xg = app.xg_out.filter(i => i.is_orange==1).map(i => parseFloat(i.xg)).reduce((a,b) => a+b,0).toFixed(2)
     orange_team.append("text")
@@ -394,6 +411,10 @@ function plot_pitch_shot() {
         .attr("stroke-opacity", 0.04)
 
     function highlight_shot (event,d) {
+        if ($(event.currentTarget).hasClass("perm")) {
+            return
+        }
+        d3.selectAll("#frozen_frame").remove()
         let target = d3.select(event.currentTarget)
         target.style("fill-opacity", 1)
         d3.selectAll(".xg-entry").filter(i => i !== d).style("display", "none")
@@ -456,7 +477,15 @@ function plot_pitch_shot() {
         step_function_callback.enter(d.time)
 
     }
+    function highlight_shot_perm(event,d) {
+        $(event.currentTarget).toggleClass("perm")
+        highlight_shot(event, d)
+        event.stopPropagation();
+    }
     function undo_higlight(event,d) {
+        if ($(event.currentTarget).hasClass("perm")) {
+            return
+        }
         let target = d3.select(event.currentTarget)
         target.style("fill-opacity", d.fill)
         d3.selectAll("#frozen_frame").remove()
@@ -487,7 +516,9 @@ function plot_pitch_shot() {
         .attr("d", (d) => d3.symbol().size(xg_size(d.xg)).type(d3.symbolCircle)())
         .attr("transform", (d) => `translate(${x(d.x_mult * d.shot_taker_pos_y)},${y(d.y_mult * d.shot_taker_pos_x)})`)
         .attr("fill-opacity", (d) => d.fill)
+        .style("cursor", "pointer")
         .on("mouseover", highlight_shot)
+        .on("click", highlight_shot_perm)
         .on("mouseleave", undo_higlight)
 
     let goals = svg.append('g')
@@ -506,7 +537,9 @@ function plot_pitch_shot() {
         .attr("d", (d) => d3.symbol().size(xg_size(d.xg)).type(d3.symbolStar)())
         .attr("transform", (d) => `translate(${x(d.x_mult * d.shot_taker_pos_y)},${y(d.y_mult * d.shot_taker_pos_x)})`)
         .attr("fill-opacity", (d) => d.fill)
+        .style("cursor", "pointer")
         .on("mouseover", highlight_shot)
+        .on("click", highlight_shot_perm)
         .on("mouseleave", undo_higlight)
 
     let legened = svg.append("g")
