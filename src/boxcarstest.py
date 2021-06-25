@@ -2976,34 +2976,34 @@ for i in range(0, 2):
                                link_replay(new_json_files[my_goals_per_match.index(max(my_goals_per_match))], 0, False),
                                link_replay(new_json_files[your_goals_per_match.index(max(your_goals_per_match))], 0,
                                            False)],
-                              ["Most consecutive matches scored in", my_most_consecutive_games_scored_in,
+                              ["Most consecutive games scored in", my_most_consecutive_games_scored_in,
                                your_most_consecutive_games_scored_in, "-", "-"],
-                              ["Most consecutive matches failed to scored in", my_most_consecutive_games_fts_in,
+                              ["Most consecutive games failed to scored in", my_most_consecutive_games_fts_in,
                                your_most_consecutive_games_fts_in, "-", "-"],
                               ["Most shots in one game", max(my_shots_over_time), max(your_shots_over_time),
                                link_replay(new_json_files[my_shots_over_time.index(max(my_shots_over_time))], 0, False),
                                link_replay(new_json_files[your_shots_over_time.index(max(your_shots_over_time))], 0,
                                            False)],
-                              ["Most consecutive matches shot in", my_most_consecutive_games_shot_in,
+                              ["Most consecutive games shot in", my_most_consecutive_games_shot_in,
                                your_most_consecutive_games_shot_in, "-", "-"],
-                              ["Most consecutive matches failed to shoot in", my_most_consecutive_games_noshot_in,
+                              ["Most consecutive games failed to shoot in", my_most_consecutive_games_noshot_in,
                                your_most_consecutive_games_noshot_in, "-", "-"],
                               ["Most assists in one game", max(my_assists_over_time), max(your_assists_over_time),
                                link_replay(new_json_files[my_assists_over_time.index(max(my_assists_over_time))], 0,
                                            False),
                                link_replay(new_json_files[your_assists_over_time.index(max(your_assists_over_time))], 0,
                                            False)],
-                              ["Most consecutive matches assisted in", my_most_consecutive_games_assist_in,
+                              ["Most consecutive games assisted in", my_most_consecutive_games_assist_in,
                                your_most_consecutive_games_assist_in, "-", "-"],
-                              ["Most consecutive matches failed to assist in", my_most_consecutive_games_noassist_in,
+                              ["Most consecutive games failed to assist in", my_most_consecutive_games_noassist_in,
                                your_most_consecutive_games_noassist_in, "-", "-"],
                               ["Most saves in one game", max(my_saves_over_time), max(your_saves_over_time),
                                link_replay(new_json_files[my_saves_over_time.index(max(my_saves_over_time))], 0, False),
                                link_replay(new_json_files[your_saves_over_time.index(max(your_saves_over_time))], 0,
                                            False)],
-                              ["Most consecutive matches saved in", my_most_consecutive_games_save_in,
+                              ["Most consecutive games saved in", my_most_consecutive_games_save_in,
                                your_most_consecutive_games_save_in, "-", "-"],
-                              ["Most consecutive matches failed to save in", my_most_consecutive_games_nosave_in,
+                              ["Most consecutive games failed to save in", my_most_consecutive_games_nosave_in,
                                your_most_consecutive_games_nosave_in, "-", "-"],
                               ["Highest score in one game", max(my_scores_over_time), max(your_scores_over_time),
                                link_replay(new_json_files[my_scores_over_time.index(max(my_scores_over_time))], 0,
@@ -3092,13 +3092,13 @@ for i in range(0, 2):
                                            True),
                                link_replay(your_highest_nonshot_goal_scored_file,
                                            your_highest_nonshot_goal_scored_frame, True)],
-                              ["Most consecutive matches returned in", my_most_consecutive_games_returned_in,
+                              ["Most consecutive games returned in", my_most_consecutive_games_returned_in,
                                your_most_consecutive_games_returned_in, "-", "-"],
-                              ["Most consecutive matches blanked in", my_most_consecutive_games_blanked_in,
+                              ["Most consecutive games blanked in", my_most_consecutive_games_blanked_in,
                                your_most_consecutive_games_blanked_in, "-", "-"],
                               ["Most consecutive MVPs (no tiebreaker)", my_most_consecutive_mvp,
                                your_most_consecutive_mvp, "-", "-"],
-                              ["Most consecutive matches without MVP", my_most_consecutive_nomvp_in,
+                              ["Most consecutive games without MVP", my_most_consecutive_nomvp_in,
                                your_most_consecutive_nomvp_in, "-", "-"],
                               ["Most consecutive goals from shots", my_most_consecutive_goals_from_shots,
                                your_most_consecutive_goals_from_shots, "-", "-"],
@@ -3108,10 +3108,10 @@ for i in range(0, 2):
                                your_most_goals_or_assists_in_one_game,
                                link_replay(my_most_goals_or_assists_in_one_game_file, 0, False),
                                link_replay(your_most_goals_or_assists_in_one_game_file, 0, False)],
-                              ["Most consecutive matches with a goal involvement",
+                              ["Most consecutive games with a goal involvement",
                                my_most_consecutive_games_scored_or_assisted_in,
                                your_most_consecutive_games_scored_or_assisted_in, "-", "-"],
-                              ["Most consecutive matches without a goal involvement",
+                              ["Most consecutive games without a goal involvement",
                                my_most_consecutive_games_ftsoa_in, your_most_consecutive_games_ftsoa_in, "-", "-"],
                               ["Most hits in one game", max(my_hits_over_time), max(your_hits_over_time),
                                link_replay(new_json_files[my_hits_over_time.index(max(my_hits_over_time))], 0,
@@ -3147,7 +3147,7 @@ for i in range(0, 2):
                               ]
 
     content = tabulate(individual_record_data,
-                       headers=["Record", my_alias, your_alias, "My first replay", "Your first replay"],
+                       headers=["Record", my_alias, your_alias, my_alias+"'s First Replay", your_alias+"'s First Replay"],
                        numalign="right",
                        tablefmt="tsv")
     if not os.path.exists(path_to_tables + "player_records.tsv"):
@@ -3470,7 +3470,7 @@ for i in range(0, 2):
                                      True)],
                         ["Most consecutive MVPs (no tiebreaker)", our_most_consecutive_mvp,
                          their_most_consecutive_mvp, "-", "-"],
-                        ["Most consecutive matches without MVP", our_most_consecutive_nomvp_in,
+                        ["Most consecutive games without MVP", our_most_consecutive_nomvp_in,
                          their_most_consecutive_nomvp_in, "-", "-"],
                         ["Most consecutive goals from shots", our_most_consecutive_goals_from_shots,
                          their_most_consecutive_goals_from_shots, "-", "-"],
@@ -3532,7 +3532,7 @@ for i in range(0, 2):
                         ]
 
     content = tabulate(team_record_data,
-                       headers=["Record", "Our Team", "Opponents", "Our first replay", "Their first replay"],
+                       headers=["Record", "Our Team", "Opponents", "Our First Replay", "Opponents' First Replay"],
                        numalign="right", tablefmt="tsv")
     if not os.path.exists(path_to_tables + "player_records.tsv"):
         open(path_to_tables + "team_records.tsv", 'w').close()
@@ -3708,7 +3708,7 @@ for i in range(0, 2):
                          link_replay(game_max_balls_won_file, 0, False)]
                         ]
 
-    content = tabulate(game_record_data, headers=["Record in one game", "Value", "First replay"], numalign="right",
+    content = tabulate(game_record_data, headers=["Record (in one game)", "Value", "First Replay"], numalign="right",
                        tablefmt="tsv")
     if not os.path.exists(path_to_tables + "game_records.tsv"):
         open(path_to_tables + "game_records.tsv", 'w').close()
