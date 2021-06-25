@@ -29,7 +29,7 @@
     <main id="app">
         
         <div class="container mb-3">
-            <div class="row justify-content-center">
+            <div class="row justify-content-center" v-if="!_.isEmpty(navigation)">
                 <div class="col-2 text-center nav_game">
                     <a v-if="navigation.prev" :href="'game.html?id='+navigation.prev['Replay ID']"><i class="fas fa-chevron-circle-left"></i></a>
                     <i class="fas fa-chevron-circle-left" v-else></i>
@@ -41,6 +41,15 @@
                 <div class="col-2 text-center nav_game">
                     <a v-if="navigation.next" :href="'game.html?id='+navigation.next['Replay ID']"><i class="fas fa-chevron-circle-right"></i></a>
                     <i class="fas fa-chevron-circle-right" v-else></i>
+                </div>
+                <div class="col-12 row">
+                    <!-- {{ navigation.this_game }} -->
+                    <div class="col-2 col-sm g-cols" v-for="tag in display_tags">
+                        <div class="d-flex flex-column pl-2 pr-2">
+                            <div class="p-0 g-title text-center">{{ tag }}</div>
+                            <div class="p-0 g-value text-center">{{ navigation.this_game[tag] }}</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-12 col-md-5 mt-3 mb-3">
                     <div id="pitch_with_shots">

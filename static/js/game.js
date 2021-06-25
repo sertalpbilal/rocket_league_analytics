@@ -16,7 +16,10 @@ var app = new Vue({
         thresholds: [0, 0.5, 1],
         game_json: {},
         main_player: "enpitsu",
-        game_list: []
+        game_list: [],
+        display_tags: [
+            "xGF", "xGC", "xGD", "HF", "HC", "HD", "P(Win)", "P(Result)", "P(Score)", "Luck %", "Outcome"
+        ]
     },
     computed: {
         shots_combined() {
@@ -167,10 +170,12 @@ var app = new Vue({
         },
         hover_row(e) {
             let tm = e.currentTarget.dataset.targetMarker
+            d3.select("#pitch_g_holder").dispatch("clearMessage")
             d3.select("#"+tm).dispatch("mouseover")
         },
         leave_row(e) {
             let tm = e.currentTarget.dataset.targetMarker
+            d3.select("#pitch_g_holder").dispatch("clearMessage")
             d3.select("#"+tm).dispatch("mouseleave")
         }
     }
@@ -179,12 +184,12 @@ var app = new Vue({
 function plot_pitch_shot() {
 
     const raw_width = 12080+20;
-    const raw_height = 8240+20;
+    const raw_height = 8240+20+580;
 
     // 5140 y max (in svg it is x)
     // 4100 x max (in svg it is y)
 
-    const margin = { top: 10, right: 10, bottom: 10, left: 10 },
+    const margin = { top: 10, right: 10, bottom: 10+580, left: 10 },
         width = raw_width - margin.left - margin.right,
         height = raw_height - margin.top - margin.bottom;
 
@@ -194,10 +199,21 @@ function plot_pitch_shot() {
         .attr("id", "fixture_plot")
         .attr('class', 'w-100')
         .append('g')
+        .attr("id", "pitch_g_holder")
         .attr("transform",
             "translate(" + margin.left + "," + margin.top + ")");
 
     let arrowPoints = [[0, 0], [0, 20], [20, 10]];
+
+    let clearfrozen = (e) => {
+        let perms = $(".perm")
+        perms.each(function() {
+            $(this).removeClass("perm")
+            d3.select(this).dispatch("mouseleave")
+        });
+        
+        $(".perm").removeClass("perm")
+    }
 
     svg.append('defs')
         .append('marker')
@@ -210,7 +226,9 @@ function plot_pitch_shot() {
         .attr('orient', 'auto-start-reverse')
         .append('path')
         .attr('d', d3.line()(arrowPoints))
-        .attr('stroke', 'black');
+        .attr('stroke', 'black')
+        
+    svg.on("clearMessage", clearfrozen);
 
     let data = app.shots_combined
 
@@ -285,6 +303,7 @@ function plot_pitch_shot() {
         .style("stroke-opacity", 0.5)
         .style("fill", "#d0e0ff78")
         .attr("d", blue_side(d3.path()))
+        .on("click", clearfrozen)
     let blue_mid = (6400+900)/2
     let team_y = 2000
     let score_y = 4120
@@ -325,6 +344,7 @@ function plot_pitch_shot() {
         .style("stroke-width", 50)
         .style("fill", "#ffe0a780")
         .attr("d", orange_side(d3.path()))
+        .on("click", clearfrozen)
     let orange_mid = (6400+11180)/2
     let orange_xg = app.xg_out.filter(i => i.is_orange==1).map(i => parseFloat(i.xg)).reduce((a,b) => a+b,0).toFixed(2)
     orange_team.append("text")
@@ -391,6 +411,10 @@ function plot_pitch_shot() {
         .attr("stroke-opacity", 0.04)
 
     function highlight_shot (event,d) {
+        if ($(event.currentTarget).hasClass("perm")) {
+            return
+        }
+        d3.selectAll("#frozen_frame").remove()
         let target = d3.select(event.currentTarget)
         target.style("fill-opacity", 1)
         d3.selectAll(".xg-entry").filter(i => i !== d).style("display", "none")
@@ -453,7 +477,15 @@ function plot_pitch_shot() {
         step_function_callback.enter(d.time)
 
     }
+    function highlight_shot_perm(event,d) {
+        $(event.currentTarget).toggleClass("perm")
+        highlight_shot(event, d)
+        event.stopPropagation();
+    }
     function undo_higlight(event,d) {
+        if ($(event.currentTarget).hasClass("perm")) {
+            return
+        }
         let target = d3.select(event.currentTarget)
         target.style("fill-opacity", d.fill)
         d3.selectAll("#frozen_frame").remove()
@@ -484,7 +516,9 @@ function plot_pitch_shot() {
         .attr("d", (d) => d3.symbol().size(xg_size(d.xg)).type(d3.symbolCircle)())
         .attr("transform", (d) => `translate(${x(d.x_mult * d.shot_taker_pos_y)},${y(d.y_mult * d.shot_taker_pos_x)})`)
         .attr("fill-opacity", (d) => d.fill)
+        .style("cursor", "pointer")
         .on("mouseover", highlight_shot)
+        .on("click", highlight_shot_perm)
         .on("mouseleave", undo_higlight)
 
     let goals = svg.append('g')
@@ -503,8 +537,44 @@ function plot_pitch_shot() {
         .attr("d", (d) => d3.symbol().size(xg_size(d.xg)).type(d3.symbolStar)())
         .attr("transform", (d) => `translate(${x(d.x_mult * d.shot_taker_pos_y)},${y(d.y_mult * d.shot_taker_pos_x)})`)
         .attr("fill-opacity", (d) => d.fill)
+        .style("cursor", "pointer")
         .on("mouseover", highlight_shot)
+        .on("click", highlight_shot_perm)
         .on("mouseleave", undo_higlight)
+
+    let legened = svg.append("g")
+    legened.append("path")
+        .style("stroke", "black")
+        .style("stroke-opacity", 1)
+        .style("stroke-width", 20)
+        .style("fill", "black")
+        .attr("d", d3.symbol().size(xg_size(0.5)).type(d3.symbolStar)())
+        .attr("transform", `translate(${width/2+500},${height+350})`)
+        .attr("fill-opacity", 0.5)
+    legened.append("text")
+        .text("Goal")
+        .attr("y", height+380)
+        .attr("x", width/2+1300)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "black")
+        .style("font-size", "230pt")
+    legened.append("path")
+        .style("stroke", "black")
+        .style("stroke-opacity", 1)
+        .style("stroke-width", 20)
+        .style("fill", "black")
+        .attr("d", d3.symbol().size(xg_size(0.5)).type(d3.symbolCircle)())
+        .attr("transform", `translate(${width/2-1500},${height+350})`)
+        .attr("fill-opacity", 0.5)
+    legened.append("text")
+        .text("Shot")
+        .attr("y", height+380)
+        .attr("x", width/2-800)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "black")
+        .style("font-size", "230pt")
 
 }
 
@@ -518,7 +588,7 @@ function plot_xg_timeline() {
     // 5140 y max (in svg it is x)
     // 4100 x max (in svg it is y)
 
-    const margin = { top: 25, right: 25, bottom: 20, left: 25 },
+    const margin = { top: 25, right: 25, bottom: 35, left: 40 },
         width = raw_width - margin.left - margin.right,
         height = raw_height - margin.top - margin.bottom;
 
@@ -728,6 +798,44 @@ function plot_xg_timeline() {
         .attr("alignment-baseline", "bottom")
         .attr("fill", "black")
         .style("font-size", "10pt")
+
+    svg.append("text")
+        .text("Cumulative xG")
+        // .attr("y", height/2)
+        // .attr("x", 200)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "bottom")
+        .attr("fill", "black")
+        .style("font-size", "10pt")
+        .attr("transform", `translate(-25, ${height/2}) rotate(-90)`)
+    
+    svg.append("text")
+        .text("Time (secs)")
+        // .attr("y", height/2)
+        // .attr("x", 200)
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "hanging")
+        .attr("fill", "black")
+        .style("font-size", "10pt")
+        .attr("transform", `translate(${width/2}, ${height+20})`)
+
+    let legened = svg.append("g")
+    legened.append("circle")
+        .attr("cx", width/2+150)
+        .attr("cy", height+25)
+        .attr("r", 4)
+        .attr("fill", "white")
+        .attr("fill-opacity", 0.9)
+        .attr("stroke", "gray")
+        .style("stroke-width", 2)
+        .style("pointer-events", "none")
+    legened.append("text")
+        .text("Goal")
+        .attr("text-anchor", 'middle')
+        .attr("alignment-baseline", "middle")
+        .attr("fill", "gray")
+        .style("font-size", "10pt")
+        .attr("transform", `translate(${width/2+175}, ${height+26})`)
 
 }
 
