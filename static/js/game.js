@@ -15,7 +15,8 @@ var app = new Vue({
         colors: ['#DE8892', 'white', '#9FDC7C'],
         thresholds: [0, 0.5, 1],
         game_json: {},
-        main_player: "enpitsu"
+        main_player: "enpitsu",
+        game_list: []
     },
     computed: {
         shots_combined() {
@@ -128,6 +129,16 @@ var app = new Vue({
             let orange_steps = get_hits(orange_team_hits)
 
             return {'hits': {'blue': blue_steps, 'orange': orange_steps}, goals}
+        },
+        navigation() {
+            if (_.isEmpty(this.game_list)) return {}
+            let games = this.game_list
+            let this_index = games.findIndex(i => i['Replay ID'] == this.game_id)
+            return {
+                'prev': this_index < games.length-1 ? games[this_index+1] : undefined,
+                'this_game': games[this_index],
+                'next': this_index > 0 ? games[this_index-1] : undefined
+            }
         }
     },
     methods: {
@@ -765,6 +776,16 @@ async function fetch_game_json() {
     })
 }
 
+async function fetch_file_list() {
+    return fetch_local_file('data/tables/scorelines.tsv').then((data) => {
+        tablevals = data.split('\n').map(i => i.split('\t').map(j => j.trim()));
+        keys = tablevals[0];
+        values = tablevals.slice(1);
+        let el_data = values.map(i => _.zipObject(keys, i));
+        app.game_list = el_data;
+    })
+}
+
 $(document).ready(() => {
 
     var queryDict = {}
@@ -777,7 +798,8 @@ $(document).ready(() => {
     Promise.all([
             fetch_game_shots(),
             fetch_game_xg(),
-            fetch_game_json()
+            fetch_game_json(),
+            fetch_file_list()
         ]).then(() => {
             console.log('ready')
             app.$nextTick(() => {
