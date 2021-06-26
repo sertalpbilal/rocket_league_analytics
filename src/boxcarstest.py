@@ -9,8 +9,7 @@
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
 
-# TODO: change the way the program runs so that it doesn't run in a loop
-# TODO: export all data used for matplotlib charts to .TSV files
+# TODO: export all data used for matplotlib charts to .TSV files so we can move away from matplotlib
 
 import csv
 import glob
@@ -87,7 +86,6 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     our_color = "green"
     their_color = "darkred"
 
-    bg_img = plt.imread("../simple-pitch.png")
 
     if check_new:
         path_to_json = '../data/json_new/'
@@ -3600,925 +3598,924 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     f.write(content)
     f.close()
 
-    fig = plt.figure(figsize=(40, 20))
-    n_plots = 26
-    widths = [1]
-    heights = [1] * n_plots
-    spec = fig.add_gridspec(ncols=1, nrows=n_plots, width_ratios=widths, height_ratios=heights)
+    if save_and_crop:
+        bg_img = plt.imread("../simple-pitch.png")
+        fig = plt.figure(figsize=(40, 20))
+        n_plots = 26
+        widths = [1]
+        heights = [1] * n_plots
+        spec = fig.add_gridspec(ncols=1, nrows=n_plots, width_ratios=widths, height_ratios=heights)
 
-    pitch_min_x = 4500
-    pitch_min_y = -6300
+        pitch_min_x = 4500
+        pitch_min_y = -6300
 
-    pitch_max_x = pitch_min_x * -1
-    pitch_max_y = pitch_min_y * -1
+        pitch_max_x = pitch_min_x * -1
+        pitch_max_y = pitch_min_y * -1
 
-    our_xg_diff_over_time = []
-    for xg in range(len(my_xg_over_time)):
-        our_xg_diff_over_time.append(my_xg_over_time[xg] + your_xg_over_time[xg] - their_xg_over_time[xg])
+        our_xg_diff_over_time = []
+        for xg in range(len(my_xg_over_time)):
+            our_xg_diff_over_time.append(my_xg_over_time[xg] + your_xg_over_time[xg] - their_xg_over_time[xg])
 
-    ax1 = fig.add_subplot(spec[0, 0])  # results
-    ax1.bar(range(len(gd_array)), gd_array, color=result_color, alpha=0.75)
-    min_gd = min(gd_array)
-    max_gd = max(gd_array)
-    min_xgd = min(our_xg_diff_over_time)
-    max_xgd = max(our_xg_diff_over_time)
-    gd_lim = max(abs(min_gd), max_gd, abs(min_xgd), max_xgd)
-    ax1.set_ylim(-gd_lim, gd_lim)
-    ax1.set_xlim(-1, len(gd_array))
-    ax1.axis("off")
-    ax1.plot(range(len(gd_array)), our_xg_diff_over_time, color="black", alpha=1)
+        ax1 = fig.add_subplot(spec[0, 0])  # results
+        ax1.bar(range(len(gd_array)), gd_array, color=result_color, alpha=0.75)
+        min_gd = min(gd_array)
+        max_gd = max(gd_array)
+        min_xgd = min(our_xg_diff_over_time)
+        max_xgd = max(our_xg_diff_over_time)
+        gd_lim = max(abs(min_gd), max_gd, abs(min_xgd), max_xgd)
+        ax1.set_ylim(-gd_lim, gd_lim)
+        ax1.set_xlim(-1, len(gd_array))
+        ax1.axis("off")
+        ax1.plot(range(len(gd_array)), our_xg_diff_over_time, color="black", alpha=1)
 
-    plt.axhline(y=0, color='black', linestyle=':')
+        plt.axhline(y=0, color='black', linestyle=':')
 
-    for streak_game_num in streak_start_games:
-        plt.axvline(x=streak_game_num - 0.5, color='grey', linestyle='-', alpha=0.25)
+        for streak_game_num in streak_start_games:
+            plt.axvline(x=streak_game_num - 0.5, color='grey', linestyle='-', alpha=0.25)
 
-    ax3 = fig.add_subplot(spec[2, 0])  # Results
+        ax3 = fig.add_subplot(spec[2, 0])  # Results
 
-    sizes = [our_win_ratio, our_loss_ratio]
-    ax3.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
-            textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
-                       })
-    ax3.set_title(str(games_nr) + " Games:")
+        sizes = [our_win_ratio, our_loss_ratio]
+        ax3.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
+                textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
+                           })
+        ax3.set_title(str(games_nr) + " Games:")
 
-    ax4 = fig.add_subplot(spec[3, 0])  # My heatmap
-    ax4.set_title(my_alias + "'s Touches")
-    ax4.set_xlim(pitch_min_x, pitch_max_x)
-    ax4.set_ylim(pitch_min_y, pitch_max_y)
-    ax4.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
-    # remove touches near kick off
-    new_my_touches_x = []
-    new_my_touches_y = []
-    for touch in range(0, len(my_touches_y)):
-        if not ((-350 < int(my_touches_x[touch]) < 350) and (my_touches_y[touch]) > -370 and int(
-                my_touches_y[touch]) < 240):
-            new_my_touches_x.append(my_touches_x[touch])
-            new_my_touches_y.append(my_touches_y[touch])
+        ax4 = fig.add_subplot(spec[3, 0])  # My heatmap
+        ax4.set_title(my_alias + "'s Touches")
+        ax4.set_xlim(pitch_min_x, pitch_max_x)
+        ax4.set_ylim(pitch_min_y, pitch_max_y)
+        ax4.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+        # remove touches near kick off
+        new_my_touches_x = []
+        new_my_touches_y = []
+        for touch in range(0, len(my_touches_y)):
+            if not ((-350 < int(my_touches_x[touch]) < 350) and (my_touches_y[touch]) > -370 and int(
+                    my_touches_y[touch]) < 240):
+                new_my_touches_x.append(my_touches_x[touch])
+                new_my_touches_y.append(my_touches_y[touch])
 
-    ax4.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
-    heatmap, xedges, yedges = np.histogram2d(new_my_touches_y + [pitch_min_y, pitch_max_y],
-                                             new_my_touches_x + [pitch_min_x, pitch_max_x], bins=80)
-    im = ax4.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=1, y_stddev=1)),
-                    extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.75)
-    im.set_cmap('gist_gray_r')
-    ax4.axis("off")
+        ax4.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+        heatmap, xedges, yedges = np.histogram2d(new_my_touches_y + [pitch_min_y, pitch_max_y],
+                                                 new_my_touches_x + [pitch_min_x, pitch_max_x], bins=80)
+        im = ax4.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=1, y_stddev=1)),
+                        extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.75)
+        im.set_cmap('gist_gray_r')
+        ax4.axis("off")
 
-    ax5 = fig.add_subplot(spec[3, 0])  # My heatmap
-    ax5.set_title(your_alias + "'s Touches")
-    ax5.set_xlim(pitch_min_x, pitch_max_x)
-    ax5.set_ylim(pitch_min_y, pitch_max_y)
-    ax5.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
-    # remove touches near kick off
-    new_your_touches_x = []
-    new_your_touches_y = []
-    for touch in range(0, len(your_touches_y)):
-        if not ((-350 < int(your_touches_x[touch]) < 350) and (your_touches_y[touch]) > -370 and int(
-                your_touches_y[touch]) < 240):
-            new_your_touches_x.append(your_touches_x[touch])
-            new_your_touches_y.append(your_touches_y[touch])
+        ax5 = fig.add_subplot(spec[3, 0])  # My heatmap
+        ax5.set_title(your_alias + "'s Touches")
+        ax5.set_xlim(pitch_min_x, pitch_max_x)
+        ax5.set_ylim(pitch_min_y, pitch_max_y)
+        ax5.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+        # remove touches near kick off
+        new_your_touches_x = []
+        new_your_touches_y = []
+        for touch in range(0, len(your_touches_y)):
+            if not ((-350 < int(your_touches_x[touch]) < 350) and (your_touches_y[touch]) > -370 and int(
+                    your_touches_y[touch]) < 240):
+                new_your_touches_x.append(your_touches_x[touch])
+                new_your_touches_y.append(your_touches_y[touch])
 
-    ax5.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
-    heatmap, xedges, yedges = np.histogram2d(new_your_touches_y + [pitch_min_y, pitch_max_y],
-                                             new_your_touches_x + [pitch_min_x, pitch_max_x], bins=80)
-    im = ax5.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=1, y_stddev=1)),
-                    extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.75)
-    im.set_cmap('gist_gray_r')
-    ax5.axis("off")
+        ax5.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+        heatmap, xedges, yedges = np.histogram2d(new_your_touches_y + [pitch_min_y, pitch_max_y],
+                                                 new_your_touches_x + [pitch_min_x, pitch_max_x], bins=80)
+        im = ax5.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=1, y_stddev=1)),
+                        extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.75)
+        im.set_cmap('gist_gray_r')
+        ax5.axis("off")
 
-    # positional tendencies chart
+        # positional tendencies chart
 
-    ax22 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
+        ax22 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
-    dic = {1: "Ground", 2: "Low Air", 3: "High Air", 4: "Def 1/2", 5: "Att 1/2", 6: "Def 1/3", 7: "Mid 1/3",
-           8: "Att 1/3", 9: "Behind Ball", 10: "In Front of Ball", 11: "Near Wall", 12: "In Corner", 13: "On Wall",
-           14: "Full Boost", 15: "Low Boost", 16: "No Boost", 17: "Closest to Ball", 18: "Close to Ball",
-           19: "Furthest from Ball",
-           20: "Slow Speed", 21: "Boost Speed", 22: "Supersonic", 23: "Carrying Ball"}
+        dic = {1: "Ground", 2: "Low Air", 3: "High Air", 4: "Def 1/2", 5: "Att 1/2", 6: "Def 1/3", 7: "Mid 1/3",
+               8: "Att 1/3", 9: "Behind Ball", 10: "In Front of Ball", 11: "Near Wall", 12: "In Corner", 13: "On Wall",
+               14: "Full Boost", 15: "Low Boost", 16: "No Boost", 17: "Closest to Ball", 18: "Close to Ball",
+               19: "Furthest from Ball",
+               20: "Slow Speed", 21: "Boost Speed", 22: "Supersonic", 23: "Carrying Ball"}
 
-    ticks = []
+        ticks = []
 
-    for num in dic:
-        ticks.append(num)
+        for num in dic:
+            ticks.append(num)
 
-    ax22.set_yticks(ticks)
+        ax22.set_yticks(ticks)
 
-    labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
+        labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
 
-    ax22.set_yticklabels(labels)
-    ax22.set_xticklabels("")
-    ax22.tick_params(bottom=False)  # remove the ticks
+        ax22.set_yticklabels(labels)
+        ax22.set_xticklabels("")
+        ax22.tick_params(bottom=False)  # remove the ticks
 
-    ax22.set_xlim(0, 1)
+        ax22.set_xlim(0, 1)
 
-    for stat in range(0, len(my_pos_tendencies)):
-        if (my_pos_tendencies[stat] + your_pos_tendencies[stat]) > 0:
-            our_local_total_tendency = my_pos_tendencies[stat] + your_pos_tendencies[stat]
-            my_local_stat_share = my_pos_tendencies[stat] / our_local_total_tendency
-            your_local_stat_share = your_pos_tendencies[stat] / our_local_total_tendency
-        else:
-            my_local_stat_share = 0
-            your_local_stat_share = 0
+        for stat in range(0, len(my_pos_tendencies)):
+            if (my_pos_tendencies[stat] + your_pos_tendencies[stat]) > 0:
+                our_local_total_tendency = my_pos_tendencies[stat] + your_pos_tendencies[stat]
+                my_local_stat_share = my_pos_tendencies[stat] / our_local_total_tendency
+                your_local_stat_share = your_pos_tendencies[stat] / our_local_total_tendency
+            else:
+                my_local_stat_share = 0
+                your_local_stat_share = 0
 
-        ax22.barh(stat + 1, my_local_stat_share, color=my_color)
-        ax22.barh(stat + 1, your_local_stat_share, left=my_local_stat_share, color=your_color)
+            ax22.barh(stat + 1, my_local_stat_share, color=my_color)
+            ax22.barh(stat + 1, your_local_stat_share, left=my_local_stat_share, color=your_color)
 
-    label_count = 0
-    for c in ax22.containers:
-        # customize the label to account for cases when there might not be a bar section
-        labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
+        label_count = 0
+        for c in ax22.containers:
+            # customize the label to account for cases when there might not be a bar section
+            labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
 
-        labels[0] = ""
+            labels[0] = ""
 
-        for stat in range(len(my_pos_tendencies)):
-            if label_count == stat * 2 and (my_pos_tendencies[stat] / games_nr) > 0:
-                if (my_pos_tendencies[stat] / games_nr) < 1:
-                    initial_ms = (my_pos_tendencies[stat] / games_nr) * 1000
-                    labels[0] = str("%.0f" % initial_ms) + "ms"
-                else:
-                    minutes_to_show, seconds_to_show = divmod((my_pos_tendencies[stat] / games_nr), 60)
-                    labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
-            if label_count == ((stat * 2) + 1) and (your_pos_tendencies[stat] / games_nr) > 0:
-                if (your_pos_tendencies[stat] / games_nr) < 1:
-                    initial_ms = (your_pos_tendencies[stat] / games_nr) * 1000
-                    labels[0] = str("%.0f" % initial_ms) + "ms"
-                else:
-                    minutes_to_show, seconds_to_show = divmod((your_pos_tendencies[stat] / games_nr), 60)
-                    labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
+            for stat in range(len(my_pos_tendencies)):
+                if label_count == stat * 2 and (my_pos_tendencies[stat] / games_nr) > 0:
+                    if (my_pos_tendencies[stat] / games_nr) < 1:
+                        initial_ms = (my_pos_tendencies[stat] / games_nr) * 1000
+                        labels[0] = str("%.0f" % initial_ms) + "ms"
+                    else:
+                        minutes_to_show, seconds_to_show = divmod((my_pos_tendencies[stat] / games_nr), 60)
+                        labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
+                if label_count == ((stat * 2) + 1) and (your_pos_tendencies[stat] / games_nr) > 0:
+                    if (your_pos_tendencies[stat] / games_nr) < 1:
+                        initial_ms = (your_pos_tendencies[stat] / games_nr) * 1000
+                        labels[0] = str("%.0f" % initial_ms) + "ms"
+                    else:
+                        minutes_to_show, seconds_to_show = divmod((your_pos_tendencies[stat] / games_nr), 60)
+                        labels[0] = "%1d:%02d" % (minutes_to_show, seconds_to_show)
 
-        # set the bar label
-        ax22.bar_label(c, labels=labels, label_type='center', color="white")
-        label_count += 1
+            # set the bar label
+            ax22.bar_label(c, labels=labels, label_type='center', color="white")
+            label_count += 1
 
-    plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
-    ax22.set_title("Positional Tendencies (per game)\nMinutes:Seconds")
+        plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
+        ax22.set_title("Positional Tendencies (per game)\nMinutes:Seconds")
 
-    my_stats = [my_goal_count, my_goals_from_shots, my_goals_from_non_shots, my_other_goals,
-                my_total_xg, my_shot_xg, my_non_shot_xg,
-                my_gfs_xg_ratio * games_nr, my_gs_ratio * games_nr,
-                my_shot_count, my_miss_count, my_assists_count, my_saves_count, my_touches_count,
-                my_passes_count, my_dribbles_count, my_clears_count, my_aerials_count, my_turnovers_won_count,
-                my_turnovers_count,
-                my_demos_count, my_demos_conceded_count, my_mvp_count, my_score_count]
+        my_stats = [my_goal_count, my_goals_from_shots, my_goals_from_non_shots, my_other_goals,
+                    my_total_xg, my_shot_xg, my_non_shot_xg,
+                    my_gfs_xg_ratio * games_nr, my_gs_ratio * games_nr,
+                    my_shot_count, my_miss_count, my_assists_count, my_saves_count, my_touches_count,
+                    my_passes_count, my_dribbles_count, my_clears_count, my_aerials_count, my_turnovers_won_count,
+                    my_turnovers_count,
+                    my_demos_count, my_demos_conceded_count, my_mvp_count, my_score_count]
 
-    your_stats = [your_goal_count, your_goals_from_shots, your_goals_from_non_shots, your_other_goals,
-                  your_total_xg, your_shot_xg, your_non_shot_xg,
-                  your_gfs_xg_ratio * games_nr, your_gs_ratio * games_nr,
-                  your_shot_count, your_miss_count, your_assists_count, your_saves_count, your_touches_count,
-                  your_passes_count, your_dribbles_count, your_clears_count, your_aerials_count,
-                  your_turnovers_won_count, your_turnovers_count,
-                  your_demos_count, your_demos_conceded_count, your_mvp_count, your_score_count]
+        your_stats = [your_goal_count, your_goals_from_shots, your_goals_from_non_shots, your_other_goals,
+                      your_total_xg, your_shot_xg, your_non_shot_xg,
+                      your_gfs_xg_ratio * games_nr, your_gs_ratio * games_nr,
+                      your_shot_count, your_miss_count, your_assists_count, your_saves_count, your_touches_count,
+                      your_passes_count, your_dribbles_count, your_clears_count, your_aerials_count,
+                      your_turnovers_won_count, your_turnovers_count,
+                      your_demos_count, your_demos_conceded_count, your_mvp_count, your_score_count]
 
-    my_stats.reverse()
-    your_stats.reverse()
+        my_stats.reverse()
+        your_stats.reverse()
 
-    ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
+        ax6 = fig.add_subplot(spec[5, 0])  # Team balance horizontal stacked bar chart
 
-    dic = {1: "Goals", 2: "Shot Goals", 3: "Non-shot Goals", 4: "Other Goals",
-           5: "xG", 6: "Shot xG", 7: "Non-shot xG",
-           8: "GfS/xG", 9: "GfS/Shots",
-           10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
-           15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball", 20: "Lost Ball",
-           21: "Demos", 22: "Demoed", 23: "MVPs", 24: "Scores"}
+        dic = {1: "Goals", 2: "Shot Goals", 3: "Non-shot Goals", 4: "Other Goals",
+               5: "xG", 6: "Shot xG", 7: "Non-shot xG",
+               8: "GfS/xG", 9: "GfS/Shots",
+               10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
+               15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball", 20: "Lost Ball",
+               21: "Demos", 22: "Demoed", 23: "MVPs", 24: "Scores"}
 
-    dic_rev = {len(dic) - i + 1: v for (i, v) in dic.items()}
-    dic = dic_rev
+        dic_rev = {len(dic) - i + 1: v for (i, v) in dic.items()}
+        dic = dic_rev
 
-    ticks = []
+        ticks = []
 
-    for num in dic:
-        ticks.append(num)
+        for num in dic:
+            ticks.append(num)
 
-    ax6.set_yticks(ticks)
+        ax6.set_yticks(ticks)
 
-    labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
-    labels_to_check = labels
+        labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
+        labels_to_check = labels
 
-    ax6.set_yticklabels(labels)
-    ax6.set_xticklabels("")
-    ax6.tick_params(bottom=False)  # remove the ticks
+        ax6.set_yticklabels(labels)
+        ax6.set_xticklabels("")
+        ax6.tick_params(bottom=False)  # remove the ticks
 
-    ax6.set_xlim(0, 1)
-
-    for stat in range(len(my_stats)):
-        if (my_stats[stat] + your_stats[stat]) > 0:
-            our_local_total_stat = my_stats[stat] + your_stats[stat]
-            my_local_stat_share = my_stats[stat] / our_local_total_stat
-            your_local_stat_share = your_stats[stat] / our_local_total_stat
-        else:
-            my_local_stat_share = 0
-            your_local_stat_share = 0
-
-        ax6.barh(stat + 1, my_local_stat_share, color=my_color)
-        ax6.barh(stat + 1, your_local_stat_share, left=my_local_stat_share, color=your_color)
-
-    label_count = 0
-    for c in ax6.containers:
-        # customize the label to account for cases when there might not be a bar section
-        labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
-
-        labels[0] = ""
+        ax6.set_xlim(0, 1)
 
         for stat in range(len(my_stats)):
-            if label_count == stat * 2 and (my_stats[stat] / games_nr) > 0:
-                labels[0] = "%.2f" % (my_stats[stat] / games_nr)
-            if label_count == ((stat * 2) + 1) and (your_stats[stat] / games_nr) > 0:
-                labels[0] = "%.2f" % (your_stats[stat] / games_nr)
-
-        # set the bar label
-        ax6.bar_label(c, labels=labels, label_type='center', color="white")
-        label_count += 1
-    plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
-    ax6.set_title(my_alias + " - " + your_alias + " (per Game)")
-
-    our_stats = []
-    labels_to_exclude = ["Demoed", "Lost Ball", "MVPs"]
-    labels_div_by_2 = ["GfS/Shots", "GfS/xG"]
-
-    labels_to_check.reverse()
-
-    for stat in range(len(my_stats)):
-        # exclude: demos_conceded, turnovers, mvp count
-        if labels_to_check[stat] not in labels_to_exclude:
-            # gs ratio and gfs/xg ratio require division by 2
-            if labels_to_check[stat] in labels_div_by_2:
-                our_stats.append((my_stats[stat] + your_stats[stat]) / 2)
+            if (my_stats[stat] + your_stats[stat]) > 0:
+                our_local_total_stat = my_stats[stat] + your_stats[stat]
+                my_local_stat_share = my_stats[stat] / our_local_total_stat
+                your_local_stat_share = your_stats[stat] / our_local_total_stat
             else:
-                our_stats.append(my_stats[stat] + your_stats[stat])
-        # mvp count
-        else:
-            if labels_to_check[stat] == "MVPs":
-                our_stats.append(our_mvp_count)
+                my_local_stat_share = 0
+                your_local_stat_share = 0
 
-    their_stats = [their_goal_count, their_goals_from_shots, their_goals_from_non_shots, their_other_goals,
-                   their_total_xg, their_shot_xg, their_non_shot_xg,
-                   their_gfs_xg_ratio * games_nr, their_gs_ratio * games_nr,
-                   their_shot_count, their_miss_count, their_assists_count, their_saves_count, their_touches_count,
-                   their_passes_count, their_dribbles_count, their_clears_count, their_aerials_count,
-                   their_turnovers_won_count,
-                   their_demos_count, their_mvp_count, their_score_count]
+            ax6.barh(stat + 1, my_local_stat_share, color=my_color)
+            ax6.barh(stat + 1, your_local_stat_share, left=my_local_stat_share, color=your_color)
 
-    their_stats.reverse()
+        label_count = 0
+        for c in ax6.containers:
+            # customize the label to account for cases when there might not be a bar section
+            labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
 
-    ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
+            labels[0] = ""
 
-    dic = {1: "Goals", 2: "Shot Goals", 3: "Non-shot Goals", 4: "Other Goals",
-           5: "xG", 6: "Shot xG", 7: "Non-shot xG",
-           8: "GfS/xG", 9: "GfS/Shots",
-           10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
-           15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball",
-           20: "Demos", 21: "MVPs", 22: "Scores"}
+            for stat in range(len(my_stats)):
+                if label_count == stat * 2 and (my_stats[stat] / games_nr) > 0:
+                    labels[0] = "%.2f" % (my_stats[stat] / games_nr)
+                if label_count == ((stat * 2) + 1) and (your_stats[stat] / games_nr) > 0:
+                    labels[0] = "%.2f" % (your_stats[stat] / games_nr)
 
-    dic_rev = {len(dic) - i + 1: v for (i, v) in dic.items()}
-    dic = dic_rev
+            # set the bar label
+            ax6.bar_label(c, labels=labels, label_type='center', color="white")
+            label_count += 1
+        plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
+        ax6.set_title(my_alias + " - " + your_alias + " (per Game)")
 
-    ticks = []
+        our_stats = []
+        labels_to_exclude = ["Demoed", "Lost Ball", "MVPs"]
+        labels_div_by_2 = ["GfS/Shots", "GfS/xG"]
 
-    for num in dic:
-        ticks.append(num)
+        labels_to_check.reverse()
 
-    ax7.set_yticks(ticks)
+        for stat in range(len(my_stats)):
+            # exclude: demos_conceded, turnovers, mvp count
+            if labels_to_check[stat] not in labels_to_exclude:
+                # gs ratio and gfs/xg ratio require division by 2
+                if labels_to_check[stat] in labels_div_by_2:
+                    our_stats.append((my_stats[stat] + your_stats[stat]) / 2)
+                else:
+                    our_stats.append(my_stats[stat] + your_stats[stat])
+            # mvp count
+            else:
+                if labels_to_check[stat] == "MVPs":
+                    our_stats.append(our_mvp_count)
 
-    labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
-    ax7.set_yticklabels(labels)
-    ax7.set_xticklabels("")
-    ax7.tick_params(bottom=False)  # remove the ticks
+        their_stats = [their_goal_count, their_goals_from_shots, their_goals_from_non_shots, their_other_goals,
+                       their_total_xg, their_shot_xg, their_non_shot_xg,
+                       their_gfs_xg_ratio * games_nr, their_gs_ratio * games_nr,
+                       their_shot_count, their_miss_count, their_assists_count, their_saves_count, their_touches_count,
+                       their_passes_count, their_dribbles_count, their_clears_count, their_aerials_count,
+                       their_turnovers_won_count,
+                       their_demos_count, their_mvp_count, their_score_count]
 
-    ax7.set_xlim(0, 1)
+        their_stats.reverse()
 
-    for stat in range(len(our_stats)):
-        if (our_stats[stat] + their_stats[stat]) > 0:
-            all_local_total_stat = our_stats[stat] + their_stats[stat]
-            our_local_stat_share = our_stats[stat] / all_local_total_stat
-            their_local_stat_share = their_stats[stat] / all_local_total_stat
-        else:
-            our_local_stat_share = 0
-            their_local_stat_share = 0
+        ax7 = fig.add_subplot(spec[6, 0])  # Horizontal stacked bar chart (us vs opponent)
 
-        ax7.barh(stat + 1, our_local_stat_share, color=our_color)
-        ax7.barh(stat + 1, their_local_stat_share, left=our_local_stat_share, color=their_color)
+        dic = {1: "Goals", 2: "Shot Goals", 3: "Non-shot Goals", 4: "Other Goals",
+               5: "xG", 6: "Shot xG", 7: "Non-shot xG",
+               8: "GfS/xG", 9: "GfS/Shots",
+               10: "Shots", 11: "Misses", 12: "Assists", 13: "Saves", 14: "Touches",
+               15: "Passes", 16: "Dribbles", 17: "Clears", 18: "Aerials", 19: "Won Ball",
+               20: "Demos", 21: "MVPs", 22: "Scores"}
 
-    label_count = 0
-    for c in ax7.containers:
-        # customize the label to account for cases when there might not be a bar section
-        labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
+        dic_rev = {len(dic) - i + 1: v for (i, v) in dic.items()}
+        dic = dic_rev
 
-        labels[0] = ""
+        ticks = []
+
+        for num in dic:
+            ticks.append(num)
+
+        ax7.set_yticks(ticks)
+
+        labels = [ticks[i] if t not in dic.keys() else dic[t] for i, t in enumerate(ticks)]
+        ax7.set_yticklabels(labels)
+        ax7.set_xticklabels("")
+        ax7.tick_params(bottom=False)  # remove the ticks
+
+        ax7.set_xlim(0, 1)
 
         for stat in range(len(our_stats)):
-            if label_count == stat * 2 and (our_stats[stat] / games_nr) > 0:
-                labels[0] = "%.2f" % (our_stats[stat] / games_nr)
-            if label_count == ((stat * 2) + 1) and (their_stats[stat] / games_nr) > 0:
-                labels[0] = "%.2f" % (their_stats[stat] / games_nr)
+            if (our_stats[stat] + their_stats[stat]) > 0:
+                all_local_total_stat = our_stats[stat] + their_stats[stat]
+                our_local_stat_share = our_stats[stat] / all_local_total_stat
+                their_local_stat_share = their_stats[stat] / all_local_total_stat
+            else:
+                our_local_stat_share = 0
+                their_local_stat_share = 0
 
-        # set the bar label
-        ax7.bar_label(c, labels=labels, label_type='center', color="white")
-        label_count += 1
+            ax7.barh(stat + 1, our_local_stat_share, color=our_color)
+            ax7.barh(stat + 1, their_local_stat_share, left=our_local_stat_share, color=their_color)
 
-    plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
-    ax7.set_title("Us - Opponents (per Game)")
+        label_count = 0
+        for c in ax7.containers:
+            # customize the label to account for cases when there might not be a bar section
+            labels = [f'{w * 100:.0f}%' if (w := v.get_width()) > 0 else '' for v in c]
 
-    new_result_array_num_up = []
-    new_result_array_num_down = []
+            labels[0] = ""
 
-    for entry in range(0, len(their_goals_over_time)):
-        their_goals_over_time[entry] *= -1
+            for stat in range(len(our_stats)):
+                if label_count == stat * 2 and (our_stats[stat] / games_nr) > 0:
+                    labels[0] = "%.2f" % (our_stats[stat] / games_nr)
+                if label_count == ((stat * 2) + 1) and (their_stats[stat] / games_nr) > 0:
+                    labels[0] = "%.2f" % (their_stats[stat] / games_nr)
 
-    ax8 = fig.add_subplot(spec[0, 0])  # our goals over time
-    ax8.set_xlim(0.5, games_nr + 0.5)
+            # set the bar label
+            ax7.bar_label(c, labels=labels, label_type='center', color="white")
+            label_count += 1
 
-    # TODO: Move x tick labels so they only show integers
+        plt.axvline(x=0.5, color='white', linestyle='-', alpha=0.5, linewidth=1)
+        ax7.set_title("Us - Opponents (per Game)")
 
-    limit1 = min(their_goals_over_time)
-    our_goals_over_time = [your_goals_over_time[x] + my_goals_over_time[x] for x in range(games_nr)]
-    limit2 = max(our_goals_over_time)
+        new_result_array_num_up = []
+        new_result_array_num_down = []
 
-    limit = max(abs(limit1), limit2)
-    ax8.set_ylim(-limit, limit)
+        for entry in range(0, len(their_goals_over_time)):
+            their_goals_over_time[entry] *= -1
 
-    for entry in range(0, len(result_array_num)):
-        new_result_array_num_up = limit
-        new_result_array_num_down = -limit
+        ax8 = fig.add_subplot(spec[0, 0])  # our goals over time
+        ax8.set_xlim(0.5, games_nr + 0.5)
 
-    ax8.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
-    ax8.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
+        limit1 = min(their_goals_over_time)
+        our_goals_over_time = [your_goals_over_time[x] + my_goals_over_time[x] for x in range(games_nr)]
+        limit2 = max(our_goals_over_time)
 
-    ax8.bar(range(1, games_nr + 1), my_goals_over_time, color=my_color, width=1)
-    ax8.bar(range(1, games_nr + 1), your_goals_over_time, color=your_color, bottom=my_goals_over_time, width=1)
-    ax8.bar(range(1, games_nr + 1), their_goals_over_time, color=their_color, width=1)
-    for streak_game_num in streak_start_games:
-        plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
-    ax8.set_ylabel("GOALS", rotation="horizontal", ha="center", va="center", labelpad=35)
+        limit = max(abs(limit1), limit2)
+        ax8.set_ylim(-limit, limit)
 
-    for entry in range(0, len(their_shots_over_time)):
-        their_shots_over_time[entry] *= -1
+        for entry in range(0, len(result_array_num)):
+            new_result_array_num_up = limit
+            new_result_array_num_down = -limit
 
-    ax9 = fig.add_subplot(spec[0, 0])  # our goals over time
-    ax9.set_xlim(0.5, games_nr + 0.5)
-    limit1 = min(their_shots_over_time)
-    limit2 = max(our_shots_over_time)
-    limit = max(abs(limit1), limit2)
-    ax9.set_ylim(-limit, limit)
+        ax8.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+        ax8.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
-    for entry in range(0, len(result_array_num)):
-        new_result_array_num_up = limit
-        new_result_array_num_down = -limit
+        ax8.bar(range(1, games_nr + 1), my_goals_over_time, color=my_color, width=1)
+        ax8.bar(range(1, games_nr + 1), your_goals_over_time, color=your_color, bottom=my_goals_over_time, width=1)
+        ax8.bar(range(1, games_nr + 1), their_goals_over_time, color=their_color, width=1)
+        for streak_game_num in streak_start_games:
+            plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
+        ax8.set_ylabel("GOALS", rotation="horizontal", ha="center", va="center", labelpad=35)
 
-    ax9.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
-    ax9.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
+        for entry in range(0, len(their_shots_over_time)):
+            their_shots_over_time[entry] *= -1
 
-    ax9.bar(range(1, games_nr + 1), my_shots_over_time, color=my_color, width=1)
-    ax9.bar(range(1, games_nr + 1), your_shots_over_time, color=your_color, bottom=my_shots_over_time, width=1)
-    ax9.bar(range(1, games_nr + 1), their_shots_over_time, color=their_color, width=1)
-    ax9.set_xticklabels("")
-    for streak_game_num in streak_start_games:
-        plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
-    ax9.set_ylabel("SHOTS", rotation="horizontal", ha="center", va="center", labelpad=35)
+        ax9 = fig.add_subplot(spec[0, 0])  # our goals over time
+        ax9.set_xlim(0.5, games_nr + 0.5)
+        limit1 = min(their_shots_over_time)
+        limit2 = max(our_shots_over_time)
+        limit = max(abs(limit1), limit2)
+        ax9.set_ylim(-limit, limit)
 
-    for entry in range(0, len(their_saves_over_time)):
-        their_saves_over_time[entry] *= -1
+        for entry in range(0, len(result_array_num)):
+            new_result_array_num_up = limit
+            new_result_array_num_down = -limit
 
-    ax10 = fig.add_subplot(spec[0, 0])  # our saves over time
-    ax10.set_xlim(0.5, games_nr + 0.5)
-    limit1 = min(their_saves_over_time)
-    limit2 = max(our_saves_over_time)
-    limit = max(abs(limit1), limit2)
+        ax9.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+        ax9.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
-    for entry in range(0, len(result_array_num)):
-        new_result_array_num_up = limit
-        new_result_array_num_down = -limit
+        ax9.bar(range(1, games_nr + 1), my_shots_over_time, color=my_color, width=1)
+        ax9.bar(range(1, games_nr + 1), your_shots_over_time, color=your_color, bottom=my_shots_over_time, width=1)
+        ax9.bar(range(1, games_nr + 1), their_shots_over_time, color=their_color, width=1)
+        ax9.set_xticklabels("")
+        for streak_game_num in streak_start_games:
+            plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
+        ax9.set_ylabel("SHOTS", rotation="horizontal", ha="center", va="center", labelpad=35)
 
-    ax10.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
-    ax10.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
+        for entry in range(0, len(their_saves_over_time)):
+            their_saves_over_time[entry] *= -1
 
-    ax10.set_ylim(-limit, limit)
-    ax10.bar(range(1, games_nr + 1), my_saves_over_time, color=my_color, width=1)
-    ax10.bar(range(1, games_nr + 1), your_saves_over_time, color=your_color, bottom=my_saves_over_time, width=1)
-    ax10.bar(range(1, games_nr + 1), their_saves_over_time, color=their_color, width=1)
-    ax10.set_xticklabels("")
-    for streak_game_num in streak_start_games:
-        plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
-    ax10.set_ylabel("SAVES", rotation="horizontal", ha="center", va="center", labelpad=35)
+        ax10 = fig.add_subplot(spec[0, 0])  # our saves over time
+        ax10.set_xlim(0.5, games_nr + 0.5)
+        limit1 = min(their_saves_over_time)
+        limit2 = max(our_saves_over_time)
+        limit = max(abs(limit1), limit2)
 
-    for entry in range(0, len(their_assists_over_time)):
-        their_assists_over_time[entry] *= -1
+        for entry in range(0, len(result_array_num)):
+            new_result_array_num_up = limit
+            new_result_array_num_down = -limit
 
-    ax11 = fig.add_subplot(spec[0, 0])  # our assists over time
-    ax11.set_xlim(0.5, games_nr + 0.5)
-    limit1 = min(their_assists_over_time)
-    limit2 = max(our_assists_over_time)
-    limit = max(abs(limit1), limit2)
-    ax11.set_ylim(-limit, limit)
+        ax10.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+        ax10.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
-    for entry in range(0, len(result_array_num)):
-        new_result_array_num_up = limit
-        new_result_array_num_down = -limit
+        ax10.set_ylim(-limit, limit)
+        ax10.bar(range(1, games_nr + 1), my_saves_over_time, color=my_color, width=1)
+        ax10.bar(range(1, games_nr + 1), your_saves_over_time, color=your_color, bottom=my_saves_over_time, width=1)
+        ax10.bar(range(1, games_nr + 1), their_saves_over_time, color=their_color, width=1)
+        ax10.set_xticklabels("")
+        for streak_game_num in streak_start_games:
+            plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
+        ax10.set_ylabel("SAVES", rotation="horizontal", ha="center", va="center", labelpad=35)
 
-    ax11.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
-    ax11.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
+        for entry in range(0, len(their_assists_over_time)):
+            their_assists_over_time[entry] *= -1
 
-    ax11.bar(range(1, games_nr + 1), my_assists_over_time, color=my_color, width=1)
-    ax11.bar(range(1, games_nr + 1), your_assists_over_time, color=your_color, bottom=my_assists_over_time, width=1)
-    ax11.bar(range(1, games_nr + 1), their_assists_over_time, color=their_color, width=1)
-    ax11.set_xticklabels("")
-    for streak_game_num in streak_start_games:
-        plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
-    ax11.set_ylabel("ASSISTS", rotation="horizontal", ha="center", va="center", labelpad=35)
+        ax11 = fig.add_subplot(spec[0, 0])  # our assists over time
+        ax11.set_xlim(0.5, games_nr + 0.5)
+        limit1 = min(their_assists_over_time)
+        limit2 = max(our_assists_over_time)
+        limit = max(abs(limit1), limit2)
+        ax11.set_ylim(-limit, limit)
 
-    my_goal_sizes_for_scatter = []
-    goal_size_multiplier = 160
+        for entry in range(0, len(result_array_num)):
+            new_result_array_num_up = limit
+            new_result_array_num_down = -limit
 
-    for xg in my_xg_per_shot_goal_list:
-        my_goal_sizes_for_scatter.append(xg * goal_size_multiplier)
+        ax11.bar(range(1, games_nr + 1), new_result_array_num_up, color=result_color, width=1, alpha=0.25)
+        ax11.bar(range(1, games_nr + 1), new_result_array_num_down, color=result_color, width=1, alpha=0.25)
 
-    ax13 = fig.add_subplot(spec[4, 0])  # Heatmap of Allan's goals
-    heatmap, xedges, yedges = np.histogram2d(my_shots_y + [pitch_min_y] + [pitch_max_y],
-                                             my_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
-    ax13.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
-    im = ax13.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
-                     extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
-    im.set_cmap('gist_gray_r')
+        ax11.bar(range(1, games_nr + 1), my_assists_over_time, color=my_color, width=1)
+        ax11.bar(range(1, games_nr + 1), your_assists_over_time, color=your_color, bottom=my_assists_over_time, width=1)
+        ax11.bar(range(1, games_nr + 1), their_assists_over_time, color=their_color, width=1)
+        ax11.set_xticklabels("")
+        for streak_game_num in streak_start_games:
+            plt.axvline(x=streak_game_num + 0.5, color='black', linestyle='-')
+        ax11.set_ylabel("ASSISTS", rotation="horizontal", ha="center", va="center", labelpad=35)
 
-    ax13.scatter(my_shot_goals_x, my_shot_goals_y, alpha=goal_scatter_alpha, color=my_color,
-                 s=my_goal_sizes_for_scatter)
+        my_goal_sizes_for_scatter = []
+        goal_size_multiplier = 160
 
-    ax13.set_xlim(pitch_min_x, pitch_max_x)
-    ax13.set_ylim(pitch_min_y, pitch_max_y)
-    ax13.axis("off")
-    ax13.set_title(my_alias + "'s Shot & Goal Heatmap")
+        for xg in my_xg_per_shot_goal_list:
+            my_goal_sizes_for_scatter.append(xg * goal_size_multiplier)
 
-    your_goal_sizes_for_scatter = []
-    for xg in your_xg_per_shot_goal_list:
-        your_goal_sizes_for_scatter.append(xg * goal_size_multiplier)
+        ax13 = fig.add_subplot(spec[4, 0])  # Heatmap of Allan's goals
+        heatmap, xedges, yedges = np.histogram2d(my_shots_y + [pitch_min_y] + [pitch_max_y],
+                                                 my_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
+        ax13.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+        im = ax13.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
+                         extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
+        im.set_cmap('gist_gray_r')
 
-    ax14 = fig.add_subplot(spec[4, 0])  # Heatmap of Sertalp's goals
-    heatmap, xedges, yedges = np.histogram2d(your_shots_y + [pitch_min_y] + [pitch_max_y],
-                                             your_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
-    ax14.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
-    im = ax14.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
-                     extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
-    im.set_cmap('gist_gray_r')
-    ax14.scatter(your_shot_goals_x, your_shot_goals_y, alpha=goal_scatter_alpha, color=your_color,
-                 s=your_goal_sizes_for_scatter)
-    ax14.set_xlim(pitch_min_x, pitch_max_x)
-    ax14.set_ylim(pitch_min_y, pitch_max_y)
-    ax14.axis("off")
-    ax14.set_title(your_alias + "'s Shot & Goal Heatmap")
+        ax13.scatter(my_shot_goals_x, my_shot_goals_y, alpha=goal_scatter_alpha, color=my_color,
+                     s=my_goal_sizes_for_scatter)
 
-    ax15 = fig.add_subplot(spec[4, 0])  # Heatmap of our team's goals
-    heatmap, xedges, yedges = np.histogram2d(my_shots_y + your_shots_y + [pitch_min_y] + [pitch_max_y],
-                                             my_shots_x + your_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
-    ax15.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
-    im = ax15.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
-                     extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
-    im.set_cmap('gist_gray_r')
-    ax15.scatter(my_shot_goals_x + your_shot_goals_x, my_shot_goals_y + your_shot_goals_y, alpha=goal_scatter_alpha,
-                 color=our_color,
-                 s=my_goal_sizes_for_scatter + your_goal_sizes_for_scatter)
-    ax15.set_xlim(pitch_min_x, pitch_max_x)
-    ax15.set_ylim(pitch_min_y, pitch_max_y)
-    ax15.axis("off")
-    ax15.set_title("Our Shot & Goal Heatmap")
+        ax13.set_xlim(pitch_min_x, pitch_max_x)
+        ax13.set_ylim(pitch_min_y, pitch_max_y)
+        ax13.axis("off")
+        ax13.set_title(my_alias + "'s Shot & Goal Heatmap")
 
-    their_goal_sizes_for_scatter = []
-    for xg in their_xg_per_shot_goal_list:
-        their_goal_sizes_for_scatter.append(xg * goal_size_multiplier)
+        your_goal_sizes_for_scatter = []
+        for xg in your_xg_per_shot_goal_list:
+            your_goal_sizes_for_scatter.append(xg * goal_size_multiplier)
 
-    ax16 = fig.add_subplot(spec[4, 0])  # Heatmap of Sertalp's goals
-    heatmap, xedges, yedges = np.histogram2d(their_shots_y + [pitch_min_y] + [pitch_max_y],
-                                             their_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
-    ax16.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
-    im = ax16.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
-                     extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
-    im.set_cmap('gist_gray_r')
-    ax16.scatter(their_shot_goals_x, their_shot_goals_y, alpha=goal_scatter_alpha, color=their_color,
-                 s=their_goal_sizes_for_scatter)
-    ax16.set_xlim(pitch_min_x, pitch_max_x)
-    ax16.set_ylim(pitch_min_y, pitch_max_y)
-    ax16.axis("off")
-    ax16.set_title("Opponent's Shot & Goal Heatmap")
+        ax14 = fig.add_subplot(spec[4, 0])  # Heatmap of Sertalp's goals
+        heatmap, xedges, yedges = np.histogram2d(your_shots_y + [pitch_min_y] + [pitch_max_y],
+                                                 your_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
+        ax14.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+        im = ax14.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
+                         extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
+        im.set_cmap('gist_gray_r')
+        ax14.scatter(your_shot_goals_x, your_shot_goals_y, alpha=goal_scatter_alpha, color=your_color,
+                     s=your_goal_sizes_for_scatter)
+        ax14.set_xlim(pitch_min_x, pitch_max_x)
+        ax14.set_ylim(pitch_min_y, pitch_max_y)
+        ax14.axis("off")
+        ax14.set_title(your_alias + "'s Shot & Goal Heatmap")
 
-    ax17 = fig.add_subplot(spec[2, 0])  # Overtime Results
-    sizes = [our_ot_win_ratio, our_ot_loss_ratio]
-    ax17.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
-             normalize=False,
-             textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
-                        })
-    ax17.set_title(str(overtime_losses_count + overtime_wins_count) + " Overtime")
+        ax15 = fig.add_subplot(spec[4, 0])  # Heatmap of our team's goals
+        heatmap, xedges, yedges = np.histogram2d(my_shots_y + your_shots_y + [pitch_min_y] + [pitch_max_y],
+                                                 my_shots_x + your_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
+        ax15.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+        im = ax15.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
+                         extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
+        im.set_cmap('gist_gray_r')
+        ax15.scatter(my_shot_goals_x + your_shot_goals_x, my_shot_goals_y + your_shot_goals_y, alpha=goal_scatter_alpha,
+                     color=our_color,
+                     s=my_goal_sizes_for_scatter + your_goal_sizes_for_scatter)
+        ax15.set_xlim(pitch_min_x, pitch_max_x)
+        ax15.set_ylim(pitch_min_y, pitch_max_y)
+        ax15.axis("off")
+        ax15.set_title("Our Shot & Goal Heatmap")
 
-    ax18 = fig.add_subplot(spec[2, 0])  # Overtime Results
+        their_goal_sizes_for_scatter = []
+        for xg in their_xg_per_shot_goal_list:
+            their_goal_sizes_for_scatter.append(xg * goal_size_multiplier)
 
-    sizes = [our_nt_win_ratio, our_nt_loss_ratio]
-    ax18.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
-             normalize=False,
-             textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
-                        })
-    ax18.set_title(str(normaltime_games_count) + " Normaltime")
+        ax16 = fig.add_subplot(spec[4, 0])  # Heatmap of Sertalp's goals
+        heatmap, xedges, yedges = np.histogram2d(their_shots_y + [pitch_min_y] + [pitch_max_y],
+                                                 their_shots_x + [pitch_min_x] + [pitch_max_x], bins=100)
+        ax16.imshow(bg_img, extent=[pitch_min_x, pitch_max_x, pitch_min_y, pitch_max_y], alpha=1)
+        im = ax16.imshow(convolve(heatmap, Gaussian2DKernel(x_stddev=5, y_stddev=5)),
+                         extent=[pitch_max_x, pitch_min_x, pitch_max_y, pitch_min_y], alpha=0.5)
+        im.set_cmap('gist_gray_r')
+        ax16.scatter(their_shot_goals_x, their_shot_goals_y, alpha=goal_scatter_alpha, color=their_color,
+                     s=their_goal_sizes_for_scatter)
+        ax16.set_xlim(pitch_min_x, pitch_max_x)
+        ax16.set_ylim(pitch_min_y, pitch_max_y)
+        ax16.axis("off")
+        ax16.set_title("Opponent's Shot & Goal Heatmap")
 
-    ax19 = fig.add_subplot(spec[2, 0])  # Goal Difference Distribution
-    gd_counter = Counter(normaltime_gd_array)
-    gd_counter_keys = list(gd_counter.keys())
-    gd_counter_values = list(gd_counter.values())
+        ax17 = fig.add_subplot(spec[2, 0])  # Overtime Results
+        sizes = [our_ot_win_ratio, our_ot_loss_ratio]
+        ax17.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
+                 normalize=False,
+                 textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
+                            })
+        ax17.set_title(str(overtime_losses_count + overtime_wins_count) + " Overtime")
 
-    neg_gd = []
-    pos_gd = []
-    neg_val = []
-    pos_val = []
+        ax18 = fig.add_subplot(spec[2, 0])  # Overtime Results
 
-    counter_col = []
+        sizes = [our_nt_win_ratio, our_nt_loss_ratio]
+        ax18.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
+                 normalize=False,
+                 textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
+                            })
+        ax18.set_title(str(normaltime_games_count) + " Normaltime")
 
-    if len(gd_counter_keys) > 0:
-        min_gd = min(gd_counter_keys)
-        max_gd = max(gd_counter_keys)
+        ax19 = fig.add_subplot(spec[2, 0])  # Goal Difference Distribution
+        gd_counter = Counter(normaltime_gd_array)
+        gd_counter_keys = list(gd_counter.keys())
+        gd_counter_values = list(gd_counter.values())
 
-    else:
-        min_gd = 0
-        max_gd = 0
+        neg_gd = []
+        pos_gd = []
+        neg_val = []
+        pos_val = []
 
-    new_min_gd = min_gd
-    new_max_gd = max_gd
+        counter_col = []
 
-    if abs(min_gd) != abs(max_gd):
-        if abs(min_gd) > abs(max_gd):
-            new_min_gd = min_gd
-            new_max_gd = min_gd * -1
+        if len(gd_counter_keys) > 0:
+            min_gd = min(gd_counter_keys)
+            max_gd = max(gd_counter_keys)
 
-        elif abs(max_gd) > abs(min_gd):
-            new_min_gd = max_gd * -1
-            new_max_gd = max_gd
-
-    new_gd_counter_keys = []
-    new_gd_counter_values = []
-    for gd in range(new_min_gd, new_max_gd + 1):
-        new_gd_counter_keys.append(gd)
-        new_gd_counter_values.append(0)
-
-    for gd in range(0, len(gd_counter_keys)):
-        if gd_counter_keys[gd] in new_gd_counter_keys:
-            for new_gd in range(0, len(new_gd_counter_keys)):
-                if new_gd_counter_keys[new_gd] == gd_counter_keys[gd]:
-                    new_gd_counter_values[new_gd] = gd_counter_values[gd]
-
-    sorted_gd_counter_values = [x for _, x in sorted(zip(new_gd_counter_keys, new_gd_counter_values))]
-
-    for gd in new_gd_counter_keys:
-        if gd < 0:
-            counter_col.append(their_color)
-        if gd == 0:
-            counter_col.append("black")
-        if gd > 0:
-            counter_col.append(our_color)
-
-    sorted_gd_counter_pct = []
-    for gd in sorted_gd_counter_values:
-        sorted_gd_counter_pct.append(gd / games_nr)
-
-    overtime_pcts = []
-    for gd in new_gd_counter_keys:
-        if gd != -1 and gd != 1:
-            overtime_pcts.append(0)
         else:
-            if gd == 1:
-                overtime_pcts.append(overtime_wins_count / games_nr)
+            min_gd = 0
+            max_gd = 0
 
-            if gd == -1:
-                overtime_pcts.append(overtime_losses_count / games_nr)
+        new_min_gd = min_gd
+        new_max_gd = max_gd
 
-    overall_pcts = []
-    for pct in range(0, len(overtime_pcts)):
-        overall_pcts.append(overtime_pcts[pct] + sorted_gd_counter_pct[pct])
+        if abs(min_gd) != abs(max_gd):
+            if abs(min_gd) > abs(max_gd):
+                new_min_gd = min_gd
+                new_max_gd = min_gd * -1
 
-    # Round the max y limit of the bar chart to the next multiple of 0.05 (5%)
-    max_y_lim = max(overall_pcts) + (0.05 - max(overall_pcts)) % 0.05
-    if max_y_lim > 1:
-        max_y_lim = 1
+            elif abs(max_gd) > abs(min_gd):
+                new_min_gd = max_gd * -1
+                new_max_gd = max_gd
 
-    for gd in new_gd_counter_keys:
-        if len(new_gd_counter_keys) > 1:
+        new_gd_counter_keys = []
+        new_gd_counter_values = []
+        for gd in range(new_min_gd, new_max_gd + 1):
+            new_gd_counter_keys.append(gd)
+            new_gd_counter_values.append(0)
+
+        for gd in range(0, len(gd_counter_keys)):
+            if gd_counter_keys[gd] in new_gd_counter_keys:
+                for new_gd in range(0, len(new_gd_counter_keys)):
+                    if new_gd_counter_keys[new_gd] == gd_counter_keys[gd]:
+                        new_gd_counter_values[new_gd] = gd_counter_values[gd]
+
+        sorted_gd_counter_values = [x for _, x in sorted(zip(new_gd_counter_keys, new_gd_counter_values))]
+
+        for gd in new_gd_counter_keys:
             if gd < 0:
-                neg_gd.append(gd)
-                neg_val.append(new_gd_counter_values[gd])
+                counter_col.append(their_color)
+            if gd == 0:
+                counter_col.append("black")
             if gd > 0:
-                pos_gd.append(gd)
-                pos_val.append(new_gd_counter_values[gd])
-        else:
-            if gd < 0:
-                neg_gd.append(gd)
-                neg_val.append(new_gd_counter_values[0])
-            if gd > 0:
-                pos_gd.append(gd)
-                pos_val.append(new_gd_counter_values[0])
+                counter_col.append(our_color)
 
-    ax19.set_xlim(min(new_gd_counter_keys) - 0.5, max(new_gd_counter_keys) + 0.5)
-    ax19.set_xticks(ticks=new_gd_counter_keys)
-    ax19.yaxis.set_major_formatter(m_tick.PercentFormatter(xmax=1, decimals=0, symbol='%', is_latex=False))
-    ax19.set_ylim(0, max_y_lim)
+        sorted_gd_counter_pct = []
+        for gd in sorted_gd_counter_values:
+            sorted_gd_counter_pct.append(gd / games_nr)
 
-    ax19.bar(neg_gd, max_y_lim, color=their_color, width=1, alpha=0.25)
-    ax19.bar(pos_gd, max_y_lim, color=our_color, width=1, alpha=0.25)
+        overtime_pcts = []
+        for gd in new_gd_counter_keys:
+            if gd != -1 and gd != 1:
+                overtime_pcts.append(0)
+            else:
+                if gd == 1:
+                    overtime_pcts.append(overtime_wins_count / games_nr)
 
-    ax19.bar(new_gd_counter_keys, sorted_gd_counter_pct, width=1, ec="black", color=counter_col)
-    ax19.bar(new_gd_counter_keys, overtime_pcts, width=1, ec="black", color="grey", bottom=sorted_gd_counter_pct)
+                if gd == -1:
+                    overtime_pcts.append(overtime_losses_count / games_nr)
 
-    ax19.set_xlabel("Goal Difference")
-    ax19.set_ylabel("Games")
-    plt.axvline(x=0, color='grey', linestyle=':')
+        overall_pcts = []
+        for pct in range(0, len(overtime_pcts)):
+            overall_pcts.append(overtime_pcts[pct] + sorted_gd_counter_pct[pct])
 
-    ax19.set_title("Goal Difference Distribution")
+        # Round the max y limit of the bar chart to the next multiple of 0.05 (5%)
+        max_y_lim = max(overall_pcts) + (0.05 - max(overall_pcts)) % 0.05
+        if max_y_lim > 1:
+            max_y_lim = 1
 
-    ax20 = fig.add_subplot(spec[2, 0])  # Goals Scored Distribution
-    ax21 = fig.add_subplot(spec[2, 0])  # Goals Conceded Distribution
+        for gd in new_gd_counter_keys:
+            if len(new_gd_counter_keys) > 1:
+                if gd < 0:
+                    neg_gd.append(gd)
+                    neg_val.append(new_gd_counter_values[gd])
+                if gd > 0:
+                    pos_gd.append(gd)
+                    pos_val.append(new_gd_counter_values[gd])
+            else:
+                if gd < 0:
+                    neg_gd.append(gd)
+                    neg_val.append(new_gd_counter_values[0])
+                if gd > 0:
+                    pos_gd.append(gd)
+                    pos_val.append(new_gd_counter_values[0])
 
-    gs_counter = Counter(gs_array)
-    gs_counter_keys = list(gs_counter.keys())
-    gs_counter_values = list(gs_counter.values())
+        ax19.set_xlim(min(new_gd_counter_keys) - 0.5, max(new_gd_counter_keys) + 0.5)
+        ax19.set_xticks(ticks=new_gd_counter_keys)
+        ax19.yaxis.set_major_formatter(m_tick.PercentFormatter(xmax=1, decimals=0, symbol='%', is_latex=False))
+        ax19.set_ylim(0, max_y_lim)
 
-    gc_counter = Counter(gc_array)
-    gc_counter_keys = list(gc_counter.keys())
-    gc_counter_values = list(gc_counter.values())
+        ax19.bar(neg_gd, max_y_lim, color=their_color, width=1, alpha=0.25)
+        ax19.bar(pos_gd, max_y_lim, color=our_color, width=1, alpha=0.25)
 
-    gs_counter_pct = []
-    for gs in gs_counter_values:
-        gs_counter_pct.append((gs / games_nr))
+        ax19.bar(new_gd_counter_keys, sorted_gd_counter_pct, width=1, ec="black", color=counter_col)
+        ax19.bar(new_gd_counter_keys, overtime_pcts, width=1, ec="black", color="grey", bottom=sorted_gd_counter_pct)
 
-    gc_counter_pct = []
-    for gc in gc_counter_values:
-        gc_counter_pct.append((gc / games_nr))
+        ax19.set_xlabel("Goal Difference")
+        ax19.set_ylabel("Games")
+        plt.axvline(x=0, color='grey', linestyle=':')
 
-    ax20.yaxis.set_major_formatter(m_tick.PercentFormatter(xmax=1, decimals=0, symbol='%', is_latex=False))
-    ax20.set_xlim(min(gc_counter_keys + gs_counter_keys) - 0.5, max(gc_counter_keys + gs_counter_keys) + 0.5)
-    ax21.set_xlim(min(gc_counter_keys + gs_counter_keys) - 0.5, max(gc_counter_keys + gs_counter_keys) + 0.5)
-    ax21.yaxis.set_major_formatter(m_tick.PercentFormatter(xmax=1, decimals=0, symbol='%', is_latex=False))
+        ax19.set_title("Goal Difference Distribution")
 
-    # Round the max y limit of the bar chart to the next multiple of 0.05 (5%)
-    gs_gc_max_pct = max(max(gs_counter_pct), max(gc_counter_pct))
-    max_y_lim = gs_gc_max_pct + ((0.05 - gs_gc_max_pct) % 0.05)
-    if max_y_lim > 1:
-        max_y_lim = 1
-    ax20.set_ylim(0, max_y_lim)
-    ax21.set_ylim(0, max_y_lim)
+        ax20 = fig.add_subplot(spec[2, 0])  # Goals Scored Distribution
+        ax21 = fig.add_subplot(spec[2, 0])  # Goals Conceded Distribution
 
-    # reverse y-axis of goals conceded
-    ax21 = plt.gca()
-    ax21.set_ylim(ax21.get_ylim()[::-1])
+        gs_counter = Counter(gs_array)
+        gs_counter_keys = list(gs_counter.keys())
+        gs_counter_values = list(gs_counter.values())
 
-    keys_to_use = []
+        gc_counter = Counter(gc_array)
+        gc_counter_keys = list(gc_counter.keys())
+        gc_counter_values = list(gc_counter.values())
 
-    min_gc_or_gs_keys = min(min(gc_counter_keys), min(gs_counter_keys))
-    max_gc_or_gs_keys = max(max(gc_counter_keys), max(gs_counter_keys))
+        gs_counter_pct = []
+        for gs in gs_counter_values:
+            gs_counter_pct.append((gs / games_nr))
 
-    for x in range(min_gc_or_gs_keys, max_gc_or_gs_keys + 1):
-        keys_to_use.append(x)
+        gc_counter_pct = []
+        for gc in gc_counter_values:
+            gc_counter_pct.append((gc / games_nr))
 
-    ax20.set_xticks(keys_to_use)
-    ax21.set_xticks(keys_to_use)
+        ax20.yaxis.set_major_formatter(m_tick.PercentFormatter(xmax=1, decimals=0, symbol='%', is_latex=False))
+        ax20.set_xlim(min(gc_counter_keys + gs_counter_keys) - 0.5, max(gc_counter_keys + gs_counter_keys) + 0.5)
+        ax21.set_xlim(min(gc_counter_keys + gs_counter_keys) - 0.5, max(gc_counter_keys + gs_counter_keys) + 0.5)
+        ax21.yaxis.set_major_formatter(m_tick.PercentFormatter(xmax=1, decimals=0, symbol='%', is_latex=False))
 
-    ax20.bar(keys_to_use, max_y_lim, color=our_color, width=1, alpha=0.25)
-    ax20.bar(gs_counter_keys, gs_counter_pct, width=1, ec="black", color=our_color)
+        # Round the max y limit of the bar chart to the next multiple of 0.05 (5%)
+        gs_gc_max_pct = max(max(gs_counter_pct), max(gc_counter_pct))
+        max_y_lim = gs_gc_max_pct + ((0.05 - gs_gc_max_pct) % 0.05)
+        if max_y_lim > 1:
+            max_y_lim = 1
+        ax20.set_ylim(0, max_y_lim)
+        ax21.set_ylim(0, max_y_lim)
 
-    ax21.bar(keys_to_use, max_y_lim, color=their_color, width=1, alpha=0.25)
-    ax21.bar(gc_counter_keys, gc_counter_pct, width=1, ec="black", color=their_color)
+        # reverse y-axis of goals conceded
+        ax21 = plt.gca()
+        ax21.set_ylim(ax21.get_ylim()[::-1])
 
-    ax20.set_ylabel("Games")
-    ax21.set_ylabel("Games")
-    ax21.tick_params(axis="x", bottom=False, top=True, labelbottom=False, labeltop=False)
-    ax20.set_title("Goals Scored & Conceded Distribution")
+        keys_to_use = []
 
-    rolling_avg_window = 10
+        min_gc_or_gs_keys = min(min(gc_counter_keys), min(gs_counter_keys))
+        max_gc_or_gs_keys = max(max(gc_counter_keys), max(gs_counter_keys))
 
-    if games_nr < 30:
-        rolling_avg_window = 1
+        for x in range(min_gc_or_gs_keys, max_gc_or_gs_keys + 1):
+            keys_to_use.append(x)
 
-    my_xg_over_time_rolling_avg = np.average(sliding_window_view(my_shot_xg_over_time, window_shape=rolling_avg_window),
-                                             axis=1)
-    my_goals_from_shots_over_time_rolling_avg = np.average(
-        sliding_window_view(my_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
-    your_xg_over_time_rolling_avg = np.average(
-        sliding_window_view(your_shot_xg_over_time, window_shape=rolling_avg_window),
-        axis=1)
-    your_goals_from_shots_over_time_rolling_avg = np.average(
-        sliding_window_view(your_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
-    our_xg_over_time_rolling_avg = np.average(
-        sliding_window_view(our_shot_xg_over_time, window_shape=rolling_avg_window),
-        axis=1)
-    our_goals_from_shots_over_time_rolling_avg = np.average(
-        sliding_window_view(our_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
-    their_xg_over_time_rolling_avg = np.average(
-        sliding_window_view(their_shot_xg_over_time, window_shape=rolling_avg_window),
-        axis=1)
-    their_goals_from_shots_over_time_rolling_avg = np.average(
-        sliding_window_view(their_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
+        ax20.set_xticks(keys_to_use)
+        ax21.set_xticks(keys_to_use)
 
-    all_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(my_goals_from_shots_over_time_rolling_avg),
-                              max(your_xg_over_time_rolling_avg), max(your_goals_from_shots_over_time_rolling_avg),
-                              max(our_xg_over_time_rolling_avg), max(our_goals_from_shots_over_time_rolling_avg),
-                              max(their_xg_over_time_rolling_avg), max(their_goals_from_shots_over_time_rolling_avg))
+        ax20.bar(keys_to_use, max_y_lim, color=our_color, width=1, alpha=0.25)
+        ax20.bar(gs_counter_keys, gs_counter_pct, width=1, ec="black", color=our_color)
 
-    individual_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(your_xg_over_time_rolling_avg),
-                                     max(my_goals_from_shots_over_time_rolling_avg),
-                                     max(your_goals_from_shots_over_time_rolling_avg))
+        ax21.bar(keys_to_use, max_y_lim, color=their_color, width=1, alpha=0.25)
+        ax21.bar(gc_counter_keys, gc_counter_pct, width=1, ec="black", color=their_color)
 
-    our_results_over_time = []
-    for i in range(0, games_nr):
-        if gd_array[i] > 0:
-            our_results_over_time.append(100)
-        else:
-            our_results_over_time.append(0)
+        ax20.set_ylabel("Games")
+        ax21.set_ylabel("Games")
+        ax21.tick_params(axis="x", bottom=False, top=True, labelbottom=False, labeltop=False)
+        ax20.set_title("Goals Scored & Conceded Distribution")
 
-    our_winrate_over_time_rolling_avg = np.average(
-        sliding_window_view(our_results_over_time, window_shape=rolling_avg_window), axis=1)
-    our_expected_winrate_over_time_rolling_avg = np.average(
-        sliding_window_view(win_chance_per_game, window_shape=rolling_avg_window), axis=1)
+        rolling_avg_window = 10
 
-    our_gd_over_time_rolling_avg = []
-    our_xgd_from_shots_over_time_rolling_avg = []
+        if games_nr < 30:
+            rolling_avg_window = 1
 
-    my_ra_bg_colors = []
-    your_ra_bg_colors = []
-    our_ra_bg_colors = []
-    their_ra_bg_colors = []
+        my_xg_over_time_rolling_avg = np.average(sliding_window_view(my_shot_xg_over_time, window_shape=rolling_avg_window),
+                                                 axis=1)
+        my_goals_from_shots_over_time_rolling_avg = np.average(
+            sliding_window_view(my_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
+        your_xg_over_time_rolling_avg = np.average(
+            sliding_window_view(your_shot_xg_over_time, window_shape=rolling_avg_window),
+            axis=1)
+        your_goals_from_shots_over_time_rolling_avg = np.average(
+            sliding_window_view(your_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
+        our_xg_over_time_rolling_avg = np.average(
+            sliding_window_view(our_shot_xg_over_time, window_shape=rolling_avg_window),
+            axis=1)
+        our_goals_from_shots_over_time_rolling_avg = np.average(
+            sliding_window_view(our_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
+        their_xg_over_time_rolling_avg = np.average(
+            sliding_window_view(their_shot_xg_over_time, window_shape=rolling_avg_window),
+            axis=1)
+        their_goals_from_shots_over_time_rolling_avg = np.average(
+            sliding_window_view(their_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
 
-    our_xdiff_ra_bg_colors = []
-    our_gdiff_bar_colors = []
+        all_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(my_goals_from_shots_over_time_rolling_avg),
+                                  max(your_xg_over_time_rolling_avg), max(your_goals_from_shots_over_time_rolling_avg),
+                                  max(our_xg_over_time_rolling_avg), max(our_goals_from_shots_over_time_rolling_avg),
+                                  max(their_xg_over_time_rolling_avg), max(their_goals_from_shots_over_time_rolling_avg))
 
-    our_winrate_bar_colors = []
+        individual_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(your_xg_over_time_rolling_avg),
+                                         max(my_goals_from_shots_over_time_rolling_avg),
+                                         max(your_goals_from_shots_over_time_rolling_avg))
 
-    for val in range(0, len(my_xg_over_time_rolling_avg)):
-        if my_xg_over_time_rolling_avg[val] > my_goals_from_shots_over_time_rolling_avg[val]:
-            my_ra_bg_colors.append("red")
-        elif my_xg_over_time_rolling_avg[val] == my_goals_from_shots_over_time_rolling_avg[val]:
-            my_ra_bg_colors.append("yellow")
-        else:
-            my_ra_bg_colors.append("green")
+        our_results_over_time = []
+        for i in range(0, games_nr):
+            if gd_array[i] > 0:
+                our_results_over_time.append(100)
+            else:
+                our_results_over_time.append(0)
 
-        if your_xg_over_time_rolling_avg[val] > your_goals_from_shots_over_time_rolling_avg[val]:
-            your_ra_bg_colors.append("red")
-        elif your_xg_over_time_rolling_avg[val] == your_goals_from_shots_over_time_rolling_avg[val]:
-            your_ra_bg_colors.append("yellow")
-        else:
-            your_ra_bg_colors.append("green")
+        our_winrate_over_time_rolling_avg = np.average(
+            sliding_window_view(our_results_over_time, window_shape=rolling_avg_window), axis=1)
+        our_expected_winrate_over_time_rolling_avg = np.average(
+            sliding_window_view(win_chance_per_game, window_shape=rolling_avg_window), axis=1)
 
-        if our_xg_over_time_rolling_avg[val] > our_goals_from_shots_over_time_rolling_avg[val]:
-            our_ra_bg_colors.append("red")
-        elif our_xg_over_time_rolling_avg[val] == our_goals_from_shots_over_time_rolling_avg[val]:
-            our_ra_bg_colors.append("yellow")
-        else:
-            our_ra_bg_colors.append("green")
+        our_gd_over_time_rolling_avg = []
+        our_xgd_from_shots_over_time_rolling_avg = []
 
-        if their_xg_over_time_rolling_avg[val] > their_goals_from_shots_over_time_rolling_avg[val]:
-            their_ra_bg_colors.append("red")
-        elif their_xg_over_time_rolling_avg[val] == their_goals_from_shots_over_time_rolling_avg[val]:
-            their_ra_bg_colors.append("yellow")
-        else:
-            their_ra_bg_colors.append("green")
+        my_ra_bg_colors = []
+        your_ra_bg_colors = []
+        our_ra_bg_colors = []
+        their_ra_bg_colors = []
 
-        our_gd_over_time_rolling_avg.append(
-            our_goals_from_shots_over_time_rolling_avg[val] - their_goals_from_shots_over_time_rolling_avg[val])
-        our_xgd_from_shots_over_time_rolling_avg.append(
-            our_xg_over_time_rolling_avg[val] - their_xg_over_time_rolling_avg[val])
+        our_xdiff_ra_bg_colors = []
+        our_gdiff_bar_colors = []
 
-        if our_gd_over_time_rolling_avg[val] > our_xgd_from_shots_over_time_rolling_avg[val]:
-            our_xdiff_ra_bg_colors.append("green")
-        elif our_gd_over_time_rolling_avg[val] == our_xgd_from_shots_over_time_rolling_avg[val]:
-            our_xdiff_ra_bg_colors.append("yellow")
-        else:
-            our_xdiff_ra_bg_colors.append("red")
+        our_winrate_bar_colors = []
 
-        if our_gd_over_time_rolling_avg[val] > 0:
-            our_gdiff_bar_colors.append(our_color)
-        elif our_gd_over_time_rolling_avg[val] == 0:
-            our_gdiff_bar_colors.append("yellow")
-        else:
-            our_gdiff_bar_colors.append(their_color)
+        for val in range(0, len(my_xg_over_time_rolling_avg)):
+            if my_xg_over_time_rolling_avg[val] > my_goals_from_shots_over_time_rolling_avg[val]:
+                my_ra_bg_colors.append("red")
+            elif my_xg_over_time_rolling_avg[val] == my_goals_from_shots_over_time_rolling_avg[val]:
+                my_ra_bg_colors.append("yellow")
+            else:
+                my_ra_bg_colors.append("green")
 
-        if our_winrate_over_time_rolling_avg[val] > our_expected_winrate_over_time_rolling_avg[val]:
-            our_winrate_bar_colors.append("green")
-        elif our_winrate_over_time_rolling_avg[val] == our_expected_winrate_over_time_rolling_avg[val]:
-            our_winrate_bar_colors.append("yellow")
-        else:
-            our_winrate_bar_colors.append("red")
+            if your_xg_over_time_rolling_avg[val] > your_goals_from_shots_over_time_rolling_avg[val]:
+                your_ra_bg_colors.append("red")
+            elif your_xg_over_time_rolling_avg[val] == your_goals_from_shots_over_time_rolling_avg[val]:
+                your_ra_bg_colors.append("yellow")
+            else:
+                your_ra_bg_colors.append("green")
 
-    our_gd_xgd_ra_max = max(max(our_gd_over_time_rolling_avg), max(our_xgd_from_shots_over_time_rolling_avg))
-    our_gd_xgd_ra_min = min(min(our_gd_over_time_rolling_avg), min(our_xgd_from_shots_over_time_rolling_avg))
+            if our_xg_over_time_rolling_avg[val] > our_goals_from_shots_over_time_rolling_avg[val]:
+                our_ra_bg_colors.append("red")
+            elif our_xg_over_time_rolling_avg[val] == our_goals_from_shots_over_time_rolling_avg[val]:
+                our_ra_bg_colors.append("yellow")
+            else:
+                our_ra_bg_colors.append("green")
 
-    our_gd_ylim = our_gd_xgd_ra_max
-    if abs(our_gd_xgd_ra_min) > our_gd_ylim:
-        our_gd_ylim = abs(our_gd_xgd_ra_min)
+            if their_xg_over_time_rolling_avg[val] > their_goals_from_shots_over_time_rolling_avg[val]:
+                their_ra_bg_colors.append("red")
+            elif their_xg_over_time_rolling_avg[val] == their_goals_from_shots_over_time_rolling_avg[val]:
+                their_ra_bg_colors.append("yellow")
+            else:
+                their_ra_bg_colors.append("green")
 
-    len_to_use = len(my_xg_over_time_rolling_avg)
+            our_gd_over_time_rolling_avg.append(
+                our_goals_from_shots_over_time_rolling_avg[val] - their_goals_from_shots_over_time_rolling_avg[val])
+            our_xgd_from_shots_over_time_rolling_avg.append(
+                our_xg_over_time_rolling_avg[val] - their_xg_over_time_rolling_avg[val])
 
-    my_avg_xg_line = my_shot_xg / games_nr
-    my_avg_gfs_line = my_goals_from_shots / games_nr
-    your_avg_xg_line = your_shot_xg / games_nr
-    your_avg_gfs_line = your_goals_from_shots / games_nr
-    our_avg_xg_line = our_shot_xg / games_nr
-    our_avg_gfs_line = (my_goals_from_shots + your_goals_from_shots) / games_nr
-    their_avg_xg_line = their_shot_xg / games_nr
-    their_avg_gfs_line = their_goals_from_shots / games_nr
-    our_avg_xgd_line = (our_shot_xg - their_shot_xg) / games_nr
-    our_avg_gdfs_line = (my_goals_from_shots + your_goals_from_shots - their_goals_from_shots) / games_nr
-    our_avg_winrate_line = (win_count / games_nr) * 100
-    our_avg_expected_winrate_line = total_win_chance / games_nr
+            if our_gd_over_time_rolling_avg[val] > our_xgd_from_shots_over_time_rolling_avg[val]:
+                our_xdiff_ra_bg_colors.append("green")
+            elif our_gd_over_time_rolling_avg[val] == our_xgd_from_shots_over_time_rolling_avg[val]:
+                our_xdiff_ra_bg_colors.append("yellow")
+            else:
+                our_xdiff_ra_bg_colors.append("red")
 
-    ax2 = fig.add_subplot(spec[2, 0])
-    ax2.bar(range(0, len_to_use), individual_rolling_avg_max, color=my_ra_bg_colors, alpha=0.1, width=1)
-    ax2.bar(range(0, len_to_use), my_goals_from_shots_over_time_rolling_avg, color=my_color, alpha=0.5, width=1)
-    ax2.plot(range(0, len_to_use), my_xg_over_time_rolling_avg, color="black", alpha=1)
-    plt.axhline(y=my_avg_gfs_line, color=my_color, linestyle='dotted')
-    plt.axhline(y=my_avg_xg_line, color='black', linestyle='dotted')
-    ax2.set_title(
-        my_alias + "'s Shot Goals and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
-    ax2.set_ylim(0, individual_rolling_avg_max)
-    ax2.set_xlim(0, len_to_use - 1)
+            if our_gd_over_time_rolling_avg[val] > 0:
+                our_gdiff_bar_colors.append(our_color)
+            elif our_gd_over_time_rolling_avg[val] == 0:
+                our_gdiff_bar_colors.append("yellow")
+            else:
+                our_gdiff_bar_colors.append(their_color)
 
-    ax23 = fig.add_subplot(spec[2, 0])
-    ax23.bar(range(0, len_to_use), individual_rolling_avg_max, color=your_ra_bg_colors, alpha=0.1, width=1)
-    ax23.bar(range(0, len_to_use), your_goals_from_shots_over_time_rolling_avg, color=your_color, alpha=0.5, width=1)
-    ax23.plot(range(0, len_to_use), your_xg_over_time_rolling_avg, color="black", alpha=1)
-    plt.axhline(y=your_avg_gfs_line, color=your_color, linestyle='dotted')
-    plt.axhline(y=your_avg_xg_line, color='black', linestyle='dotted')
-    ax23.set_title(your_alias + "'s Shot Goals and xG (black line) over time (" + str(
-        rolling_avg_window) + " game rolling average)")
-    ax23.set_ylim(0, individual_rolling_avg_max)
-    ax23.set_xlim(0, len_to_use - 1)
+            if our_winrate_over_time_rolling_avg[val] > our_expected_winrate_over_time_rolling_avg[val]:
+                our_winrate_bar_colors.append("green")
+            elif our_winrate_over_time_rolling_avg[val] == our_expected_winrate_over_time_rolling_avg[val]:
+                our_winrate_bar_colors.append("yellow")
+            else:
+                our_winrate_bar_colors.append("red")
 
-    for i in range(len(their_xg_over_time_rolling_avg)):
-        their_xg_over_time_rolling_avg[i] *= -1
-        their_goals_from_shots_over_time_rolling_avg[i] *= -1
+        our_gd_xgd_ra_max = max(max(our_gd_over_time_rolling_avg), max(our_xgd_from_shots_over_time_rolling_avg))
+        our_gd_xgd_ra_min = min(min(our_gd_over_time_rolling_avg), min(our_xgd_from_shots_over_time_rolling_avg))
 
-    ax24 = fig.add_subplot(spec[2, 0])
-    ax24.bar(range(0, len_to_use), all_rolling_avg_max, color=our_ra_bg_colors, alpha=0.1, width=1)
-    ax24.bar(range(0, len_to_use), -all_rolling_avg_max, color=their_ra_bg_colors, alpha=0.1, width=1)
-    ax24.bar(range(0, len_to_use), our_goals_from_shots_over_time_rolling_avg, color=our_color, alpha=0.5, width=1)
-    ax24.bar(range(0, len_to_use), their_goals_from_shots_over_time_rolling_avg, color=their_color, alpha=0.5, width=1)
-    ax24.plot(range(0, len_to_use), their_xg_over_time_rolling_avg, color="black", alpha=1)
-    ax24.plot(range(0, len_to_use), our_xg_over_time_rolling_avg, color="black", alpha=1)
-    plt.axhline(y=our_avg_gfs_line, color=our_color, linestyle='dotted')
-    plt.axhline(y=our_avg_xg_line, color='black', linestyle='dotted')
-    plt.axhline(y=-their_avg_gfs_line, color=their_color, linestyle='dotted')
-    plt.axhline(y=-their_avg_xg_line, color='black', linestyle='dotted')
-    ax24.set_title("Our goals scored & conceded from shots and xG (black line) over time (" + str(
-        rolling_avg_window) + " game rolling average)")
-    ax24.set_ylim(-all_rolling_avg_max, all_rolling_avg_max)
-    ax24.set_xlim(0, len_to_use - 1)
+        our_gd_ylim = our_gd_xgd_ra_max
+        if abs(our_gd_xgd_ra_min) > our_gd_ylim:
+            our_gd_ylim = abs(our_gd_xgd_ra_min)
 
-    ax25 = fig.add_subplot(spec[2, 0])
-    ax25.bar(range(0, len_to_use), our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
-    ax25.bar(range(0, len_to_use), -our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
-    ax25.bar(range(0, len_to_use), our_gd_over_time_rolling_avg, color=our_gdiff_bar_colors, alpha=0.5, width=1)
-    ax25.plot(range(0, len_to_use), our_xgd_from_shots_over_time_rolling_avg, color="black", alpha=1)
-    ax25.set_title("Our GD from goals that came from shots and xGD (black line) over time (" + str(
-        rolling_avg_window) + " game rolling average)")
-    plt.axhline(y=our_avg_gdfs_line, color=our_color, linestyle='dotted')
-    plt.axhline(y=our_avg_xgd_line, color='black', linestyle='dotted')
-    ax25.set_ylim(-our_gd_ylim, our_gd_ylim)
-    ax25.set_xlim(0, len_to_use - 1)
+        len_to_use = len(my_xg_over_time_rolling_avg)
 
-    ax26 = fig.add_subplot(spec[2, 0])
-    ax26.bar(range(0, len_to_use), 100, color=our_winrate_bar_colors, alpha=0.1, width=1)
-    ax26.bar(range(0, len_to_use), our_winrate_over_time_rolling_avg, color=our_color, alpha=0.5, width=1)
-    ax26.plot(range(0, len_to_use), our_expected_winrate_over_time_rolling_avg, color="black", alpha=1)
-    plt.axhline(y=our_avg_winrate_line, color=our_color, linestyle='dotted')
-    plt.axhline(y=our_avg_expected_winrate_line, color='black', linestyle='dotted')
-    ax26.set_title("Our win rate and expected win rate (black line) over time (" + str(
-        rolling_avg_window) + " game rolling average)")
-    ax26.set_ylim(0, 100)
-    ax26.set_xlim(0, len_to_use - 1)
+        my_avg_xg_line = my_shot_xg / games_nr
+        my_avg_gfs_line = my_goals_from_shots / games_nr
+        your_avg_xg_line = your_shot_xg / games_nr
+        your_avg_gfs_line = your_goals_from_shots / games_nr
+        our_avg_xg_line = our_shot_xg / games_nr
+        our_avg_gfs_line = (my_goals_from_shots + your_goals_from_shots) / games_nr
+        their_avg_xg_line = their_shot_xg / games_nr
+        their_avg_gfs_line = their_goals_from_shots / games_nr
+        our_avg_xgd_line = (our_shot_xg - their_shot_xg) / games_nr
+        our_avg_gdfs_line = (my_goals_from_shots + your_goals_from_shots - their_goals_from_shots) / games_nr
+        our_avg_winrate_line = (win_count / games_nr) * 100
+        our_avg_expected_winrate_line = total_win_chance / games_nr
 
-    # positioning and scaling of charts
+        ax2 = fig.add_subplot(spec[2, 0])
+        ax2.bar(range(0, len_to_use), individual_rolling_avg_max, color=my_ra_bg_colors, alpha=0.1, width=1)
+        ax2.bar(range(0, len_to_use), my_goals_from_shots_over_time_rolling_avg, color=my_color, alpha=0.5, width=1)
+        ax2.plot(range(0, len_to_use), my_xg_over_time_rolling_avg, color="black", alpha=1)
+        plt.axhline(y=my_avg_gfs_line, color=my_color, linestyle='dotted')
+        plt.axhline(y=my_avg_xg_line, color='black', linestyle='dotted')
+        ax2.set_title(
+            my_alias + "'s Shot Goals and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+        ax2.set_ylim(0, individual_rolling_avg_max)
+        ax2.set_xlim(0, len_to_use - 1)
 
-    ax1.set_position([0, 0.88, 1, 0.1])  # Results chart at top
+        ax23 = fig.add_subplot(spec[2, 0])
+        ax23.bar(range(0, len_to_use), individual_rolling_avg_max, color=your_ra_bg_colors, alpha=0.1, width=1)
+        ax23.bar(range(0, len_to_use), your_goals_from_shots_over_time_rolling_avg, color=your_color, alpha=0.5, width=1)
+        ax23.plot(range(0, len_to_use), your_xg_over_time_rolling_avg, color="black", alpha=1)
+        plt.axhline(y=your_avg_gfs_line, color=your_color, linestyle='dotted')
+        plt.axhline(y=your_avg_xg_line, color='black', linestyle='dotted')
+        ax23.set_title(your_alias + "'s Shot Goals and xG (black line) over time (" + str(
+            rolling_avg_window) + " game rolling average)")
+        ax23.set_ylim(0, individual_rolling_avg_max)
+        ax23.set_xlim(0, len_to_use - 1)
 
-    ax2.set_position([0.5, 0.725, 0.2, 0.1])  # my xG
-    ax23.set_position([0.5, 0.56875, 0.2, 0.1])  # your xG
-    ax26.set_position([0.5, 0.4125, 0.2, 0.1])  # win rate
-    ax24.set_position([0.5, 0.25625, 0.2, 0.1])  # our xG
-    ax25.set_position([0.5, 0.1, 0.2, 0.1])  # xGD
+        for i in range(len(their_xg_over_time_rolling_avg)):
+            their_xg_over_time_rolling_avg[i] *= -1
+            their_goals_from_shots_over_time_rolling_avg[i] *= -1
 
-    ax19.set_position([0.39, 0.5, 0.09, 0.325])  # Goal Difference Distribution chart
-    ax20.set_position([0.39, 0.275, 0.09, 0.15])  # Goals Scored Distribution chart
-    ax21.set_position([0.39, 0.1, 0.09, 0.15])  # Goals Conceded Distribution chart
+        ax24 = fig.add_subplot(spec[2, 0])
+        ax24.bar(range(0, len_to_use), all_rolling_avg_max, color=our_ra_bg_colors, alpha=0.1, width=1)
+        ax24.bar(range(0, len_to_use), -all_rolling_avg_max, color=their_ra_bg_colors, alpha=0.1, width=1)
+        ax24.bar(range(0, len_to_use), our_goals_from_shots_over_time_rolling_avg, color=our_color, alpha=0.5, width=1)
+        ax24.bar(range(0, len_to_use), their_goals_from_shots_over_time_rolling_avg, color=their_color, alpha=0.5, width=1)
+        ax24.plot(range(0, len_to_use), their_xg_over_time_rolling_avg, color="black", alpha=1)
+        ax24.plot(range(0, len_to_use), our_xg_over_time_rolling_avg, color="black", alpha=1)
+        plt.axhline(y=our_avg_gfs_line, color=our_color, linestyle='dotted')
+        plt.axhline(y=our_avg_xg_line, color='black', linestyle='dotted')
+        plt.axhline(y=-their_avg_gfs_line, color=their_color, linestyle='dotted')
+        plt.axhline(y=-their_avg_xg_line, color='black', linestyle='dotted')
+        ax24.set_title("Our goals scored & conceded from shots and xG (black line) over time (" + str(
+            rolling_avg_window) + " game rolling average)")
+        ax24.set_ylim(-all_rolling_avg_max, all_rolling_avg_max)
+        ax24.set_xlim(0, len_to_use - 1)
 
-    ax3.set_position([0.85, 0.75, 0.075, 0.075])  # Results pie chart
-    ax17.set_position([0.89, 0.75, 0.075, 0.075])  # OT Results pie chart
-    ax18.set_position([0.93, 0.75, 0.075, 0.075])  # NT Results pie chart
-    ax22.set_position([0.75, 0.5, 0.1, 0.32])  # Positional tendencies chart (Allan vs Sertalp)
-    ax4.set_position([0.87, 0.5, 0.05, 0.2])  # Allan's touch heatmap
-    ax5.set_position([0.93, 0.5, 0.05, 0.2])  # Sertalp's touch heatmap
+        ax25 = fig.add_subplot(spec[2, 0])
+        ax25.bar(range(0, len_to_use), our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
+        ax25.bar(range(0, len_to_use), -our_gd_ylim, color=our_xdiff_ra_bg_colors, alpha=0.1, width=1)
+        ax25.bar(range(0, len_to_use), our_gd_over_time_rolling_avg, color=our_gdiff_bar_colors, alpha=0.5, width=1)
+        ax25.plot(range(0, len_to_use), our_xgd_from_shots_over_time_rolling_avg, color="black", alpha=1)
+        ax25.set_title("Our GD from goals that came from shots and xGD (black line) over time (" + str(
+            rolling_avg_window) + " game rolling average)")
+        plt.axhline(y=our_avg_gdfs_line, color=our_color, linestyle='dotted')
+        plt.axhline(y=our_avg_xgd_line, color='black', linestyle='dotted')
+        ax25.set_ylim(-our_gd_ylim, our_gd_ylim)
+        ax25.set_xlim(0, len_to_use - 1)
 
-    ax13.set_position([0.03, 0.5, 0.08, 0.32])  # Allan's shot & goal heatmap
-    ax6.set_position([0.15, 0.5, 0.1, 0.32])  # Horizontal Bar Chart (Allan vs Sertalp)
-    ax14.set_position([0.28, 0.5, 0.08, 0.32])  # Sertalp's shot & goal heatmap
+        ax26 = fig.add_subplot(spec[2, 0])
+        ax26.bar(range(0, len_to_use), 100, color=our_winrate_bar_colors, alpha=0.1, width=1)
+        ax26.bar(range(0, len_to_use), our_winrate_over_time_rolling_avg, color=our_color, alpha=0.5, width=1)
+        ax26.plot(range(0, len_to_use), our_expected_winrate_over_time_rolling_avg, color="black", alpha=1)
+        plt.axhline(y=our_avg_winrate_line, color=our_color, linestyle='dotted')
+        plt.axhline(y=our_avg_expected_winrate_line, color='black', linestyle='dotted')
+        ax26.set_title("Our win rate and expected win rate (black line) over time (" + str(
+            rolling_avg_window) + " game rolling average)")
+        ax26.set_ylim(0, 100)
+        ax26.set_xlim(0, len_to_use - 1)
 
-    ax15.set_position([0.03, 0.1, 0.08, 0.32])  # Our shot & goal heatmap
-    ax7.set_position([0.15, 0.1, 0.1, 0.32])  # Horizontal Bar Chart (Us vs Opponent)
-    ax16.set_position([0.28, 0.1, 0.08, 0.32])  # Opponent's shot & goal heatmap
+        # positioning and scaling of charts
 
-    ax8.set_position([0.75, 0.05, 0.227, 0.1])  # Goals over time
-    ax9.set_position([0.75, 0.155, 0.227, 0.1])  # Shots over time
-    ax10.set_position([0.75, 0.26, 0.227, 0.1])  # Saves over time
-    ax11.set_position([0.75, 0.365, 0.227, 0.1])  # Assists over time
+        ax1.set_position([0, 0.88, 1, 0.1])  # Results chart at top
 
-    if save_and_crop:
+        ax2.set_position([0.5, 0.725, 0.2, 0.1])  # my xG
+        ax23.set_position([0.5, 0.56875, 0.2, 0.1])  # your xG
+        ax26.set_position([0.5, 0.4125, 0.2, 0.1])  # win rate
+        ax24.set_position([0.5, 0.25625, 0.2, 0.1])  # our xG
+        ax25.set_position([0.5, 0.1, 0.2, 0.1])  # xGD
+
+        ax19.set_position([0.39, 0.5, 0.09, 0.325])  # Goal Difference Distribution chart
+        ax20.set_position([0.39, 0.275, 0.09, 0.15])  # Goals Scored Distribution chart
+        ax21.set_position([0.39, 0.1, 0.09, 0.15])  # Goals Conceded Distribution chart
+
+        ax3.set_position([0.85, 0.75, 0.075, 0.075])  # Results pie chart
+        ax17.set_position([0.89, 0.75, 0.075, 0.075])  # OT Results pie chart
+        ax18.set_position([0.93, 0.75, 0.075, 0.075])  # NT Results pie chart
+        ax22.set_position([0.75, 0.5, 0.1, 0.32])  # Positional tendencies chart (Allan vs Sertalp)
+        ax4.set_position([0.87, 0.5, 0.05, 0.2])  # Allan's touch heatmap
+        ax5.set_position([0.93, 0.5, 0.05, 0.2])  # Sertalp's touch heatmap
+
+        ax13.set_position([0.03, 0.5, 0.08, 0.32])  # Allan's shot & goal heatmap
+        ax6.set_position([0.15, 0.5, 0.1, 0.32])  # Horizontal Bar Chart (Allan vs Sertalp)
+        ax14.set_position([0.28, 0.5, 0.08, 0.32])  # Sertalp's shot & goal heatmap
+
+        ax15.set_position([0.03, 0.1, 0.08, 0.32])  # Our shot & goal heatmap
+        ax7.set_position([0.15, 0.1, 0.1, 0.32])  # Horizontal Bar Chart (Us vs Opponent)
+        ax16.set_position([0.28, 0.1, 0.08, 0.32])  # Opponent's shot & goal heatmap
+
+        ax8.set_position([0.75, 0.05, 0.227, 0.1])  # Goals over time
+        ax9.set_position([0.75, 0.155, 0.227, 0.1])  # Shots over time
+        ax10.set_position([0.75, 0.26, 0.227, 0.1])  # Saves over time
+        ax11.set_position([0.75, 0.365, 0.227, 0.1])  # Assists over time
+
         plt.savefig(path_to_charts + "full_canvas.png")
         # Divide the canvas into individual charts by cropping
         img = Image.open(path_to_charts + "full_canvas.png")
@@ -4683,7 +4680,7 @@ crunch_stats(check_new=False, show_xg_scorelines=False, save_and_crop=True)
 
 midTime = time.time()
 # Update files using games from latest streak
-crunch_stats(check_new=True, show_xg_scorelines=True, save_and_crop=True)
+crunch_stats(check_new=True, show_xg_scorelines=False, save_and_crop=True)
 
 lastTime = time.time()
 executionTime = (time.time() - startTime)
