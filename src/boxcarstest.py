@@ -9,6 +9,9 @@
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
 
+# TODO: change the way the program runs so that it doesn't run in a loop
+# TODO: export all data used for matplotlib charts to .TSV files
+
 import csv
 import glob
 import json
@@ -256,10 +259,6 @@ for i in range(0, 2):
     their_shot_misses_y = []
     their_shot_misses_z = []
 
-    my_touches_count = 0
-    your_touches_count = 0
-    their_touches_count = 0
-
     win_count = 0
     loss_count = 0
     result_array = []
@@ -274,14 +273,6 @@ for i in range(0, 2):
     shot_diff_array = []
 
     our_team_color = []
-
-    my_assists_count = 0
-    your_assists_count = 0
-    their_assists_count = 0
-
-    my_saves_count = 0
-    your_saves_count = 0
-    their_saves_count = 0
 
     my_goals_over_time = []
     your_goals_over_time = []
@@ -298,14 +289,6 @@ for i in range(0, 2):
     my_assists_over_time = []
     your_assists_over_time = []
     their_assists_over_time = []
-
-    my_demos_count = 0
-    your_demos_count = 0
-    their_demos_count = 0
-
-    my_demos_conceded_count = 0
-    your_demos_conceded_count = 0
-    their_demos_conceded_count = 0
 
     my_demos_over_time = []
     your_demos_over_time = []
@@ -354,41 +337,9 @@ for i in range(0, 2):
     their_balls_lost_over_time = []
     game_balls_lost_over_time = []
 
-    my_passes_count = 0
-    your_passes_count = 0
-    their_passes_count = 0
-
-    my_dribbles_count = 0
-    your_dribbles_count = 0
-    their_dribbles_count = 0
-
-    my_aerials_count = 0
-    your_aerials_count = 0
-    their_aerials_count = 0
-
-    my_score_count = 0
-    your_score_count = 0
-    their_score_count = 0
-
-    my_clears_count = 0
-    your_clears_count = 0
-    their_clears_count = 0
-
-    my_turnovers_count = 0
-    your_turnovers_count = 0
-    their_turnovers_count = 0
-
-    my_turnovers_won_count = 0
-    your_turnovers_won_count = 0
-    their_turnovers_won_count = 0
-
     # TODO: take FF into account
     overtime_wins_count = 0
     overtime_losses_count = 0
-
-    my_goal_count = 0
-    your_goal_count = 0
-    their_goal_count = 0
 
     win_chance_per_game = []
     total_win_chance = 0
@@ -523,10 +474,6 @@ for i in range(0, 2):
     your_scores_over_time = []
     their_scores_over_time = []
 
-    # also includes non-shot goals
-    my_goals_per_game = []
-    your_goals_per_game = []
-
     my_mvp_count = 0
     your_mvp_count = 0
     their_mvp_count = 0
@@ -537,10 +484,6 @@ for i in range(0, 2):
     your_shots_goal_or_miss = []
     our_shots_goal_or_miss = []
     their_shots_goal_or_miss = []
-
-    my_hit_count = 0
-    your_hit_count = 0
-    their_hit_count = 0
 
     for file in new_json_files:
         file_counter += 1
@@ -603,7 +546,6 @@ for i in range(0, 2):
                                 their_local_xg_per_hit.append(float(my_list[row][4]))
 
                             if my_list[row][col] == my_name:
-                                my_hit_count += 1
                                 my_local_hits += 1
                                 my_local_xg += float(my_list[row][4])
                                 my_total_xg += float(my_list[row][4])
@@ -647,7 +589,6 @@ for i in range(0, 2):
                                     my_xg_per_miss_from_shot_frame_list.append(int(my_list[row][7]))
 
                             elif my_list[row][col] == your_name:
-                                your_hit_count += 1
                                 your_local_hits += 1
                                 your_local_xg += float(my_list[row][4])
                                 your_total_xg += float(my_list[row][4])
@@ -689,7 +630,6 @@ for i in range(0, 2):
                                     your_xg_per_miss_from_shot_frame_list.append(int(my_list[row][7]))
 
                             else:
-                                their_hit_count += 1
                                 their_local_hits += 1
                                 their_local_xg += float(my_list[row][4])
                                 their_total_xg += float(my_list[row][4])
@@ -735,20 +675,20 @@ for i in range(0, 2):
             local_GS = 0
             local_GC = 0
 
-            local_my_goals = 0
-            local_your_goals = 0
-            local_their_goals = 0
+            my_local_goals = 0
+            your_local_goals = 0
+            their_local_goals = 0
 
-            local_my_shots = 0
-            local_your_shots = 0
-            local_our_shots = 0
-            local_their_shots = 0
-            local_my_saves = 0
-            local_your_saves = 0
-            local_their_saves = 0
-            local_my_assists = 0
-            local_your_assists = 0
-            local_their_assists = 0
+            my_local_shots = 0
+            your_local_shots = 0
+            our_local_shots = 0
+            their_local_shots = 0
+            my_local_saves = 0
+            your_local_saves = 0
+            their_local_saves = 0
+            my_local_assists = 0
+            your_local_assists = 0
+            their_local_assists = 0
 
             my_local_passes = 0
             your_local_passes = 0
@@ -793,30 +733,21 @@ for i in range(0, 2):
             for i in data['players']:
                 if i["id"]["id"] == my_id:
                     if "assists" in i:
-                        local_my_assists += i["assists"]
-                        my_assists_count += i["assists"]
+                        my_local_assists += i["assists"]
                 elif i["id"]["id"] == your_id:
                     if "assists" in i:
-                        local_your_assists += i["assists"]
-                        your_assists_count += i["assists"]
+                        your_local_assists += i["assists"]
                 else:
                     if "assists" in i:
-                        local_their_assists += i["assists"]
-                        their_assists_count += i["assists"]
+                        their_local_assists += i["assists"]
 
             for i in data["gameMetadata"]["goals"]:
                 if i["playerId"]["id"] == my_id:
-                    local_my_goals += 1
-                    my_goal_count += 1
+                    my_local_goals += 1
                 elif i["playerId"]["id"] == your_id:
-                    local_your_goals += 1
-                    your_goal_count += 1
+                    your_local_goals += 1
                 else:
-                    local_their_goals += 1
-                    their_goal_count += 1
-
-            my_goals_per_game.append(local_my_goals)
-            your_goals_per_game.append(local_your_goals)
+                    their_local_goals += 1
 
             my_local_score = 0
             your_local_score = 0
@@ -829,31 +760,23 @@ for i in range(0, 2):
 
                 if i["id"]["id"] == my_id:
                     if "score" in i:
-                        my_scores_over_time.append(i["score"])
                         my_local_score = i["score"]
-                        my_score_count += i["score"]
+                        my_scores_over_time.append(i["score"])
                     if "saves" in i:
-                        my_saves_count += i["saves"]
-                        local_my_saves += i["saves"]
+                        my_local_saves += i["saves"]
                     if "totalPasses" in i["stats"]["hitCounts"]:
-                        my_passes_count += i["stats"]["hitCounts"]["totalPasses"]
                         my_local_passes = i["stats"]["hitCounts"]["totalPasses"]
                     if "totalClears" in i["stats"]["hitCounts"]:
-                        my_clears_count += i["stats"]["hitCounts"]["totalClears"]
                         my_local_clears = i["stats"]["hitCounts"]["totalClears"]
                     if "turnovers" in i["stats"]["possession"]:
-                        my_turnovers_count += i["stats"]["possession"]["turnovers"]
                         my_local_balls_lost = i["stats"]["possession"]["turnovers"]
                     if "wonTurnovers" in i["stats"]["possession"]:
-                        my_turnovers_won_count += i["stats"]["possession"]["wonTurnovers"]
                         my_local_balls_won = i["stats"]["possession"]["wonTurnovers"]
 
                     if "totalDribbles" in i["stats"]["hitCounts"]:
-                        my_dribbles_count += i["stats"]["hitCounts"]["totalDribbles"]
                         my_local_dribbles = i["stats"]["hitCounts"]["totalDribbles"]
 
                     if "totalAerials" in i["stats"]["hitCounts"]:
-                        my_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
                         my_local_aerials = i["stats"]["hitCounts"]["totalAerials"]
 
                     # positional tendencies
@@ -912,29 +835,21 @@ for i in range(0, 2):
                 elif i["id"]["id"] == your_id:
                     if "score" in i:
                         your_scores_over_time.append(i["score"])
-                        your_score_count += i["score"]
                         your_local_score = i["score"]
                     if "saves" in i:
-                        your_saves_count += i["saves"]
-                        local_your_saves += i["saves"]
+                        your_local_saves += i["saves"]
                     if "totalPasses" in i["stats"]["hitCounts"]:
-                        your_passes_count += i["stats"]["hitCounts"]["totalPasses"]
                         your_local_passes = i["stats"]["hitCounts"]["totalPasses"]
                     if "totalClears" in i["stats"]["hitCounts"]:
-                        your_clears_count += i["stats"]["hitCounts"]["totalClears"]
                         your_local_clears = i["stats"]["hitCounts"]["totalClears"]
                     if "turnovers" in i["stats"]["possession"]:
-                        your_turnovers_count += i["stats"]["possession"]["turnovers"]
                         your_local_balls_lost = i["stats"]["possession"]["turnovers"]
                     if "wonTurnovers" in i["stats"]["possession"]:
-                        your_turnovers_won_count += i["stats"]["possession"]["wonTurnovers"]
                         your_local_balls_won = i["stats"]["possession"]["wonTurnovers"]
                     if "totalDribbles" in i["stats"]["hitCounts"]:
-                        your_dribbles_count += i["stats"]["hitCounts"]["totalDribbles"]
                         your_local_dribbles = i["stats"]["hitCounts"]["totalDribbles"]
 
                     if "totalAerials" in i["stats"]["hitCounts"]:
-                        your_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
                         your_local_aerials = i["stats"]["hitCounts"]["totalAerials"]
 
                     # positional tendencies
@@ -992,32 +907,24 @@ for i in range(0, 2):
 
                 else:
                     if "score" in i:
-                        their_score_count += i["score"]
                         if i["id"]["id"] == local_ids[0]:
                             opp1_local_score = i["score"]
                         elif i["id"]["id"] == local_ids[1]:
                             opp2_local_score = i["score"]
 
                     if "saves" in i:
-                        their_saves_count += i["saves"]
-                        local_their_saves += i["saves"]
+                        their_local_saves += i["saves"]
                     if "totalPasses" in i["stats"]["hitCounts"]:
-                        their_passes_count += i["stats"]["hitCounts"]["totalPasses"]
                         their_local_passes += i["stats"]["hitCounts"]["totalPasses"]
                     if "totalClears" in i["stats"]["hitCounts"]:
-                        their_clears_count += i["stats"]["hitCounts"]["totalClears"]
                         their_local_clears += i["stats"]["hitCounts"]["totalClears"]
                     if "turnovers" in i["stats"]["possession"]:
-                        their_turnovers_count += i["stats"]["possession"]["turnovers"]
                         their_local_balls_lost += i["stats"]["possession"]["turnovers"]
                     if "wonTurnovers" in i["stats"]["possession"]:
-                        their_turnovers_won_count += i["stats"]["possession"]["wonTurnovers"]
                         their_local_balls_won += i["stats"]["possession"]["wonTurnovers"]
                     if "totalDribbles" in i["stats"]["hitCounts"]:
-                        their_dribbles_count += i["stats"]["hitCounts"]["totalDribbles"]
                         their_local_dribbles += i["stats"]["hitCounts"]["totalDribbles"]
                     if "totalAerials" in i["stats"]["hitCounts"]:
-                        their_aerials_count += i["stats"]["hitCounts"]["totalAerials"]
                         their_local_aerials += i["stats"]["hitCounts"]["totalAerials"]
 
             my_passes_over_time.append(my_local_passes)
@@ -1094,26 +1001,18 @@ for i in range(0, 2):
             if "demos" in data["gameMetadata"]:
                 for i in data["gameMetadata"]["demos"]:
                     if i["attackerId"]["id"] == my_id and i["victimId"]["id"] != my_id:
-                        my_demos_count += 1
                         my_local_demos += 1
-                        their_demos_conceded_count += 1
                         their_local_demoed += 1
                     if i["attackerId"]["id"] == your_id and i["victimId"]["id"] != your_id:
-                        your_demos_count += 1
                         your_local_demos += 1
-                        their_demos_conceded_count += 1
                         their_local_demoed += 1
                     if i["victimId"]["id"] == my_id and i["attackerId"]["id"] != your_id \
                             and i["attackerId"]["id"] != my_id:
-                        their_demos_count += 1
                         their_local_demos += 1
-                        my_demos_conceded_count += 1
                         my_local_demoed += 1
                     if i["victimId"]["id"] == your_id and i["attackerId"]["id"] != your_id \
                             and i["attackerId"]["id"] != my_id:
-                        their_demos_count += 1
                         their_local_demos += 1
-                        your_demos_conceded_count += 1
                         your_local_demoed += 1
 
             my_demos_over_time.append(my_local_demos)
@@ -1147,48 +1046,44 @@ for i in range(0, 2):
 
             for i in data['gameStats']['hits']:
                 if i["playerId"]["id"] == my_id:
-                    my_touches_count += 1
                     my_touches_x.append(i["ballData"]["posX"] * local_multiplier)
                     my_touches_y.append(i["ballData"]["posY"] * local_multiplier)
                     my_touches_z.append(i["ballData"]["posZ"])
                 elif i["playerId"]["id"] == your_id:
-                    your_touches_count += 1
                     your_touches_x.append(i["ballData"]["posX"] * local_multiplier)
                     your_touches_y.append(i["ballData"]["posY"] * local_multiplier)
                     your_touches_z.append(i["ballData"]["posZ"])
-                else:
-                    their_touches_count += 1
 
                 if "shot" in i:
                     if i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id:
-                        local_our_shots += 1
+                        our_local_shots += 1
 
                         if "goal" in i:
                             if i["playerId"]["id"] == my_id:
                                 my_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
                                 my_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
                                 my_shot_goals_z.append(i["ballData"]["posZ"])
-                                local_my_shots += 1
+                                my_local_shots += 1
                             else:
                                 your_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
                                 your_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
                                 your_shot_goals_z.append(i["ballData"]["posZ"])
-                                local_your_shots += 1
+                                your_local_shots += 1
 
                         else:
                             if i["playerId"]["id"] == my_id:
                                 my_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
                                 my_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
                                 my_shot_misses_z.append(i["ballData"]["posZ"])
-                                local_my_shots += 1
+                                my_local_shots += 1
                             else:
                                 your_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
                                 your_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
                                 your_shot_misses_z.append(i["ballData"]["posZ"])
-                                local_your_shots += 1
+                                your_local_shots += 1
 
                     else:
-                        local_their_shots += 1
+                        their_local_shots += 1
 
                         if "goal" in i:
                             their_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
@@ -1276,23 +1171,25 @@ for i in range(0, 2):
             gd_array.append(local_GS - local_GC)
             gs_array.append(local_GS)
             gc_array.append(local_GC)
-            shot_diff_array.append(local_our_shots - local_their_shots)
+            shot_diff_array.append(our_local_shots - their_local_shots)
+            
+            
+            
+            my_goals_over_time.append(my_local_goals)
+            your_goals_over_time.append(your_local_goals)
+            their_goals_over_time.append(their_local_goals)
 
-            my_goals_over_time.append(local_my_goals)
-            your_goals_over_time.append(local_your_goals)
-            their_goals_over_time.append(local_their_goals)
+            my_shots_over_time.append(my_local_shots)
+            your_shots_over_time.append(your_local_shots)
+            their_shots_over_time.append(their_local_shots)
 
-            my_shots_over_time.append(local_my_shots)
-            your_shots_over_time.append(local_your_shots)
-            their_shots_over_time.append(local_their_shots)
+            my_saves_over_time.append(my_local_saves)
+            your_saves_over_time.append(your_local_saves)
+            their_saves_over_time.append(their_local_saves)
 
-            my_saves_over_time.append(local_my_saves)
-            your_saves_over_time.append(local_your_saves)
-            their_saves_over_time.append(local_their_saves)
-
-            my_assists_over_time.append(local_my_assists)
-            your_assists_over_time.append(local_your_assists)
-            their_assists_over_time.append(local_their_assists)
+            my_assists_over_time.append(my_local_assists)
+            your_assists_over_time.append(your_local_assists)
+            their_assists_over_time.append(their_local_assists)
 
             my_xg_over_time.append(my_local_xg)
             your_xg_over_time.append(your_local_xg)
@@ -1398,11 +1295,6 @@ for i in range(0, 2):
             win_chance = 0
             draw_chance = 0
             loss_chance = 0
-            local_xgf_prob = 0
-            local_xgc_prob = 0
-
-            chance_of_missing = 1
-            chance_of_scoring = 1
 
             # our chances of scoring up to N goals where N is the number of shots we took
             our_xgf_prob_raw = poisson_binomial_pmf(our_local_xg_per_hit)
@@ -1413,8 +1305,8 @@ for i in range(0, 2):
             our_xgf_prob = [0] * max_possible_goals
             our_xgc_prob = [0] * max_possible_goals
 
-            local_our_hits_att = len(our_local_xg_per_hit)
-            local_our_hits_con = len(their_local_xg_per_hit)
+            our_local_hits_att = len(our_local_xg_per_hit)
+            our_local_hits_con = len(their_local_xg_per_hit)
 
             for i in range(len(our_xgf_prob_raw)):
                 our_xgf_prob[i] = our_xgf_prob_raw[i]
@@ -1470,28 +1362,39 @@ for i in range(0, 2):
 
             local_goal_difference = local_GS - local_GC
             local_xg_difference = (my_local_xg + your_local_xg) - their_local_xg
-            local_hit_difference = local_our_hits_att - local_our_hits_con
+            local_hit_difference = our_local_hits_att - our_local_hits_con
 
             scoreline_data.append(
                 [color_to_add + "%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC,
-                 local_our_hits_att, local_our_hits_con, "%.2f" % local_xg_difference, local_goal_difference,
+                 our_local_hits_att, our_local_hits_con, "%.2f" % local_xg_difference, local_goal_difference,
                  local_hit_difference, file.replace(".json", ""),
                  round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
                  round((result_luck * 100), 2),
                  result_type + Style.RESET_ALL])
             scoreline_data_no_colors.append(
                 ["%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_GS, local_GC,
-                 local_our_hits_att, local_our_hits_con, "%.2f" % local_xg_difference, local_goal_difference,
+                 our_local_hits_att, our_local_hits_con, "%.2f" % local_xg_difference, local_goal_difference,
                  local_hit_difference, file.replace(".json", ""),
                  round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
                  round((result_luck * 100), 2),
                  result_type, local_time])
+
     if show_xg_scorelines:
         print(tabulate(scoreline_data,
                        headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "xGD", "GD", "HD", "Replay ID", "P(Win)",
                                 "P(Result)", "P(Score)", "Luck %",
                                 "Outcome"], numalign="right", stralign="right"))
         print("\n")
+
+    content = tabulate(scoreline_data_no_colors,
+                       headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "xGD", "GD", "HD", "Replay ID", "P(Win)",
+                                "P(Result)", "P(Score)", "Luck %",
+                                "Outcome", "StartTime"], tablefmt="tsv")
+    if not os.path.exists(path_to_tables + "scorelines.tsv"):
+        open(path_to_tables + "scorelines.tsv", 'w').close()
+    f = open(path_to_tables + "scorelines.tsv", "w")
+    f.write(content)
+    f.close()
 
     my_max_demos_file = new_json_files[my_demos_over_time.index(max(my_demos_over_time))]
     your_max_demos_file = new_json_files[your_demos_over_time.index(max(your_demos_over_time))]
@@ -1540,15 +1443,61 @@ for i in range(0, 2):
     their_max_balls_lost_file = new_json_files[their_balls_lost_over_time.index(max(their_balls_lost_over_time))]
     game_max_balls_lost_file = new_json_files[game_balls_lost_over_time.index(max(game_balls_lost_over_time))]
 
-    content = tabulate(scoreline_data_no_colors,
-                       headers=["xGF", "xGC", "GF", "GC", "HF", "HC", "xGD", "GD", "HD", "Replay ID", "P(Win)",
-                                "P(Result)", "P(Score)", "Luck %",
-                                "Outcome", "StartTime"], tablefmt="tsv")
-    if not os.path.exists(path_to_tables + "scorelines.tsv"):
-        open(path_to_tables + "scorelines.tsv", 'w').close()
-    f = open(path_to_tables + "scorelines.tsv", "w")
-    f.write(content)
-    f.close()
+    my_goal_count = sum(my_goals_over_time)
+    your_goal_count = sum(your_goals_over_time)
+    their_goal_count = sum(their_goals_over_time)
+
+    my_passes_count = sum(my_passes_over_time)
+    your_passes_count = sum(your_passes_over_time)
+    their_passes_count = sum(their_passes_over_time)
+
+    my_dribbles_count = sum(my_dribbles_over_time)
+    your_dribbles_count = sum(your_dribbles_over_time)
+    their_dribbles_count = sum(their_dribbles_over_time)
+
+    my_aerials_count = sum(my_aerials_over_time)
+    your_aerials_count = sum(your_aerials_over_time)
+    their_aerials_count = sum(their_aerials_over_time)
+
+    my_scores_count = sum(my_scores_over_time)
+    your_scores_count = sum(your_scores_over_time)
+    their_scores_count = sum(their_scores_over_time)
+
+    my_clears_count = sum(my_clears_over_time)
+    your_clears_count = sum(your_clears_over_time)
+    their_clears_count = sum(their_clears_over_time)
+
+    my_turnovers_count = sum(my_balls_lost_over_time)
+    your_turnovers_count = sum(your_balls_lost_over_time)
+    their_turnovers_count = sum(their_balls_lost_over_time)
+
+    my_turnovers_won_count = sum(my_balls_won_over_time)
+    your_turnovers_won_count = sum(your_balls_won_over_time)
+    their_turnovers_won_count = sum(their_balls_won_over_time)
+
+    my_assists_count = sum(my_assists_over_time)
+    your_assists_count = sum(your_assists_over_time)
+    their_assists_count = sum(their_assists_over_time)
+
+    my_saves_count = sum(my_saves_over_time)
+    your_saves_count = sum(your_saves_over_time)
+    their_saves_count = sum(their_saves_over_time)
+
+    my_demos_count = sum(my_demos_over_time)
+    your_demos_count = sum(your_demos_over_time)
+    their_demos_count = sum(their_demos_over_time)
+
+    my_score_count = sum(my_scores_over_time)
+    your_score_count = sum(your_scores_over_time)
+    their_score_count = sum(their_scores_over_time)
+
+    my_demos_conceded_count = sum(my_demoed_over_time)
+    your_demos_conceded_count = sum(your_demoed_over_time)
+    their_demos_conceded_count = sum(their_demoed_over_time)
+    
+    my_touches_count = sum(my_hits_over_time)
+    your_touches_count = sum(your_hits_over_time)
+    their_touches_count = sum(their_hits_over_time)
 
     your_miss_count = len(your_shot_misses_distance_to_goal)
     my_miss_count = len(my_shot_misses_distance_to_goal)
@@ -1556,8 +1505,6 @@ for i in range(0, 2):
 
     our_goal_count = my_goal_count + your_goal_count
     our_miss_count = my_miss_count + your_miss_count
-
-    our_hit_count = my_hit_count + your_hit_count
 
     my_shot_count = len(my_shots_x)
     your_shot_count = len(your_shots_x)
@@ -1597,7 +1544,6 @@ for i in range(0, 2):
     our_dribbles_count = my_dribbles_count + your_dribbles_count
     our_aerials_count = my_aerials_count + your_aerials_count
 
-    # TODO: fix possible div by 0 bugs for following variables
     our_total_xg = my_total_xg + your_total_xg
     our_total_goals_from_shots = my_goals_from_shots + your_goals_from_shots
     our_total_goals_from_non_shots = my_goals_from_non_shots + your_goals_from_non_shots
@@ -1853,14 +1799,14 @@ for i in range(0, 2):
     streak_your_xg = []
     streak_their_xg = []
     streak_filenames = []
-    local_my_goals_in_streak = 0
-    local_your_goals_in_streak = 0
-    local_our_goals_in_streak = 0
-    local_their_goals_in_streak = 0
-    local_my_xg_in_streak = 0
-    local_your_xg_in_streak = 0
-    local_our_xg_in_streak = 0
-    local_their_xg_in_streak = 0
+    my_local_goals_in_streak = 0
+    your_local_goals_in_streak = 0
+    our_local_goals_in_streak = 0
+    their_local_goals_in_streak = 0
+    my_local_xg_in_streak = 0
+    your_local_xg_in_streak = 0
+    our_local_xg_in_streak = 0
+    their_local_xg_in_streak = 0
     local_filenames_in_streak = []
 
     for result in range(0, len(result_array)):
@@ -1871,17 +1817,17 @@ for i in range(0, 2):
 
         local_expected_wins_in_streak += (win_chance_per_game[result] / 100)
 
-        local_my_goals_in_streak += my_goals_over_time[result]
-        local_your_goals_in_streak += your_goals_over_time[result]
+        my_local_goals_in_streak += my_goals_over_time[result]
+        your_local_goals_in_streak += your_goals_over_time[result]
 
-        local_our_goals_in_streak += (my_goals_over_time[result] + your_goals_over_time[result])
-        local_their_goals_in_streak += their_goals_over_time[result]
+        our_local_goals_in_streak += (my_goals_over_time[result] + your_goals_over_time[result])
+        their_local_goals_in_streak += their_goals_over_time[result]
 
-        local_my_xg_in_streak += my_xg_over_time[result]
-        local_your_xg_in_streak += your_xg_over_time[result]
+        my_local_xg_in_streak += my_xg_over_time[result]
+        your_local_xg_in_streak += your_xg_over_time[result]
 
-        local_our_xg_in_streak += (my_xg_over_time[result] + your_xg_over_time[result])
-        local_their_xg_in_streak += their_xg_over_time[result]
+        our_local_xg_in_streak += (my_xg_over_time[result] + your_xg_over_time[result])
+        their_local_xg_in_streak += their_xg_over_time[result]
 
         local_streak_results += str(result_array[result] + " ")
         local_filenames_in_streak.append(new_json_files[result])
@@ -1892,27 +1838,27 @@ for i in range(0, 2):
             streak_expected_wins.append(local_expected_wins_in_streak)
             streak_results.append(local_streak_results)
             streak_num_games.append(local_wins_in_streak + local_losses_in_streak)
-            streak_goals.append(local_our_goals_in_streak)
-            streak_my_goals.append(local_my_goals_in_streak)
-            streak_your_goals.append(local_your_goals_in_streak)
-            streak_their_goals.append(local_their_goals_in_streak)
-            streak_xg.append(local_our_xg_in_streak)
-            streak_my_xg.append(local_my_xg_in_streak)
-            streak_your_xg.append(local_your_xg_in_streak)
-            streak_their_xg.append(local_their_xg_in_streak)
+            streak_goals.append(our_local_goals_in_streak)
+            streak_my_goals.append(my_local_goals_in_streak)
+            streak_your_goals.append(your_local_goals_in_streak)
+            streak_their_goals.append(their_local_goals_in_streak)
+            streak_xg.append(our_local_xg_in_streak)
+            streak_my_xg.append(my_local_xg_in_streak)
+            streak_your_xg.append(your_local_xg_in_streak)
+            streak_their_xg.append(their_local_xg_in_streak)
             streak_filenames.append(local_filenames_in_streak)
             local_wins_in_streak = 0
             local_losses_in_streak = 0
             local_expected_wins_in_streak = 0
             local_streak_results = ""
-            local_our_goals_in_streak = 0
-            local_my_goals_in_streak = 0
-            local_your_goals_in_streak = 0
-            local_their_goals_in_streak = 0
-            local_our_xg_in_streak = 0
-            local_my_xg_in_streak = 0
-            local_your_xg_in_streak = 0
-            local_their_xg_in_streak = 0
+            our_local_goals_in_streak = 0
+            my_local_goals_in_streak = 0
+            your_local_goals_in_streak = 0
+            their_local_goals_in_streak = 0
+            our_local_xg_in_streak = 0
+            my_local_xg_in_streak = 0
+            your_local_xg_in_streak = 0
+            their_local_xg_in_streak = 0
             local_filenames_in_streak = []
 
         res_num += 1
@@ -2206,7 +2152,7 @@ for i in range(0, 2):
     my_most_consecutive_games_scored_in = 0
     my_most_consecutive_games_fts_in_helper = 0
     my_most_consecutive_games_fts_in = 0
-    for goals in my_goals_per_game:
+    for goals in my_goals_over_time:
         if goals > 0:
             my_most_consecutive_games_scored_in_helper += 1
         else:
@@ -2225,7 +2171,7 @@ for i in range(0, 2):
     your_most_consecutive_games_scored_in = 0
     your_most_consecutive_games_fts_in_helper = 0
     your_most_consecutive_games_fts_in = 0
-    for goals in your_goals_per_game:
+    for goals in your_goals_over_time:
         if goals > 0:
             your_most_consecutive_games_scored_in_helper += 1
         else:
@@ -2985,9 +2931,9 @@ for i in range(0, 2):
     their_biggest_xg_overperformance_in_one_game_percentage = \
         "%.0f" % (((their_biggest_xg_overperformance_goals / their_biggest_xg_overperformance_xg) * 100) - 100) + "%"
 
-    individual_record_data = [["Most goals scored in one game", max(my_goals_per_game), max(your_goals_per_game),
-                               link_replay(new_json_files[my_goals_per_game.index(max(my_goals_per_game))], 0, False),
-                               link_replay(new_json_files[your_goals_per_game.index(max(your_goals_per_game))], 0,
+    individual_record_data = [["Most goals scored in one game", max(my_goals_over_time), max(your_goals_over_time),
+                               link_replay(new_json_files[my_goals_over_time.index(max(my_goals_over_time))], 0, False),
+                               link_replay(new_json_files[your_goals_over_time.index(max(your_goals_over_time))], 0,
                                            False)],
                               ["Most consecutive games scored in", my_most_consecutive_games_scored_in,
                                your_most_consecutive_games_scored_in, "-", "-"],
