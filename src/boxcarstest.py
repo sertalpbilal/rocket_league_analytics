@@ -2,14 +2,11 @@
 # TODO: calculate how long the ball is in our half vs. the opponent's half
 # TODO: detect forfeits
 # TODO: detect overtime without having to load CSVs (CSVs aren't being used for anything else other than that right now)
-# TODO: fix issues with GD chart when there is only 1 game and it's an overtime game
-# TODO: fix axes on charts which show game numbers to only show ints and not floats
 # TODO: handle own-goals (add stats for own goals scored)
 # TODO: decide whether to plot "non-shot" goals in the 4 goal heatmaps
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
-
-# TODO: export all data used for matplotlib charts to .TSV files so we can move away from matplotlib
+# TODO: smarter streak handling (output latest streak game data when checking all games rather than before/after)
 
 import csv
 import glob
@@ -18,6 +15,7 @@ import os
 import shutil
 import time
 from collections import Counter
+from itertools import chain
 from pathlib import Path
 from statistics import mean
 
@@ -85,7 +83,6 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     your_color = "mediumblue"
     our_color = "green"
     their_color = "darkred"
-
 
     if check_new:
         path_to_json = '../data/json_new/'
@@ -237,6 +234,10 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     your_touches_y = []
     your_touches_z = []
 
+    my_misses_over_time = []
+    your_misses_over_time = []
+    their_misses_over_time = []
+
     my_shot_misses_x = []
     my_shot_misses_y = []
     my_shot_misses_z = []
@@ -252,6 +253,7 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     win_count = 0
     loss_count = 0
     result_array = []
+    result_array_with_ot = []
     result_array_num = []
     gd_array = []
     normaltime_gd_array = []
@@ -335,33 +337,15 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
 
     loss_chance_per_game = []
 
+    # Number of available "positional tendencies"
+    pos_tendencies_nr = 23
+
     # positional tendencies
-    my_pos_tendencies = [0] * 23
-    your_pos_tendencies = [0] * 23
-    # columns: time stats...
-    # 0 - ground
-    # 1 - low in air
-    # 2 - high in air
-    # 3 - defending half
-    # 4 - attacking half
-    # 5 - defending third
-    # 6 - neutral third
-    # 7 - attacking third
-    # 8 - behind ball
-    # 9 - in front of ball
-    # 10 - near wall
-    # 11 - in corner
-    # 12 - on wall
-    # 13 - full boost
-    # 14 - low boost
-    # 15 - no boost
-    # 16 - closest to ball
-    # 17 - close to ball
-    # 18 - furthest from ball
-    # 19 - slow speed
-    # 20 - boost speed
-    # 21 - supersonic
-    # 22 - carrying ball
+    my_pos_tendencies = [0] * pos_tendencies_nr
+    your_pos_tendencies = [0] * pos_tendencies_nr
+
+    my_pos_tendencies_over_time = []
+    your_pos_tendencies_over_time = []
 
     my_total_xg = 0
     your_total_xg = 0
@@ -443,6 +427,14 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     your_goals_from_shots_over_time = []
     their_goals_from_shots_over_time = []
 
+    my_goals_from_non_shots_over_time = []
+    your_goals_from_non_shots_over_time = []
+    their_goals_from_non_shots_over_time = []
+
+    my_other_goals_over_time = []
+    your_other_goals_over_time = []
+    their_other_goals_over_time = []
+
     my_hits_over_time = []
     our_hits_over_time = []
     your_hits_over_time = []
@@ -463,16 +455,19 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     your_scores_over_time = []
     their_scores_over_time = []
 
-    my_mvp_count = 0
-    your_mvp_count = 0
-    their_mvp_count = 0
-    our_mvp_count = 0
     mvp_per_game = []
+
+    my_mvp_list = []
+    your_mvp_list = []
+    opp1_mvp_list = []
+    opp2_mvp_list = []
 
     my_shots_goal_or_miss = []  # 0 = miss, 1 = goal
     your_shots_goal_or_miss = []
     our_shots_goal_or_miss = []
     their_shots_goal_or_miss = []
+
+    luck_over_time = []
 
     for file in new_json_files:
         file_counter += 1
@@ -515,6 +510,10 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
             my_local_hits = 0
             your_local_hits = 0
             their_local_hits = 0
+
+            my_local_misses = 0
+            your_local_misses = 0
+            their_local_misses = 0
 
             for col in range(ncols):
                 for row in range(0, nrows):
@@ -572,6 +571,7 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
 
                                 # misses from shots
                                 elif my_list[row][6] == "False" and my_list[row][5] == "True":
+                                    my_local_misses += 1
                                     my_shots_goal_or_miss.append(0)
                                     my_xg_per_miss_from_shot_list.append(float(my_list[row][4]))
                                     my_xg_per_miss_from_shot_file_list.append(file.replace(".json", ""))
@@ -613,6 +613,7 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
                                     your_goals_from_shots += 1
                                     your_shots_goal_or_miss.append(1)
                                 elif my_list[row][6] == "False" and my_list[row][5] == "True":
+                                    your_local_misses += 1
                                     your_shots_goal_or_miss.append(0)
                                     your_xg_per_miss_from_shot_list.append(float(my_list[row][4]))
                                     your_xg_per_miss_from_shot_file_list.append(file.replace(".json", ""))
@@ -652,6 +653,7 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
                                     their_local_goals_from_shots += 1
                                     their_goals_from_shots += 1
                                 elif my_list[row][6] == "False" and my_list[row][5] == "True":
+                                    their_local_misses += 1
                                     their_xg_per_miss_from_shot_list.append(float(my_list[row][4]))
                                     their_xg_per_miss_from_shot_file_list.append(file.replace(".json", ""))
                                     their_xg_per_miss_from_shot_frame_list.append(int(my_list[row][7]))
@@ -659,6 +661,14 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
             my_goals_from_shots_over_time.append(my_local_goals_from_shots)
             your_goals_from_shots_over_time.append(your_local_goals_from_shots)
             their_goals_from_shots_over_time.append(their_local_goals_from_shots)
+
+            my_goals_from_non_shots_over_time.append(my_local_goals_from_non_shots)
+            your_goals_from_non_shots_over_time.append(your_local_goals_from_non_shots)
+            their_goals_from_non_shots_over_time.append(their_local_goals_from_non_shots)
+
+            my_misses_over_time.append(my_local_misses)
+            your_misses_over_time.append(your_local_misses)
+            their_misses_over_time.append(their_local_misses)
 
             local_color = "blue"
             local_gs = 0
@@ -738,10 +748,20 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
                 else:
                     their_local_goals += 1
 
+            my_other_goals_over_time.append(my_local_goals - my_local_goals_from_shots -
+                                            my_local_goals_from_non_shots)
+            your_other_goals_over_time.append(your_local_goals - your_local_goals_from_shots -
+                                              your_local_goals_from_non_shots)
+            their_other_goals_over_time.append(their_local_goals - their_local_goals_from_shots -
+                                               their_local_goals_from_non_shots)
+
             my_local_score = 0
             your_local_score = 0
             opp1_local_score = 0
             opp2_local_score = 0
+
+            my_local_pos_tendencies = [0] * pos_tendencies_nr
+            your_local_pos_tendencies = [0] * pos_tendencies_nr
 
             for i in data["players"]:
                 if i["id"]["id"] != my_id and i["id"]["id"] != your_id:
@@ -771,55 +791,79 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
                     # positional tendencies
                     if "timeOnGround" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
+                        my_local_pos_tendencies[0] = i["stats"]["positionalTendencies"]["timeOnGround"]
                     if "timeLowInAir" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[1] += i["stats"]["positionalTendencies"]["timeLowInAir"]
+                        my_local_pos_tendencies[1] = i["stats"]["positionalTendencies"]["timeLowInAir"]
                     if "timeHighInAir" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[2] += i["stats"]["positionalTendencies"]["timeHighInAir"]
+                        my_local_pos_tendencies[2] = i["stats"]["positionalTendencies"]["timeHighInAir"]
                     if "timeInDefendingHalf" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[3] += i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
+                        my_local_pos_tendencies[3] = i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
                     if "timeInAttackingHalf" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[4] += i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
+                        my_local_pos_tendencies[4] = i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
                     if "timeInDefendingThird" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[5] += i["stats"]["positionalTendencies"]["timeInDefendingThird"]
+                        my_local_pos_tendencies[5] = i["stats"]["positionalTendencies"]["timeInDefendingThird"]
                     if "timeInNeutralThird" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[6] += i["stats"]["positionalTendencies"]["timeInNeutralThird"]
+                        my_local_pos_tendencies[6] = i["stats"]["positionalTendencies"]["timeInNeutralThird"]
                     if "timeInAttackingThird" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[7] += i["stats"]["positionalTendencies"]["timeInAttackingThird"]
+                        my_local_pos_tendencies[7] = i["stats"]["positionalTendencies"]["timeInAttackingThird"]
                     if "timeBehindBall" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[8] += i["stats"]["positionalTendencies"]["timeBehindBall"]
+                        my_local_pos_tendencies[8] = i["stats"]["positionalTendencies"]["timeBehindBall"]
                     if "timeInFrontBall" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[9] += i["stats"]["positionalTendencies"]["timeInFrontBall"]
+                        my_local_pos_tendencies[9] = i["stats"]["positionalTendencies"]["timeInFrontBall"]
                     if "timeNearWall" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[10] += i["stats"]["positionalTendencies"]["timeNearWall"]
+                        my_local_pos_tendencies[10] = i["stats"]["positionalTendencies"]["timeNearWall"]
                     if "timeInCorner" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
+                        my_local_pos_tendencies[11] = i["stats"]["positionalTendencies"]["timeInCorner"]
                     if "timeOnWall" in i["stats"]["positionalTendencies"]:
                         my_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
+                        my_local_pos_tendencies[12] = i["stats"]["positionalTendencies"]["timeOnWall"]
 
                     if "timeFullBoost" in i["stats"]["boost"]:
                         my_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
+                        my_local_pos_tendencies[13] = i["stats"]["boost"]["timeFullBoost"]
                     if "timeLowBoost" in i["stats"]["boost"]:
                         my_pos_tendencies[14] += i["stats"]["boost"]["timeLowBoost"]
+                        my_local_pos_tendencies[14] = i["stats"]["boost"]["timeLowBoost"]
                     if "timeNoBoost" in i["stats"]["boost"]:
                         my_pos_tendencies[15] += i["stats"]["boost"]["timeNoBoost"]
+                        my_local_pos_tendencies[15] = i["stats"]["boost"]["timeNoBoost"]
 
                     if "timeClosestToBall" in i["stats"]["distance"]:
                         my_pos_tendencies[16] += i["stats"]["distance"]["timeClosestToBall"]
+                        my_local_pos_tendencies[16] = i["stats"]["distance"]["timeClosestToBall"]
                     if "timeCloseToBall" in i["stats"]["distance"]:
                         my_pos_tendencies[17] += i["stats"]["distance"]["timeCloseToBall"]
+                        my_local_pos_tendencies[17] = i["stats"]["distance"]["timeCloseToBall"]
                     if "timeFurthestFromBall" in i["stats"]["distance"]:
                         my_pos_tendencies[18] += i["stats"]["distance"]["timeFurthestFromBall"]
+                        my_local_pos_tendencies[18] = i["stats"]["distance"]["timeFurthestFromBall"]
 
                     if "timeAtSlowSpeed" in i["stats"]["speed"]:
                         my_pos_tendencies[19] += i["stats"]["speed"]["timeAtSlowSpeed"]
+                        my_local_pos_tendencies[19] = i["stats"]["speed"]["timeAtSlowSpeed"]
+
                     if "timeAtBoostSpeed" in i["stats"]["speed"]:
                         my_pos_tendencies[20] += i["stats"]["speed"]["timeAtBoostSpeed"]
+                        my_local_pos_tendencies[20] = i["stats"]["speed"]["timeAtBoostSpeed"]
                     if "timeAtSuperSonic" in i["stats"]["speed"]:
                         my_pos_tendencies[21] += i["stats"]["speed"]["timeAtSuperSonic"]
+                        my_local_pos_tendencies[21] = i["stats"]["speed"]["timeAtSuperSonic"]
 
                     if "ballCarries" in i["stats"]:
                         if "totalCarryTime" in i["stats"]["ballCarries"]:
                             my_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
+                            my_local_pos_tendencies[22] = i["stats"]["ballCarries"]["totalCarryTime"]
 
                 elif i["id"]["id"] == your_id:
                     if "score" in i:
@@ -844,55 +888,75 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
                     # positional tendencies
                     if "timeOnGround" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
+                        your_local_pos_tendencies[0] = i["stats"]["positionalTendencies"]["timeOnGround"]
                     if "timeLowInAir" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[1] += i["stats"]["positionalTendencies"]["timeLowInAir"]
+                        your_local_pos_tendencies[1] = i["stats"]["positionalTendencies"]["timeLowInAir"]
                     if "timeHighInAir" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[2] += i["stats"]["positionalTendencies"]["timeHighInAir"]
+                        your_local_pos_tendencies[2] = i["stats"]["positionalTendencies"]["timeHighInAir"]
                     if "timeInDefendingHalf" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[3] += i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
+                        your_local_pos_tendencies[3] = i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
                     if "timeInAttackingHalf" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[4] += i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
+                        your_local_pos_tendencies[4] = i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
                     if "timeInDefendingThird" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[5] += i["stats"]["positionalTendencies"]["timeInDefendingThird"]
+                        your_local_pos_tendencies[5] = i["stats"]["positionalTendencies"]["timeInDefendingThird"]
                     if "timeInNeutralThird" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[6] += i["stats"]["positionalTendencies"]["timeInNeutralThird"]
+                        your_local_pos_tendencies[6] = i["stats"]["positionalTendencies"]["timeInNeutralThird"]
                     if "timeInAttackingThird" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[7] += i["stats"]["positionalTendencies"]["timeInAttackingThird"]
+                        your_local_pos_tendencies[7] = i["stats"]["positionalTendencies"]["timeInAttackingThird"]
                     if "timeBehindBall" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[8] += i["stats"]["positionalTendencies"]["timeBehindBall"]
+                        your_local_pos_tendencies[8] = i["stats"]["positionalTendencies"]["timeBehindBall"]
                     if "timeInFrontBall" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[9] += i["stats"]["positionalTendencies"]["timeInFrontBall"]
+                        your_local_pos_tendencies[9] = i["stats"]["positionalTendencies"]["timeInFrontBall"]
                     if "timeNearWall" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[10] += i["stats"]["positionalTendencies"]["timeNearWall"]
+                        your_local_pos_tendencies[10] = i["stats"]["positionalTendencies"]["timeNearWall"]
                     if "timeInCorner" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
+                        your_local_pos_tendencies[11] = i["stats"]["positionalTendencies"]["timeInCorner"]
                     if "timeOnWall" in i["stats"]["positionalTendencies"]:
                         your_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
-
+                        your_local_pos_tendencies[12] = i["stats"]["positionalTendencies"]["timeOnWall"]
                     if "timeFullBoost" in i["stats"]["boost"]:
                         your_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
+                        your_local_pos_tendencies[13] = i["stats"]["boost"]["timeFullBoost"]
                     if "timeLowBoost" in i["stats"]["boost"]:
                         your_pos_tendencies[14] += i["stats"]["boost"]["timeLowBoost"]
+                        your_local_pos_tendencies[14] = i["stats"]["boost"]["timeLowBoost"]
                     if "timeNoBoost" in i["stats"]["boost"]:
                         your_pos_tendencies[15] += i["stats"]["boost"]["timeNoBoost"]
-
+                        your_local_pos_tendencies[15] = i["stats"]["boost"]["timeNoBoost"]
                     if "timeClosestToBall" in i["stats"]["distance"]:
                         your_pos_tendencies[16] += i["stats"]["distance"]["timeClosestToBall"]
+                        your_local_pos_tendencies[16] = i["stats"]["distance"]["timeClosestToBall"]
                     if "timeCloseToBall" in i["stats"]["distance"]:
                         your_pos_tendencies[17] += i["stats"]["distance"]["timeCloseToBall"]
+                        your_local_pos_tendencies[17] = i["stats"]["distance"]["timeCloseToBall"]
                     if "timeFurthestFromBall" in i["stats"]["distance"]:
                         your_pos_tendencies[18] += i["stats"]["distance"]["timeFurthestFromBall"]
-
+                        your_local_pos_tendencies[18] = i["stats"]["distance"]["timeFurthestFromBall"]
                     if "timeAtSlowSpeed" in i["stats"]["speed"]:
                         your_pos_tendencies[19] += i["stats"]["speed"]["timeAtSlowSpeed"]
+                        your_local_pos_tendencies[19] = i["stats"]["speed"]["timeAtSlowSpeed"]
                     if "timeAtBoostSpeed" in i["stats"]["speed"]:
                         your_pos_tendencies[20] += i["stats"]["speed"]["timeAtBoostSpeed"]
+                        your_local_pos_tendencies[20] = i["stats"]["speed"]["timeAtBoostSpeed"]
                     if "timeAtSuperSonic" in i["stats"]["speed"]:
                         your_pos_tendencies[21] += i["stats"]["speed"]["timeAtSuperSonic"]
+                        your_local_pos_tendencies[21] = i["stats"]["speed"]["timeAtSuperSonic"]
 
                     if "ballCarries" in i["stats"]:
                         if "totalCarryTime" in i["stats"]["ballCarries"]:
                             your_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
+                            your_local_pos_tendencies[22] = i["stats"]["ballCarries"]["totalCarryTime"]
 
                 else:
                     if "score" in i:
@@ -915,6 +979,9 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
                         their_local_dribbles += i["stats"]["hitCounts"]["totalDribbles"]
                     if "totalAerials" in i["stats"]["hitCounts"]:
                         their_local_aerials += i["stats"]["hitCounts"]["totalAerials"]
+
+            my_pos_tendencies_over_time.append(my_local_pos_tendencies)
+            your_pos_tendencies_over_time.append(your_local_pos_tendencies)
 
             my_passes_over_time.append(my_local_passes)
             your_passes_over_time.append(your_local_passes)
@@ -958,24 +1025,32 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
 
             # determine MVP - no tiebreaker (players can share MVP if they scored the same amount of pts)
             if my_local_score == max_local_score:
-                my_mvp_count += 1
+                my_mvp_list.append(1)
                 local_mvp_per_game[0] = my_alias
 
+            if my_local_score < max_local_score:
+                my_mvp_list.append(0)
+
             if your_local_score == max_local_score:
-                your_mvp_count += 1
+                your_mvp_list.append(1)
                 local_mvp_per_game[1] = your_alias
 
+            if your_local_score < max_local_score:
+                your_mvp_list.append(0)
+
             if opp1_local_score == max_local_score:
+                opp1_mvp_list.append(1)
                 local_mvp_per_game[2] = "Opponent1"
 
+            if opp1_local_score < max_local_score:
+                opp1_mvp_list.append(0)
+
             if opp2_local_score == max_local_score:
+                opp2_mvp_list.append(1)
                 local_mvp_per_game[3] = "Opponent2"
 
-            if my_alias in local_mvp_per_game or your_alias in local_mvp_per_game:
-                our_mvp_count += 1
-
-            if "Opponent1" in local_mvp_per_game or "Opponent2" in local_mvp_per_game:
-                their_mvp_count += 1
+            if opp2_local_score < max_local_score:
+                opp2_mvp_list.append(0)
 
             mvp_per_game.append(local_mvp_per_game)
 
@@ -1213,12 +1288,14 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
             if local_gs > local_gc and local_went_overtime:
                 win_count += 1
                 result_array.append("W")
+                result_array_with_ot.append("W*")
                 result_array_num.append(1)
                 result_color.append("darkblue")
 
             elif local_gs > local_gc and not local_went_overtime:
                 win_count += 1
                 result_array.append("W")
+                result_array_with_ot.append("W")
                 result_array_num.append(1)
                 result_color.append(our_color)
                 normaltime_gd_array.append(local_gs - local_gc)
@@ -1226,12 +1303,14 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
             elif local_gc > local_gs and local_went_overtime:
                 loss_count += 1
                 result_array.append("L")
+                result_array_with_ot.append("L*")
                 result_array_num.append(-1)
                 result_color.append("darkorange")
 
             elif local_gc > local_gs and not local_went_overtime:
                 loss_count += 1
                 result_array.append("L")
+                result_array_with_ot.append("L")
                 result_array_num.append(-1)
                 result_color.append(their_color)
                 normaltime_gd_array.append(local_gs - local_gc)
@@ -1308,6 +1387,8 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
             local_xg_difference = (my_local_xg + your_local_xg) - their_local_xg
             local_hit_difference = our_local_hits_att - our_local_hits_con
 
+            luck_over_time.append(result_luck * 100)
+
             scoreline_data.append(
                 [color_to_add + "%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_gs, local_gc,
                  our_local_hits_att, our_local_hits_con, "%.2f" % local_xg_difference, local_goal_difference,
@@ -1339,6 +1420,8 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     f = open(path_to_tables + "scorelines.tsv", "w")
     f.write(content)
     f.close()
+
+    games_nr = len(new_json_files)
 
     my_max_demos_file = new_json_files[my_demos_over_time.index(max(my_demos_over_time))]
     your_max_demos_file = new_json_files[your_demos_over_time.index(max(your_demos_over_time))]
@@ -1432,17 +1515,22 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     your_touches_count = sum(your_hits_over_time)
     their_touches_count = sum(their_hits_over_time)
 
-    your_miss_count = len(your_shot_misses_distance_to_goal)
-    my_miss_count = len(my_shot_misses_distance_to_goal)
-    their_miss_count = len(their_shot_misses_distance_to_goal)
+    my_mvp_count = sum(my_mvp_list)
+    your_mvp_count = sum(your_mvp_list)
+    their_mvp_count = sum(opp1_mvp_list) + sum(opp2_mvp_list)
+    our_mvp_count = my_mvp_count + your_mvp_count
+
+    your_miss_count = sum(your_misses_over_time)
+    my_miss_count = sum(my_misses_over_time)
+    their_miss_count = sum(their_misses_over_time)
 
     our_goal_count = my_goal_count + your_goal_count
     our_miss_count = my_miss_count + your_miss_count
 
-    my_shot_count = len(my_shots_x)
-    your_shot_count = len(your_shots_x)
+    my_shot_count = sum(my_shots_over_time)
+    your_shot_count = sum(your_shots_over_time)
     our_shot_count = my_shot_count + your_shot_count
-    their_shot_count = len(their_shots_x)
+    their_shot_count = sum(their_shots_over_time)
 
     if their_shot_count > 0:
         their_gs_ratio = their_goals_from_shots / their_shot_count
@@ -1579,6 +1667,171 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     our_goals_from_non_shots = my_goals_from_non_shots + your_goals_from_non_shots
     our_other_goals = our_goal_count - our_goals_from_shots - our_goals_from_non_shots
     their_other_goals = their_goal_count - their_goals_from_shots - their_goals_from_non_shots
+
+    our_shots_over_time = [your_shots_over_time[x] + my_shots_over_time[x] for x in range(games_nr)]
+    our_saves_over_time = [your_saves_over_time[x] + my_saves_over_time[x] for x in range(games_nr)]
+    our_xg_over_time = [your_xg_over_time[x] + my_xg_over_time[x] for x in range(games_nr)]
+    our_assists_over_time = [your_assists_over_time[x] + my_assists_over_time[x] for x in range(games_nr)]
+    our_goals_from_shots_over_time = [your_goals_from_shots_over_time[x]
+                                      + my_goals_from_shots_over_time[x] for x in range(games_nr)]
+    our_goals_from_non_shots_over_time = [your_goals_from_non_shots_over_time[x]
+                                          + my_goals_from_non_shots_over_time[x] for x in range(games_nr)]
+    our_shot_xg_over_time = [your_shot_xg_over_time[x] + my_shot_xg_over_time[x] for x in range(games_nr)]
+    our_non_shot_xg_over_time = [your_non_shot_xg_over_time[x]
+                                 + my_non_shot_xg_over_time[x] for x in range(games_nr)]
+    our_scores_over_time = [your_scores_over_time[x] + my_scores_over_time[x] for x in range(games_nr)]
+    our_other_goals_over_time = [your_other_goals_over_time[x] + my_other_goals_over_time[x] for x in range(games_nr)]
+
+    # only from shots
+    our_misses_over_time = [your_misses_over_time[x] + my_misses_over_time[x] for x in range(games_nr)]
+
+    per_game_data = []
+    my_pos_tendencies_game_data = []
+    your_pos_tendencies_game_data = []
+    for game in range(games_nr):
+        current_game_name = new_json_files[game].replace(".json", "")
+
+        my_pos_tendencies_game_data.append(chain([current_game_name],
+                                                 ([my_pos_tendencies_over_time[game][column]
+                                                   for column in range(pos_tendencies_nr)])))
+        your_pos_tendencies_game_data.append(chain([current_game_name],
+                                                   ([your_pos_tendencies_over_time[game][column]
+                                                     for column in range(pos_tendencies_nr)])))
+
+        per_game_data.append([current_game_name, gs_array[game], gc_array[game],
+                              result_array_with_ot[game], win_chance_per_game[game], luck_over_time[game],
+                              my_shots_over_time[game], your_shots_over_time[game],
+                              our_shots_over_time[game], their_shots_over_time[game],
+                              my_goals_over_time[game], your_goals_over_time[game],
+                              my_goals_from_shots_over_time[game], your_goals_from_shots_over_time[game],
+                              our_goals_from_shots_over_time[game], their_goals_from_shots_over_time[game],
+                              my_goals_from_non_shots_over_time[game], your_goals_from_non_shots_over_time[game],
+                              our_goals_from_non_shots_over_time[game], their_goals_from_non_shots_over_time[game],
+                              my_saves_over_time[game], your_saves_over_time[game],
+                              our_saves_over_time[game], their_saves_over_time[game],
+                              my_assists_over_time[game], your_assists_over_time[game],
+                              our_assists_over_time[game], their_assists_over_time[game],
+                              my_xg_over_time[game], your_xg_over_time[game], our_xg_over_time[game],
+                              their_xg_over_time[game],
+                              my_shot_xg_over_time[game], your_shot_xg_over_time[game], our_shot_xg_over_time[game],
+                              their_shot_xg_over_time[game],
+                              my_non_shot_xg_over_time[game], your_non_shot_xg_over_time[game],
+                              our_non_shot_xg_over_time[game],
+                              their_non_shot_xg_over_time[game],
+                              my_mvp_list[game], your_mvp_list[game], opp1_mvp_list[game], opp2_mvp_list[game],
+                              my_passes_over_time[game], your_passes_over_time[game],
+                              our_passes_over_time[game], their_passes_over_time[game],
+                              my_dribbles_over_time[game], your_dribbles_over_time[game],
+                              our_dribbles_over_time[game], their_dribbles_over_time[game],
+                              my_aerials_over_time[game], your_aerials_over_time[game],
+                              our_aerials_over_time[game], their_aerials_over_time[game],
+                              my_clears_over_time[game], your_clears_over_time[game],
+                              our_clears_over_time[game], their_clears_over_time[game],
+                              my_balls_won_over_time[game], your_balls_won_over_time[game],
+                              our_balls_won_over_time[game], their_balls_won_over_time[game],
+                              my_balls_lost_over_time[game], your_balls_lost_over_time[game],
+                              our_balls_lost_over_time[game], their_balls_lost_over_time[game],
+                              my_demos_over_time[game], your_demos_over_time[game],
+                              our_demos_over_time[game], their_demos_over_time[game],
+                              my_demoed_over_time[game], your_demoed_over_time[game],
+                              our_demoed_over_time[game], their_demoed_over_time[game],
+                              my_hits_over_time[game], your_hits_over_time[game],
+                              our_hits_over_time[game], their_hits_over_time[game],
+                              my_scores_over_time[game], your_scores_over_time[game],
+                              our_scores_over_time[game], their_scores_over_time[game],
+                              my_misses_over_time[game], your_misses_over_time[game],
+                              our_misses_over_time[game], their_misses_over_time[game],
+                              my_other_goals_over_time[game], your_other_goals_over_time[game],
+                              our_other_goals_over_time[game], their_other_goals_over_time[game]
+                              ])
+
+    content = tabulate(my_pos_tendencies_game_data, headers=["Game ID", "ground", "low in air", "high in air",
+                                                             "defending half",
+                                                             "attacking half", "defending third", "neutral third",
+                                                             "attacking third",
+                                                             "behind ball", "in front of ball", "near wall",
+                                                             "in corner",
+                                                             "on wall",
+                                                             "full boost", "low boost", "no boost", "closest to ball",
+                                                             "close to ball", "furthest from ball", "slow speed",
+                                                             "boost speed", "supersonic", "carrying ball"],
+                       numalign="right", tablefmt="tsv")
+    if not os.path.exists(path_to_tables + "p1_positional_tendency_data.tsv"):
+        open(path_to_tables + "p1_positional_tendency_data.tsv", 'w').close()
+    f = open(path_to_tables + "p1_positional_tendency_data.tsv", "w")
+    f.write(content)
+    f.close()
+
+    content = tabulate(your_pos_tendencies_game_data,
+                       headers=["Game ID", "ground", "low in air", "high in air", "defending half",
+                                "attacking half", "defending third", "neutral third",
+                                "attacking third",
+                                "behind ball", "in front of ball", "near wall", "in corner",
+                                "on wall",
+                                "full boost", "low boost", "no boost", "closest to ball",
+                                "close to ball", "furthest from ball", "slow speed",
+                                "boost speed", "supersonic", "carrying ball"],
+                       numalign="right", tablefmt="tsv")
+    if not os.path.exists(path_to_tables + "p2_positional_tendency_data.tsv"):
+        open(path_to_tables + "p2_positional_tendency_data.tsv", 'w').close()
+    f = open(path_to_tables + "p2_positional_tendency_data.tsv", "w")
+    f.write(content)
+    f.close()
+
+    content = tabulate(per_game_data, headers=["Game ID", "Our GS", "Our GC", "Result", "P(Win)", "Luck %",
+                                               my_alias + " Shots", your_alias + " Shots", "Our Shots",
+                                               "Opponent Shots",
+                                               my_alias + " Goals", your_alias + " Goals",
+                                               my_alias + " Goals from Shots", your_alias + " Goals from Shots",
+                                               "Our Goals from Shots", "Opponent Goals from Shots",
+                                               my_alias + " Goals from Non-Shots",
+                                               your_alias + " Goals from Non-Shots",
+                                               "Our Goals from Non-Shots", "Opponent Goals from Non-Shots",
+                                               my_alias + " Saves", your_alias + " Saves", "Our Saves",
+                                               "Opponent Saves",
+                                               my_alias + " Assists", your_alias + " Assists", "Our Assists",
+                                               "Opponent Assists",
+                                               my_alias + " xG", your_alias + " xG", "Our xG",
+                                               "Opponent xG",
+                                               my_alias + " Shot xG", your_alias + " Shot xG", "Our Shot xG",
+                                               "Opponent Shot xG",
+                                               my_alias + " Non-Shot xG", your_alias + " Non-Shot xG",
+                                               "Our Non-Shot xG",
+                                               "Opponent Non-Shot xG",
+                                               my_alias + " MVP", your_alias + " MVP", "Opponent 1 MVP",
+                                               "Opponent 2 MVP",
+                                               my_alias + " Passes", your_alias + " Passes", "Our Passes",
+                                               "Opponent Passes",
+                                               my_alias + " Dribbles", your_alias + " Dribbles", "Our Dribbles",
+                                               "Opponent Dribbles",
+                                               my_alias + " Aerials", your_alias + " Aerials", "Our Aerials",
+                                               "Opponent Aerials",
+                                               my_alias + " Clears", your_alias + " Clears", "Our Clears",
+                                               "Opponent Clears",
+                                               my_alias + " Balls Won", your_alias + " Balls Won", "Our Balls Won",
+                                               "Opponent Balls Won",
+                                               my_alias + " Balls Lost", your_alias + " Balls Lost", "Our Balls Lost",
+                                               "Opponent Balls Lost",
+                                               my_alias + " Demos", your_alias + " Demos", "Our Demos",
+                                               "Opponent Demos",
+                                               my_alias + " Demoed", your_alias + " Demoed", "Our Demoed",
+                                               "Opponent Demoed",
+                                               my_alias + " Touches", your_alias + " Touches", "Our Touches",
+                                               "Opponent Touches",
+                                               my_alias + " Score", your_alias + " Score", "Our Score",
+                                               "Opponent Score",
+                                               my_alias + " Misses", your_alias + " Misses", "Our Misses",
+                                               "Opponent Misses",
+                                               my_alias + " Other Goals", your_alias + " Other Goals",
+                                               "Our Other Goals",
+                                               "Opponent Other Goals"
+                                               ],
+                       numalign="right", tablefmt="tsv")
+    if not os.path.exists(path_to_tables + "per_game_data.tsv"):
+        open(path_to_tables + "per_game_data.tsv", 'w').close()
+    f = open(path_to_tables + "per_game_data.tsv", "w")
+    f.write(content)
+    f.close()
 
     individual_data = [["Goals", my_goal_count, your_goal_count],
                        ["Shot Goals", my_goals_from_shots, your_goals_from_shots],
@@ -1960,12 +2213,6 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
                             "GS/G", "GC/G", "GD/G", my_alias + " xG/G", your_alias + " xG/G",
                             "xG/G", "xGC/G", "xGD/G", "expected_win %", "Luck %"], numalign="right"))
     print("\n")
-
-    games_nr = len(new_json_files)
-    our_shots_over_time = [your_shots_over_time[x] + my_shots_over_time[x] for x in range(games_nr)]
-    our_saves_over_time = [your_saves_over_time[x] + my_saves_over_time[x] for x in range(games_nr)]
-    our_xg_over_time = [your_xg_over_time[x] + my_xg_over_time[x] for x in range(games_nr)]
-    our_assists_over_time = [your_assists_over_time[x] + my_assists_over_time[x] for x in range(games_nr)]
 
     """
     scorelines_array = []
@@ -2495,8 +2742,6 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     if our_biggest_xg_miss_from_non_shot == my_biggest_xg_miss_from_non_shot:
         our_biggest_xg_miss_from_non_shot_file = my_biggest_xg_miss_from_non_shot_file
         our_biggest_xg_miss_from_non_shot_frame = my_biggest_xg_miss_from_non_shot_frame
-
-    # TODO: if my misses from non_shots > 0...
 
     our_lowest_xg_goal_from_non_shot_file = ""
     if our_lowest_xg_goal_from_non_shot == your_lowest_xg_goal_from_non_shot:
@@ -4097,7 +4342,8 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
 
         ax17 = fig.add_subplot(spec[2, 0])  # Overtime Results
         sizes = [our_ot_win_ratio, our_ot_loss_ratio]
-        ax17.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
+        ax17.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0),
+                 shadow=True,
                  normalize=False,
                  textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
                             })
@@ -4106,7 +4352,8 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
         ax18 = fig.add_subplot(spec[2, 0])  # Overtime Results
 
         sizes = [our_nt_win_ratio, our_nt_loss_ratio]
-        ax18.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0), shadow=True,
+        ax18.pie(sizes, colors=[our_color, their_color], startangle=90, autopct='%1.1f%%', explode=(0.1, 0),
+                 shadow=True,
                  normalize=False,
                  textprops={'color': "black", 'bbox': dict(boxstyle="square,pad=0.4", fc="white", alpha=0.9)
                             })
@@ -4286,8 +4533,9 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
         if games_nr < 30:
             rolling_avg_window = 1
 
-        my_xg_over_time_rolling_avg = np.average(sliding_window_view(my_shot_xg_over_time, window_shape=rolling_avg_window),
-                                                 axis=1)
+        my_xg_over_time_rolling_avg = np.average(
+            sliding_window_view(my_shot_xg_over_time, window_shape=rolling_avg_window),
+            axis=1)
         my_goals_from_shots_over_time_rolling_avg = np.average(
             sliding_window_view(my_goals_from_shots_over_time, window_shape=rolling_avg_window), axis=1)
         your_xg_over_time_rolling_avg = np.average(
@@ -4309,7 +4557,8 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
         all_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(my_goals_from_shots_over_time_rolling_avg),
                                   max(your_xg_over_time_rolling_avg), max(your_goals_from_shots_over_time_rolling_avg),
                                   max(our_xg_over_time_rolling_avg), max(our_goals_from_shots_over_time_rolling_avg),
-                                  max(their_xg_over_time_rolling_avg), max(their_goals_from_shots_over_time_rolling_avg))
+                                  max(their_xg_over_time_rolling_avg),
+                                  max(their_goals_from_shots_over_time_rolling_avg))
 
         individual_rolling_avg_max = max(max(my_xg_over_time_rolling_avg), max(your_xg_over_time_rolling_avg),
                                          max(my_goals_from_shots_over_time_rolling_avg),
@@ -4424,13 +4673,15 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
         plt.axhline(y=my_avg_gfs_line, color=my_color, linestyle='dotted')
         plt.axhline(y=my_avg_xg_line, color='black', linestyle='dotted')
         ax2.set_title(
-            my_alias + "'s Shot Goals and xG (black line) over time (" + str(rolling_avg_window) + " game rolling average)")
+            my_alias + "'s Shot Goals and xG (black line) over time (" + str(
+                rolling_avg_window) + " game rolling average)")
         ax2.set_ylim(0, individual_rolling_avg_max)
         ax2.set_xlim(0, len_to_use - 1)
 
         ax23 = fig.add_subplot(spec[2, 0])
         ax23.bar(range(0, len_to_use), individual_rolling_avg_max, color=your_ra_bg_colors, alpha=0.1, width=1)
-        ax23.bar(range(0, len_to_use), your_goals_from_shots_over_time_rolling_avg, color=your_color, alpha=0.5, width=1)
+        ax23.bar(range(0, len_to_use), your_goals_from_shots_over_time_rolling_avg, color=your_color, alpha=0.5,
+                 width=1)
         ax23.plot(range(0, len_to_use), your_xg_over_time_rolling_avg, color="black", alpha=1)
         plt.axhline(y=your_avg_gfs_line, color=your_color, linestyle='dotted')
         plt.axhline(y=your_avg_xg_line, color='black', linestyle='dotted')
@@ -4447,7 +4698,8 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
         ax24.bar(range(0, len_to_use), all_rolling_avg_max, color=our_ra_bg_colors, alpha=0.1, width=1)
         ax24.bar(range(0, len_to_use), -all_rolling_avg_max, color=their_ra_bg_colors, alpha=0.1, width=1)
         ax24.bar(range(0, len_to_use), our_goals_from_shots_over_time_rolling_avg, color=our_color, alpha=0.5, width=1)
-        ax24.bar(range(0, len_to_use), their_goals_from_shots_over_time_rolling_avg, color=their_color, alpha=0.5, width=1)
+        ax24.bar(range(0, len_to_use), their_goals_from_shots_over_time_rolling_avg, color=their_color, alpha=0.5,
+                 width=1)
         ax24.plot(range(0, len_to_use), their_xg_over_time_rolling_avg, color="black", alpha=1)
         ax24.plot(range(0, len_to_use), our_xg_over_time_rolling_avg, color="black", alpha=1)
         plt.axhline(y=our_avg_gfs_line, color=our_color, linestyle='dotted')
@@ -4679,11 +4931,13 @@ startTime = time.time()
 crunch_stats(check_new=False, show_xg_scorelines=False, save_and_crop=True)
 
 midTime = time.time()
+
 # Update files using games from latest streak
 crunch_stats(check_new=True, show_xg_scorelines=False, save_and_crop=True)
 
 lastTime = time.time()
 executionTime = (time.time() - startTime)
+
 print('\n\nAll games execution time: ', "%.2f" % (midTime - startTime) + "s")
 print('Latest streak execution time: ', "%.2f" % (lastTime - midTime) + "s")
 print('Total execution time: ', "%.2f" % executionTime + "s")
