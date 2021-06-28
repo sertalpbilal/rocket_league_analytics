@@ -30,6 +30,9 @@ from numpy.lib.stride_tricks import sliding_window_view
 from tabulate import tabulate
 import threading
 
+# Flags to make the program faster (automatically set)
+added_streak = False
+
 
 # Generates replay links given a game ID and/or frame
 def link_replay(game_id, frame, show_timestamp):
@@ -63,12 +66,17 @@ def poisson_binomial_pmf(p):
 
 
 # Crunches all the stats and generates output files
-def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
+def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
+    global added_streak
+
+    if not show_tables:
+        show_xg_scorelines = False
+
     if check_new:
-        print("\n\n\nConsidering newest games...\n")
+        print("\n\nConsidering newest games...\n")
         goal_scatter_alpha = 0.5
     else:
-        print("Considering all games...\n")
+        print("\n\nConsidering all games...\n")
         goal_scatter_alpha = 0.25
 
     # Names in Rocket League
@@ -102,60 +110,6 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
 
     if not os.path.exists(path_to_charts):
         os.makedirs(path_to_charts)
-
-    json_files = [pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
-
-    json_files_2v2 = []
-    file_counter = 0
-    file_time = []
-
-    # Only keep RANKED_DOUBLES games
-    for file in json_files:
-        # exclude abandoned game
-        if file != "9e4c5030-ff84-49b5-b32f-2e4d585fd44e.json":
-            f = open(path_to_json + file, )
-            data = json.load(f)
-
-            local_playlist = data["gameMetadata"]["playlist"]
-
-            if local_playlist == "RANKED_DOUBLES":
-                json_files_2v2.append(file)
-
-    # Sort files by time created - loop through jsons, get start time of game, then sort by time
-    for file in json_files_2v2:
-        f = open(path_to_json + file, )
-        data = json.load(f)
-        file_counter += 1
-
-        local_time = data["gameMetadata"]["time"]
-
-        file_time.append(local_time)
-
-    file_counter = 0
-    new_json_files = [x for _, x in sorted(zip(file_time, json_files_2v2))]
-    new_csv_files = []
-
-    local_time_array = []
-    streak_start_games = []
-    file_pos = 0
-
-    for file in new_json_files:
-        f = open(path_to_json + file, )
-        data = json.load(f)
-
-        local_time = data["gameMetadata"]["time"]
-        local_time_array.append(int(local_time))
-
-        # find the time difference between current game and previous game to see if they are part of a streak
-        # if at least 30 minutes passed between the two games, they are not part of the same streak
-        streak_min_threshold = 30
-
-        if file_pos > 0:
-            if local_time_array[file_pos] - local_time_array[file_pos - 1] >= (streak_min_threshold * 60):
-                streak_start_games.append(file_pos)
-
-        new_csv_files.append(file.replace(".json", ".csv"))
-        file_pos += 1
 
     my_shot_misses_distance_to_goal = []
     your_shot_misses_distance_to_goal = []
@@ -470,905 +424,831 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
 
     luck_over_time = []
 
-    for file in new_json_files:
-        file_counter += 1
-        if file_counter < len(new_json_files) + 1:
+    print("Filtering files to use")
+    json_files = [pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
 
+    json_files_2v2 = []
+    file_time = []
+    # Only keep RANKED_DOUBLES games
+    # Sort files by time created - loop through jsons, get start time of game, then sort by time
+    for file in json_files:
+        # exclude abandoned game
+        if file != "9e4c5030-ff84-49b5-b32f-2e4d585fd44e.json":
             f = open(path_to_json + file, )
             data = json.load(f)
 
-            # load corresponding xG data file
-            with open(path_to_xg + file.replace("json", "csv"), encoding="utf8") as f:
-                reader = csv.reader(f)
-                my_list = list(reader)
-
-            nrows = len(my_list)
-            ncols = len(my_list[0])
-
-            my_local_xg = 0
-            your_local_xg = 0
-            their_local_xg = 0
-
-            my_local_shot_xg = 0
-            your_local_shot_xg = 0
-            their_local_shot_xg = 0
-
-            my_local_non_shot_xg = 0
-            your_local_non_shot_xg = 0
-            their_local_non_shot_xg = 0
-
-            my_local_goals_from_shots = 0
-            your_local_goals_from_shots = 0
-            their_local_goals_from_shots = 0
-
-            my_local_goals_from_non_shots = 0
-            your_local_goals_from_non_shots = 0
-            their_local_goals_from_non_shots = 0
-
-            our_local_xg_per_hit = []
-            their_local_xg_per_hit = []
-
-            my_local_hits = 0
-            your_local_hits = 0
-            their_local_hits = 0
-
-            my_local_misses = 0
-            your_local_misses = 0
-            their_local_misses = 0
-
-            for col in range(ncols):
-                for row in range(0, nrows):
-                    if my_list[0][col] == "shot_taker_name":
-                        if row != 0:
-                            if my_list[row][col] == my_name or my_list[row][col] == your_name:
-                                if my_list[row][6] == "True" and my_list[row][5] == "True":
-                                    our_shots_goal_or_miss.append(1)
-                                elif my_list[row][6] == "False" and my_list[row][5] == "True":
-                                    our_shots_goal_or_miss.append(0)
-                                our_local_xg_per_hit.append(float(my_list[row][4]))
-
-                            if my_list[row][col] != my_name and my_list[row][col] != your_name:
-                                if my_list[row][6] == "True" and my_list[row][5] == "True":
-                                    their_shots_goal_or_miss.append(1)
-                                elif my_list[row][6] == "False" and my_list[row][5] == "True":
-                                    their_shots_goal_or_miss.append(0)
-                                their_local_xg_per_hit.append(float(my_list[row][4]))
-
-                            if my_list[row][col] == my_name:
-                                my_local_hits += 1
-                                my_local_xg += float(my_list[row][4])
-                                my_total_xg += float(my_list[row][4])
-
-                                # shots
-                                if my_list[row][5] == "True":
-                                    my_shot_xg += float(my_list[row][4])
-                                    my_local_shot_xg += float(my_list[row][4])
-
-                                # non-shots
-                                if my_list[row][5] == "False":
-                                    my_non_shot_xg += float(my_list[row][4])
-                                    my_local_non_shot_xg += float(my_list[row][4])
-                                    # Non-shot Goals
-                                    if my_list[row][6] == "True":
-                                        my_goals_from_non_shots += 1
-                                        my_local_goals_from_non_shots += 1
-                                        my_xg_per_non_shot_goal_list.append(float(my_list[row][4]))
-                                        my_xg_per_non_shot_goal_file_list.append(file.replace(".json", ""))
-                                        my_xg_per_non_shot_goal_frame_list.append(int(my_list[row][7]))
-                                    else:
-                                        my_xg_per_miss_from_non_shot_list.append(float(my_list[row][4]))
-                                        my_xg_per_miss_from_non_shot_file_list.append(file.replace(".json", ""))
-                                        my_xg_per_miss_from_non_shot_frame_list.append(int(my_list[row][7]))
-
-                                # Shot Goals
-                                if my_list[row][6] == "True" and my_list[row][5] == "True":
-                                    my_goal_xg += float(my_list[row][4])
-                                    my_xg_per_shot_goal_list.append(float(my_list[row][4]))
-                                    my_xg_per_shot_goal_file_list.append(file.replace(".json", ""))
-                                    my_xg_per_shot_goal_frame_list.append(int(my_list[row][7]))
-                                    my_local_goals_from_shots += 1
-                                    my_goals_from_shots += 1
-                                    my_shots_goal_or_miss.append(1)
-
-                                # misses from shots
-                                elif my_list[row][6] == "False" and my_list[row][5] == "True":
-                                    my_local_misses += 1
-                                    my_shots_goal_or_miss.append(0)
-                                    my_xg_per_miss_from_shot_list.append(float(my_list[row][4]))
-                                    my_xg_per_miss_from_shot_file_list.append(file.replace(".json", ""))
-                                    my_xg_per_miss_from_shot_frame_list.append(int(my_list[row][7]))
-
-                            elif my_list[row][col] == your_name:
-                                your_local_hits += 1
-                                your_local_xg += float(my_list[row][4])
-                                your_total_xg += float(my_list[row][4])
-
-                                # shots
-                                if my_list[row][5] == "True":
-                                    your_shot_xg += float(my_list[row][4])
-                                    your_local_shot_xg += float(my_list[row][4])
-
-                                # non-shots
-                                if my_list[row][5] == "False":
-                                    your_non_shot_xg += float(my_list[row][4])
-                                    your_local_non_shot_xg += float(my_list[row][4])
-
-                                    if my_list[row][6] == "True":
-                                        your_goals_from_non_shots += 1
-                                        your_local_goals_from_non_shots += 1
-                                        your_xg_per_non_shot_goal_list.append(float(my_list[row][4]))
-                                        your_xg_per_non_shot_goal_file_list.append(file.replace(".json", ""))
-                                        your_xg_per_non_shot_goal_frame_list.append(int(my_list[row][7]))
-
-                                    else:
-                                        your_xg_per_miss_from_non_shot_list.append(float(my_list[row][4]))
-                                        your_xg_per_miss_from_non_shot_file_list.append(file.replace(".json", ""))
-                                        your_xg_per_miss_from_non_shot_frame_list.append(int(my_list[row][7]))
-
-                                if my_list[row][6] == "True" and my_list[row][5] == "True":
-                                    your_goal_xg += float(my_list[row][4])
-                                    your_xg_per_shot_goal_list.append(float(my_list[row][4]))
-                                    your_xg_per_shot_goal_file_list.append(file.replace(".json", ""))
-                                    your_xg_per_shot_goal_frame_list.append(int(my_list[row][7]))
-                                    your_local_goals_from_shots += 1
-                                    your_goals_from_shots += 1
-                                    your_shots_goal_or_miss.append(1)
-                                elif my_list[row][6] == "False" and my_list[row][5] == "True":
-                                    your_local_misses += 1
-                                    your_shots_goal_or_miss.append(0)
-                                    your_xg_per_miss_from_shot_list.append(float(my_list[row][4]))
-                                    your_xg_per_miss_from_shot_file_list.append(file.replace(".json", ""))
-                                    your_xg_per_miss_from_shot_frame_list.append(int(my_list[row][7]))
-
-                            else:
-                                their_local_hits += 1
-                                their_local_xg += float(my_list[row][4])
-                                their_total_xg += float(my_list[row][4])
-
-                                # shots
-                                if my_list[row][5] == "True":
-                                    their_shot_xg += float(my_list[row][4])
-                                    their_local_shot_xg += float(my_list[row][4])
-
-                                # non-shots
-                                if my_list[row][5] == "False":
-                                    their_non_shot_xg += float(my_list[row][4])
-                                    their_local_non_shot_xg += float(my_list[row][4])
-                                    if my_list[row][6] == "True":
-                                        their_goals_from_non_shots += 1
-                                        their_local_goals_from_non_shots += 1
-                                        their_xg_per_non_shot_goal_list.append(float(my_list[row][4]))
-                                        their_xg_per_non_shot_goal_file_list.append(file.replace(".json", ""))
-                                        their_xg_per_non_shot_goal_frame_list.append(int(my_list[row][7]))
-
-                                    else:
-                                        their_xg_per_miss_from_non_shot_list.append(float(my_list[row][4]))
-                                        their_xg_per_miss_from_non_shot_file_list.append(file.replace(".json", ""))
-                                        their_xg_per_miss_from_non_shot_frame_list.append(int(my_list[row][7]))
-
-                                if my_list[row][6] == "True" and my_list[row][5] == "True":
-                                    their_goal_xg += float(my_list[row][4])
-                                    their_xg_per_shot_goal_list.append(float(my_list[row][4]))
-                                    their_xg_per_shot_goal_file_list.append(file.replace(".json", ""))
-                                    their_xg_per_shot_goal_frame_list.append(int(my_list[row][7]))
-                                    their_local_goals_from_shots += 1
-                                    their_goals_from_shots += 1
-                                elif my_list[row][6] == "False" and my_list[row][5] == "True":
-                                    their_local_misses += 1
-                                    their_xg_per_miss_from_shot_list.append(float(my_list[row][4]))
-                                    their_xg_per_miss_from_shot_file_list.append(file.replace(".json", ""))
-                                    their_xg_per_miss_from_shot_frame_list.append(int(my_list[row][7]))
-
-            my_goals_from_shots_over_time.append(my_local_goals_from_shots)
-            your_goals_from_shots_over_time.append(your_local_goals_from_shots)
-            their_goals_from_shots_over_time.append(their_local_goals_from_shots)
-
-            my_goals_from_non_shots_over_time.append(my_local_goals_from_non_shots)
-            your_goals_from_non_shots_over_time.append(your_local_goals_from_non_shots)
-            their_goals_from_non_shots_over_time.append(their_local_goals_from_non_shots)
-
-            my_misses_over_time.append(my_local_misses)
-            your_misses_over_time.append(your_local_misses)
-            their_misses_over_time.append(their_local_misses)
-
-            local_color = "blue"
-            local_gs = 0
-            local_gc = 0
-
-            my_local_goals = 0
-            your_local_goals = 0
-            their_local_goals = 0
-
-            my_local_shots = 0
-            your_local_shots = 0
-            our_local_shots = 0
-            their_local_shots = 0
-            my_local_saves = 0
-            your_local_saves = 0
-            their_local_saves = 0
-            my_local_assists = 0
-            your_local_assists = 0
-            their_local_assists = 0
-
-            my_local_passes = 0
-            your_local_passes = 0
-            their_local_passes = 0
-
-            my_local_dribbles = 0
-            your_local_dribbles = 0
-            their_local_dribbles = 0
-
-            my_local_clears = 0
-            your_local_clears = 0
-            their_local_clears = 0
-
-            my_local_aerials = 0
-            your_local_aerials = 0
-            their_local_aerials = 0
-
-            my_local_balls_won = 0
-            your_local_balls_won = 0
-            their_local_balls_won = 0
-
-            my_local_balls_lost = 0
-            your_local_balls_lost = 0
-            their_local_balls_lost = 0
-
-            local_multiplier = 1
+            local_playlist = data["gameMetadata"]["playlist"]
             local_time = data["gameMetadata"]["time"]
-            local_names = []
-            local_ids = []
 
-            # Link our names to IDs and detect our team color
-            for i in data['players']:
-                local_names.append(i["name"])
-                if i["name"] == my_name:
-                    if i["isOrange"]:
-                        local_color = "orange"
-                        local_multiplier = -1
-                    my_id = i["id"]["id"]
-                elif i["name"] == your_name:
-                    your_id = i["id"]["id"]
+            if local_playlist == "RANKED_DOUBLES":
+                json_files_2v2.append(file)
+                file_time.append(local_time)
 
-            for i in data['players']:
-                if i["id"]["id"] == my_id:
-                    if "assists" in i:
-                        my_local_assists += i["assists"]
-                elif i["id"]["id"] == your_id:
-                    if "assists" in i:
-                        your_local_assists += i["assists"]
-                else:
-                    if "assists" in i:
-                        their_local_assists += i["assists"]
+    new_json_files = [x for _, x in sorted(zip(file_time, json_files_2v2))]
 
-            for i in data["gameMetadata"]["goals"]:
-                if i["playerId"]["id"] == my_id:
-                    my_local_goals += 1
-                elif i["playerId"]["id"] == your_id:
-                    your_local_goals += 1
-                else:
-                    their_local_goals += 1
+    local_time_array = []
+    streak_start_games = []
+    file_pos = 0
 
-            my_other_goals_over_time.append(my_local_goals - my_local_goals_from_shots -
-                                            my_local_goals_from_non_shots)
-            your_other_goals_over_time.append(your_local_goals - your_local_goals_from_shots -
-                                              your_local_goals_from_non_shots)
-            their_other_goals_over_time.append(their_local_goals - their_local_goals_from_shots -
-                                               their_local_goals_from_non_shots)
+    # if at least N minutes pass between two games, they are not part of the same streak
+    streak_min_threshold = 30
 
-            my_local_score = 0
-            your_local_score = 0
-            opp1_local_score = 0
-            opp2_local_score = 0
+    print("Reading stats from files")
+    for file in new_json_files:
+        f = open(path_to_json + file, )
+        data = json.load(f)
 
-            my_local_pos_tendencies = [0] * pos_tendencies_nr
-            your_local_pos_tendencies = [0] * pos_tendencies_nr
+        local_time = data["gameMetadata"]["time"]
+        local_time_array.append(int(local_time))
 
-            for i in data["players"]:
-                if i["id"]["id"] != my_id and i["id"]["id"] != your_id:
-                    local_ids.append(i["id"]["id"])
+        # find the time difference between current game and previous game to see if they are part of a streak
+        if file_pos > 0:
+            if local_time_array[file_pos] - local_time_array[file_pos - 1] >= (streak_min_threshold * 60):
+                streak_start_games.append(file_pos)
 
-                if i["id"]["id"] == my_id:
-                    if "score" in i:
-                        my_local_score = i["score"]
-                        my_scores_over_time.append(i["score"])
-                    if "saves" in i:
-                        my_local_saves += i["saves"]
-                    if "totalPasses" in i["stats"]["hitCounts"]:
-                        my_local_passes = i["stats"]["hitCounts"]["totalPasses"]
-                    if "totalClears" in i["stats"]["hitCounts"]:
-                        my_local_clears = i["stats"]["hitCounts"]["totalClears"]
-                    if "turnovers" in i["stats"]["possession"]:
-                        my_local_balls_lost = i["stats"]["possession"]["turnovers"]
-                    if "wonTurnovers" in i["stats"]["possession"]:
-                        my_local_balls_won = i["stats"]["possession"]["wonTurnovers"]
+        file_pos += 1
 
-                    if "totalDribbles" in i["stats"]["hitCounts"]:
-                        my_local_dribbles = i["stats"]["hitCounts"]["totalDribbles"]
-
-                    if "totalAerials" in i["stats"]["hitCounts"]:
-                        my_local_aerials = i["stats"]["hitCounts"]["totalAerials"]
-
-                    # positional tendencies
-                    if "timeOnGround" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
-                        my_local_pos_tendencies[0] = i["stats"]["positionalTendencies"]["timeOnGround"]
-                    if "timeLowInAir" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[1] += i["stats"]["positionalTendencies"]["timeLowInAir"]
-                        my_local_pos_tendencies[1] = i["stats"]["positionalTendencies"]["timeLowInAir"]
-                    if "timeHighInAir" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[2] += i["stats"]["positionalTendencies"]["timeHighInAir"]
-                        my_local_pos_tendencies[2] = i["stats"]["positionalTendencies"]["timeHighInAir"]
-                    if "timeInDefendingHalf" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[3] += i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
-                        my_local_pos_tendencies[3] = i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
-                    if "timeInAttackingHalf" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[4] += i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
-                        my_local_pos_tendencies[4] = i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
-                    if "timeInDefendingThird" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[5] += i["stats"]["positionalTendencies"]["timeInDefendingThird"]
-                        my_local_pos_tendencies[5] = i["stats"]["positionalTendencies"]["timeInDefendingThird"]
-                    if "timeInNeutralThird" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[6] += i["stats"]["positionalTendencies"]["timeInNeutralThird"]
-                        my_local_pos_tendencies[6] = i["stats"]["positionalTendencies"]["timeInNeutralThird"]
-                    if "timeInAttackingThird" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[7] += i["stats"]["positionalTendencies"]["timeInAttackingThird"]
-                        my_local_pos_tendencies[7] = i["stats"]["positionalTendencies"]["timeInAttackingThird"]
-                    if "timeBehindBall" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[8] += i["stats"]["positionalTendencies"]["timeBehindBall"]
-                        my_local_pos_tendencies[8] = i["stats"]["positionalTendencies"]["timeBehindBall"]
-                    if "timeInFrontBall" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[9] += i["stats"]["positionalTendencies"]["timeInFrontBall"]
-                        my_local_pos_tendencies[9] = i["stats"]["positionalTendencies"]["timeInFrontBall"]
-                    if "timeNearWall" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[10] += i["stats"]["positionalTendencies"]["timeNearWall"]
-                        my_local_pos_tendencies[10] = i["stats"]["positionalTendencies"]["timeNearWall"]
-                    if "timeInCorner" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
-                        my_local_pos_tendencies[11] = i["stats"]["positionalTendencies"]["timeInCorner"]
-                    if "timeOnWall" in i["stats"]["positionalTendencies"]:
-                        my_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
-                        my_local_pos_tendencies[12] = i["stats"]["positionalTendencies"]["timeOnWall"]
-
-                    if "timeFullBoost" in i["stats"]["boost"]:
-                        my_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
-                        my_local_pos_tendencies[13] = i["stats"]["boost"]["timeFullBoost"]
-                    if "timeLowBoost" in i["stats"]["boost"]:
-                        my_pos_tendencies[14] += i["stats"]["boost"]["timeLowBoost"]
-                        my_local_pos_tendencies[14] = i["stats"]["boost"]["timeLowBoost"]
-                    if "timeNoBoost" in i["stats"]["boost"]:
-                        my_pos_tendencies[15] += i["stats"]["boost"]["timeNoBoost"]
-                        my_local_pos_tendencies[15] = i["stats"]["boost"]["timeNoBoost"]
-
-                    if "timeClosestToBall" in i["stats"]["distance"]:
-                        my_pos_tendencies[16] += i["stats"]["distance"]["timeClosestToBall"]
-                        my_local_pos_tendencies[16] = i["stats"]["distance"]["timeClosestToBall"]
-                    if "timeCloseToBall" in i["stats"]["distance"]:
-                        my_pos_tendencies[17] += i["stats"]["distance"]["timeCloseToBall"]
-                        my_local_pos_tendencies[17] = i["stats"]["distance"]["timeCloseToBall"]
-                    if "timeFurthestFromBall" in i["stats"]["distance"]:
-                        my_pos_tendencies[18] += i["stats"]["distance"]["timeFurthestFromBall"]
-                        my_local_pos_tendencies[18] = i["stats"]["distance"]["timeFurthestFromBall"]
-
-                    if "timeAtSlowSpeed" in i["stats"]["speed"]:
-                        my_pos_tendencies[19] += i["stats"]["speed"]["timeAtSlowSpeed"]
-                        my_local_pos_tendencies[19] = i["stats"]["speed"]["timeAtSlowSpeed"]
-
-                    if "timeAtBoostSpeed" in i["stats"]["speed"]:
-                        my_pos_tendencies[20] += i["stats"]["speed"]["timeAtBoostSpeed"]
-                        my_local_pos_tendencies[20] = i["stats"]["speed"]["timeAtBoostSpeed"]
-                    if "timeAtSuperSonic" in i["stats"]["speed"]:
-                        my_pos_tendencies[21] += i["stats"]["speed"]["timeAtSuperSonic"]
-                        my_local_pos_tendencies[21] = i["stats"]["speed"]["timeAtSuperSonic"]
-
-                    if "ballCarries" in i["stats"]:
-                        if "totalCarryTime" in i["stats"]["ballCarries"]:
-                            my_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
-                            my_local_pos_tendencies[22] = i["stats"]["ballCarries"]["totalCarryTime"]
-
-                elif i["id"]["id"] == your_id:
-                    if "score" in i:
-                        your_scores_over_time.append(i["score"])
-                        your_local_score = i["score"]
-                    if "saves" in i:
-                        your_local_saves += i["saves"]
-                    if "totalPasses" in i["stats"]["hitCounts"]:
-                        your_local_passes = i["stats"]["hitCounts"]["totalPasses"]
-                    if "totalClears" in i["stats"]["hitCounts"]:
-                        your_local_clears = i["stats"]["hitCounts"]["totalClears"]
-                    if "turnovers" in i["stats"]["possession"]:
-                        your_local_balls_lost = i["stats"]["possession"]["turnovers"]
-                    if "wonTurnovers" in i["stats"]["possession"]:
-                        your_local_balls_won = i["stats"]["possession"]["wonTurnovers"]
-                    if "totalDribbles" in i["stats"]["hitCounts"]:
-                        your_local_dribbles = i["stats"]["hitCounts"]["totalDribbles"]
-
-                    if "totalAerials" in i["stats"]["hitCounts"]:
-                        your_local_aerials = i["stats"]["hitCounts"]["totalAerials"]
-
-                    # positional tendencies
-                    if "timeOnGround" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
-                        your_local_pos_tendencies[0] = i["stats"]["positionalTendencies"]["timeOnGround"]
-                    if "timeLowInAir" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[1] += i["stats"]["positionalTendencies"]["timeLowInAir"]
-                        your_local_pos_tendencies[1] = i["stats"]["positionalTendencies"]["timeLowInAir"]
-                    if "timeHighInAir" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[2] += i["stats"]["positionalTendencies"]["timeHighInAir"]
-                        your_local_pos_tendencies[2] = i["stats"]["positionalTendencies"]["timeHighInAir"]
-                    if "timeInDefendingHalf" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[3] += i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
-                        your_local_pos_tendencies[3] = i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
-                    if "timeInAttackingHalf" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[4] += i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
-                        your_local_pos_tendencies[4] = i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
-                    if "timeInDefendingThird" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[5] += i["stats"]["positionalTendencies"]["timeInDefendingThird"]
-                        your_local_pos_tendencies[5] = i["stats"]["positionalTendencies"]["timeInDefendingThird"]
-                    if "timeInNeutralThird" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[6] += i["stats"]["positionalTendencies"]["timeInNeutralThird"]
-                        your_local_pos_tendencies[6] = i["stats"]["positionalTendencies"]["timeInNeutralThird"]
-                    if "timeInAttackingThird" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[7] += i["stats"]["positionalTendencies"]["timeInAttackingThird"]
-                        your_local_pos_tendencies[7] = i["stats"]["positionalTendencies"]["timeInAttackingThird"]
-                    if "timeBehindBall" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[8] += i["stats"]["positionalTendencies"]["timeBehindBall"]
-                        your_local_pos_tendencies[8] = i["stats"]["positionalTendencies"]["timeBehindBall"]
-                    if "timeInFrontBall" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[9] += i["stats"]["positionalTendencies"]["timeInFrontBall"]
-                        your_local_pos_tendencies[9] = i["stats"]["positionalTendencies"]["timeInFrontBall"]
-                    if "timeNearWall" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[10] += i["stats"]["positionalTendencies"]["timeNearWall"]
-                        your_local_pos_tendencies[10] = i["stats"]["positionalTendencies"]["timeNearWall"]
-                    if "timeInCorner" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
-                        your_local_pos_tendencies[11] = i["stats"]["positionalTendencies"]["timeInCorner"]
-                    if "timeOnWall" in i["stats"]["positionalTendencies"]:
-                        your_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
-                        your_local_pos_tendencies[12] = i["stats"]["positionalTendencies"]["timeOnWall"]
-                    if "timeFullBoost" in i["stats"]["boost"]:
-                        your_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
-                        your_local_pos_tendencies[13] = i["stats"]["boost"]["timeFullBoost"]
-                    if "timeLowBoost" in i["stats"]["boost"]:
-                        your_pos_tendencies[14] += i["stats"]["boost"]["timeLowBoost"]
-                        your_local_pos_tendencies[14] = i["stats"]["boost"]["timeLowBoost"]
-                    if "timeNoBoost" in i["stats"]["boost"]:
-                        your_pos_tendencies[15] += i["stats"]["boost"]["timeNoBoost"]
-                        your_local_pos_tendencies[15] = i["stats"]["boost"]["timeNoBoost"]
-                    if "timeClosestToBall" in i["stats"]["distance"]:
-                        your_pos_tendencies[16] += i["stats"]["distance"]["timeClosestToBall"]
-                        your_local_pos_tendencies[16] = i["stats"]["distance"]["timeClosestToBall"]
-                    if "timeCloseToBall" in i["stats"]["distance"]:
-                        your_pos_tendencies[17] += i["stats"]["distance"]["timeCloseToBall"]
-                        your_local_pos_tendencies[17] = i["stats"]["distance"]["timeCloseToBall"]
-                    if "timeFurthestFromBall" in i["stats"]["distance"]:
-                        your_pos_tendencies[18] += i["stats"]["distance"]["timeFurthestFromBall"]
-                        your_local_pos_tendencies[18] = i["stats"]["distance"]["timeFurthestFromBall"]
-                    if "timeAtSlowSpeed" in i["stats"]["speed"]:
-                        your_pos_tendencies[19] += i["stats"]["speed"]["timeAtSlowSpeed"]
-                        your_local_pos_tendencies[19] = i["stats"]["speed"]["timeAtSlowSpeed"]
-                    if "timeAtBoostSpeed" in i["stats"]["speed"]:
-                        your_pos_tendencies[20] += i["stats"]["speed"]["timeAtBoostSpeed"]
-                        your_local_pos_tendencies[20] = i["stats"]["speed"]["timeAtBoostSpeed"]
-                    if "timeAtSuperSonic" in i["stats"]["speed"]:
-                        your_pos_tendencies[21] += i["stats"]["speed"]["timeAtSuperSonic"]
-                        your_local_pos_tendencies[21] = i["stats"]["speed"]["timeAtSuperSonic"]
-
-                    if "ballCarries" in i["stats"]:
-                        if "totalCarryTime" in i["stats"]["ballCarries"]:
-                            your_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
-                            your_local_pos_tendencies[22] = i["stats"]["ballCarries"]["totalCarryTime"]
-
-                else:
-                    if "score" in i:
-                        if i["id"]["id"] == local_ids[0]:
-                            opp1_local_score = i["score"]
-                        elif i["id"]["id"] == local_ids[1]:
-                            opp2_local_score = i["score"]
-
-                    if "saves" in i:
-                        their_local_saves += i["saves"]
-                    if "totalPasses" in i["stats"]["hitCounts"]:
-                        their_local_passes += i["stats"]["hitCounts"]["totalPasses"]
-                    if "totalClears" in i["stats"]["hitCounts"]:
-                        their_local_clears += i["stats"]["hitCounts"]["totalClears"]
-                    if "turnovers" in i["stats"]["possession"]:
-                        their_local_balls_lost += i["stats"]["possession"]["turnovers"]
-                    if "wonTurnovers" in i["stats"]["possession"]:
-                        their_local_balls_won += i["stats"]["possession"]["wonTurnovers"]
-                    if "totalDribbles" in i["stats"]["hitCounts"]:
-                        their_local_dribbles += i["stats"]["hitCounts"]["totalDribbles"]
-                    if "totalAerials" in i["stats"]["hitCounts"]:
-                        their_local_aerials += i["stats"]["hitCounts"]["totalAerials"]
-
-            my_pos_tendencies_over_time.append(my_local_pos_tendencies)
-            your_pos_tendencies_over_time.append(your_local_pos_tendencies)
-
-            my_passes_over_time.append(my_local_passes)
-            your_passes_over_time.append(your_local_passes)
-            our_passes_over_time.append(my_local_passes + your_local_passes)
-            their_passes_over_time.append(their_local_passes)
-            game_passes_over_time.append(my_local_passes + your_local_passes + their_local_passes)
-
-            my_dribbles_over_time.append(my_local_dribbles)
-            your_dribbles_over_time.append(your_local_dribbles)
-            our_dribbles_over_time.append(my_local_dribbles + your_local_dribbles)
-            their_dribbles_over_time.append(their_local_dribbles)
-            game_dribbles_over_time.append(my_local_dribbles + your_local_dribbles + their_local_dribbles)
-
-            my_clears_over_time.append(my_local_clears)
-            your_clears_over_time.append(your_local_clears)
-            our_clears_over_time.append(my_local_clears + your_local_clears)
-            their_clears_over_time.append(their_local_clears)
-            game_clears_over_time.append(my_local_clears + your_local_clears + their_local_clears)
-
-            my_aerials_over_time.append(my_local_aerials)
-            your_aerials_over_time.append(your_local_aerials)
-            our_aerials_over_time.append(my_local_aerials + your_local_aerials)
-            their_aerials_over_time.append(their_local_aerials)
-            game_aerials_over_time.append(my_local_aerials + your_local_aerials + their_local_aerials)
-
-            my_balls_won_over_time.append(my_local_balls_won)
-            your_balls_won_over_time.append(your_local_balls_won)
-            our_balls_won_over_time.append(my_local_balls_won + your_local_balls_won)
-            their_balls_won_over_time.append(their_local_balls_won)
-            game_balls_won_over_time.append(my_local_balls_won + your_local_balls_won + their_local_balls_won)
-
-            my_balls_lost_over_time.append(my_local_balls_lost)
-            your_balls_lost_over_time.append(your_local_balls_lost)
-            our_balls_lost_over_time.append(my_local_balls_lost + your_local_balls_lost)
-            their_balls_lost_over_time.append(their_local_balls_lost)
-            game_balls_lost_over_time.append(my_local_balls_lost + your_local_balls_lost + their_local_balls_lost)
-
-            max_local_score = max(max(my_local_score, your_local_score), max(opp1_local_score, opp2_local_score))
-            local_mvp_per_game = ["", "", "", ""]
-            their_scores_over_time.append(opp1_local_score + opp2_local_score)
-
-            # determine MVP - no tiebreaker (players can share MVP if they scored the same amount of pts)
-            if my_local_score == max_local_score:
-                my_mvp_list.append(1)
-                local_mvp_per_game[0] = my_alias
-
-            if my_local_score < max_local_score:
-                my_mvp_list.append(0)
-
-            if your_local_score == max_local_score:
-                your_mvp_list.append(1)
-                local_mvp_per_game[1] = your_alias
-
-            if your_local_score < max_local_score:
-                your_mvp_list.append(0)
-
-            if opp1_local_score == max_local_score:
-                opp1_mvp_list.append(1)
-                local_mvp_per_game[2] = "Opponent1"
-
-            if opp1_local_score < max_local_score:
-                opp1_mvp_list.append(0)
-
-            if opp2_local_score == max_local_score:
-                opp2_mvp_list.append(1)
-                local_mvp_per_game[3] = "Opponent2"
-
-            if opp2_local_score < max_local_score:
-                opp2_mvp_list.append(0)
-
-            mvp_per_game.append(local_mvp_per_game)
-
-            my_local_demos = 0
-            your_local_demos = 0
-            their_local_demos = 0
-
-            my_local_demoed = 0
-            your_local_demoed = 0
-            their_local_demoed = 0
-
-            if "demos" in data["gameMetadata"]:
-                for i in data["gameMetadata"]["demos"]:
-                    if i["attackerId"]["id"] == my_id and i["victimId"]["id"] != my_id:
-                        my_local_demos += 1
-                        their_local_demoed += 1
-                    if i["attackerId"]["id"] == your_id and i["victimId"]["id"] != your_id:
-                        your_local_demos += 1
-                        their_local_demoed += 1
-                    if i["victimId"]["id"] == my_id and i["attackerId"]["id"] != your_id \
-                            and i["attackerId"]["id"] != my_id:
-                        their_local_demos += 1
-                        my_local_demoed += 1
-                    if i["victimId"]["id"] == your_id and i["attackerId"]["id"] != your_id \
-                            and i["attackerId"]["id"] != my_id:
-                        their_local_demos += 1
-                        your_local_demoed += 1
-
-            my_demos_over_time.append(my_local_demos)
-            your_demos_over_time.append(your_local_demos)
-            our_demos_over_time.append(my_local_demos + your_local_demos)
-            their_demos_over_time.append(their_local_demos)
-
-            my_demoed_over_time.append(my_local_demoed)
-            your_demoed_over_time.append(your_local_demoed)
-            our_demoed_over_time.append(my_local_demoed + your_local_demoed)
-            their_demoed_over_time.append(their_local_demoed)
-
-            game_demos_over_time.append(my_local_demos + your_local_demos + their_local_demos)
-
-            if local_color == "orange":
-                our_team_color.append("O")
-                if data["teams"][0]["isOrange"]:
-                    local_gs = data["teams"][0]["score"]
-                    local_gc = data["teams"][1]["score"]
-                elif data["teams"][1]["isOrange"]:
-                    local_gs = data["teams"][1]["score"]
-                    local_gc = data["teams"][0]["score"]
-            elif local_color == "blue":
-                our_team_color.append("B")
-                if data["teams"][0]["isOrange"]:
-                    local_gs = data["teams"][1]["score"]
-                    local_gc = data["teams"][0]["score"]
-                elif data["teams"][1]["isOrange"]:
-                    local_gs = data["teams"][0]["score"]
-                    local_gc = data["teams"][1]["score"]
-
-            for i in data['gameStats']['hits']:
-                if i["playerId"]["id"] == my_id:
-                    my_touches_x.append(i["ballData"]["posX"] * local_multiplier)
-                    my_touches_y.append(i["ballData"]["posY"] * local_multiplier)
-                    my_touches_z.append(i["ballData"]["posZ"])
-                elif i["playerId"]["id"] == your_id:
-                    your_touches_x.append(i["ballData"]["posX"] * local_multiplier)
-                    your_touches_y.append(i["ballData"]["posY"] * local_multiplier)
-                    your_touches_z.append(i["ballData"]["posZ"])
-
-                if "shot" in i:
-                    if i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id:
-                        our_local_shots += 1
-
-                        if "goal" in i:
-                            if i["playerId"]["id"] == my_id:
-                                my_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
-                                my_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
-                                my_shot_goals_z.append(i["ballData"]["posZ"])
-                                my_local_shots += 1
-                            else:
-                                your_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
-                                your_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
-                                your_shot_goals_z.append(i["ballData"]["posZ"])
-                                your_local_shots += 1
-
+        # load corresponding xG data file
+        with open(path_to_xg + file.replace("json", "csv"), encoding="utf8") as f:
+            reader = csv.reader(f)
+            my_list = list(reader)
+        nrows = len(my_list)
+        ncols = len(my_list[0])
+        my_local_xg = 0
+        your_local_xg = 0
+        their_local_xg = 0
+        my_local_shot_xg = 0
+        your_local_shot_xg = 0
+        their_local_shot_xg = 0
+        my_local_non_shot_xg = 0
+        your_local_non_shot_xg = 0
+        their_local_non_shot_xg = 0
+        my_local_goals_from_shots = 0
+        your_local_goals_from_shots = 0
+        their_local_goals_from_shots = 0
+        my_local_goals_from_non_shots = 0
+        your_local_goals_from_non_shots = 0
+        their_local_goals_from_non_shots = 0
+        our_local_xg_per_hit = []
+        their_local_xg_per_hit = []
+        my_local_hits = 0
+        your_local_hits = 0
+        their_local_hits = 0
+        my_local_misses = 0
+        your_local_misses = 0
+        their_local_misses = 0
+        for col in range(ncols):
+            for row in range(0, nrows):
+                if my_list[0][col] == "shot_taker_name":
+                    if row != 0:
+                        if my_list[row][col] == my_name or my_list[row][col] == your_name:
+                            if my_list[row][6] == "True" and my_list[row][5] == "True":
+                                our_shots_goal_or_miss.append(1)
+                            elif my_list[row][6] == "False" and my_list[row][5] == "True":
+                                our_shots_goal_or_miss.append(0)
+                            our_local_xg_per_hit.append(float(my_list[row][4]))
+                        if my_list[row][col] != my_name and my_list[row][col] != your_name:
+                            if my_list[row][6] == "True" and my_list[row][5] == "True":
+                                their_shots_goal_or_miss.append(1)
+                            elif my_list[row][6] == "False" and my_list[row][5] == "True":
+                                their_shots_goal_or_miss.append(0)
+                            their_local_xg_per_hit.append(float(my_list[row][4]))
+                        if my_list[row][col] == my_name:
+                            my_local_hits += 1
+                            my_local_xg += float(my_list[row][4])
+                            my_total_xg += float(my_list[row][4])
+                            # shots
+                            if my_list[row][5] == "True":
+                                my_shot_xg += float(my_list[row][4])
+                                my_local_shot_xg += float(my_list[row][4])
+                            # non-shots
+                            if my_list[row][5] == "False":
+                                my_non_shot_xg += float(my_list[row][4])
+                                my_local_non_shot_xg += float(my_list[row][4])
+                                # Non-shot Goals
+                                if my_list[row][6] == "True":
+                                    my_goals_from_non_shots += 1
+                                    my_local_goals_from_non_shots += 1
+                                    my_xg_per_non_shot_goal_list.append(float(my_list[row][4]))
+                                    my_xg_per_non_shot_goal_file_list.append(file.replace(".json", ""))
+                                    my_xg_per_non_shot_goal_frame_list.append(int(my_list[row][7]))
+                                else:
+                                    my_xg_per_miss_from_non_shot_list.append(float(my_list[row][4]))
+                                    my_xg_per_miss_from_non_shot_file_list.append(file.replace(".json", ""))
+                                    my_xg_per_miss_from_non_shot_frame_list.append(int(my_list[row][7]))
+                            # Shot Goals
+                            if my_list[row][6] == "True" and my_list[row][5] == "True":
+                                my_goal_xg += float(my_list[row][4])
+                                my_xg_per_shot_goal_list.append(float(my_list[row][4]))
+                                my_xg_per_shot_goal_file_list.append(file.replace(".json", ""))
+                                my_xg_per_shot_goal_frame_list.append(int(my_list[row][7]))
+                                my_local_goals_from_shots += 1
+                                my_goals_from_shots += 1
+                                my_shots_goal_or_miss.append(1)
+                            # misses from shots
+                            elif my_list[row][6] == "False" and my_list[row][5] == "True":
+                                my_local_misses += 1
+                                my_shots_goal_or_miss.append(0)
+                                my_xg_per_miss_from_shot_list.append(float(my_list[row][4]))
+                                my_xg_per_miss_from_shot_file_list.append(file.replace(".json", ""))
+                                my_xg_per_miss_from_shot_frame_list.append(int(my_list[row][7]))
+                        elif my_list[row][col] == your_name:
+                            your_local_hits += 1
+                            your_local_xg += float(my_list[row][4])
+                            your_total_xg += float(my_list[row][4])
+                            # shots
+                            if my_list[row][5] == "True":
+                                your_shot_xg += float(my_list[row][4])
+                                your_local_shot_xg += float(my_list[row][4])
+                            # non-shots
+                            if my_list[row][5] == "False":
+                                your_non_shot_xg += float(my_list[row][4])
+                                your_local_non_shot_xg += float(my_list[row][4])
+                                if my_list[row][6] == "True":
+                                    your_goals_from_non_shots += 1
+                                    your_local_goals_from_non_shots += 1
+                                    your_xg_per_non_shot_goal_list.append(float(my_list[row][4]))
+                                    your_xg_per_non_shot_goal_file_list.append(file.replace(".json", ""))
+                                    your_xg_per_non_shot_goal_frame_list.append(int(my_list[row][7]))
+                                else:
+                                    your_xg_per_miss_from_non_shot_list.append(float(my_list[row][4]))
+                                    your_xg_per_miss_from_non_shot_file_list.append(file.replace(".json", ""))
+                                    your_xg_per_miss_from_non_shot_frame_list.append(int(my_list[row][7]))
+                            if my_list[row][6] == "True" and my_list[row][5] == "True":
+                                your_goal_xg += float(my_list[row][4])
+                                your_xg_per_shot_goal_list.append(float(my_list[row][4]))
+                                your_xg_per_shot_goal_file_list.append(file.replace(".json", ""))
+                                your_xg_per_shot_goal_frame_list.append(int(my_list[row][7]))
+                                your_local_goals_from_shots += 1
+                                your_goals_from_shots += 1
+                                your_shots_goal_or_miss.append(1)
+                            elif my_list[row][6] == "False" and my_list[row][5] == "True":
+                                your_local_misses += 1
+                                your_shots_goal_or_miss.append(0)
+                                your_xg_per_miss_from_shot_list.append(float(my_list[row][4]))
+                                your_xg_per_miss_from_shot_file_list.append(file.replace(".json", ""))
+                                your_xg_per_miss_from_shot_frame_list.append(int(my_list[row][7]))
                         else:
-                            if i["playerId"]["id"] == my_id:
-                                my_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
-                                my_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
-                                my_shot_misses_z.append(i["ballData"]["posZ"])
-                                my_local_shots += 1
-                            else:
-                                your_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
-                                your_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
-                                your_shot_misses_z.append(i["ballData"]["posZ"])
-                                your_local_shots += 1
+                            their_local_hits += 1
+                            their_local_xg += float(my_list[row][4])
+                            their_total_xg += float(my_list[row][4])
+                            # shots
+                            if my_list[row][5] == "True":
+                                their_shot_xg += float(my_list[row][4])
+                                their_local_shot_xg += float(my_list[row][4])
+                            # non-shots
+                            if my_list[row][5] == "False":
+                                their_non_shot_xg += float(my_list[row][4])
+                                their_local_non_shot_xg += float(my_list[row][4])
+                                if my_list[row][6] == "True":
+                                    their_goals_from_non_shots += 1
+                                    their_local_goals_from_non_shots += 1
+                                    their_xg_per_non_shot_goal_list.append(float(my_list[row][4]))
+                                    their_xg_per_non_shot_goal_file_list.append(file.replace(".json", ""))
+                                    their_xg_per_non_shot_goal_frame_list.append(int(my_list[row][7]))
+                                else:
+                                    their_xg_per_miss_from_non_shot_list.append(float(my_list[row][4]))
+                                    their_xg_per_miss_from_non_shot_file_list.append(file.replace(".json", ""))
+                                    their_xg_per_miss_from_non_shot_frame_list.append(int(my_list[row][7]))
+                            if my_list[row][6] == "True" and my_list[row][5] == "True":
+                                their_goal_xg += float(my_list[row][4])
+                                their_xg_per_shot_goal_list.append(float(my_list[row][4]))
+                                their_xg_per_shot_goal_file_list.append(file.replace(".json", ""))
+                                their_xg_per_shot_goal_frame_list.append(int(my_list[row][7]))
+                                their_local_goals_from_shots += 1
+                                their_goals_from_shots += 1
+                            elif my_list[row][6] == "False" and my_list[row][5] == "True":
+                                their_local_misses += 1
+                                their_xg_per_miss_from_shot_list.append(float(my_list[row][4]))
+                                their_xg_per_miss_from_shot_file_list.append(file.replace(".json", ""))
+                                their_xg_per_miss_from_shot_frame_list.append(int(my_list[row][7]))
+        my_goals_from_shots_over_time.append(my_local_goals_from_shots)
+        your_goals_from_shots_over_time.append(your_local_goals_from_shots)
+        their_goals_from_shots_over_time.append(their_local_goals_from_shots)
+        my_goals_from_non_shots_over_time.append(my_local_goals_from_non_shots)
+        your_goals_from_non_shots_over_time.append(your_local_goals_from_non_shots)
+        their_goals_from_non_shots_over_time.append(their_local_goals_from_non_shots)
+        my_misses_over_time.append(my_local_misses)
+        your_misses_over_time.append(your_local_misses)
+        their_misses_over_time.append(their_local_misses)
+        local_color = "blue"
+        local_gs = 0
+        local_gc = 0
+        my_local_goals = 0
+        your_local_goals = 0
+        their_local_goals = 0
+        my_local_shots = 0
+        your_local_shots = 0
+        our_local_shots = 0
+        their_local_shots = 0
+        my_local_saves = 0
+        your_local_saves = 0
+        their_local_saves = 0
+        my_local_assists = 0
+        your_local_assists = 0
+        their_local_assists = 0
+        my_local_passes = 0
+        your_local_passes = 0
+        their_local_passes = 0
+        my_local_dribbles = 0
+        your_local_dribbles = 0
+        their_local_dribbles = 0
+        my_local_clears = 0
+        your_local_clears = 0
+        their_local_clears = 0
+        my_local_aerials = 0
+        your_local_aerials = 0
+        their_local_aerials = 0
+        my_local_balls_won = 0
+        your_local_balls_won = 0
+        their_local_balls_won = 0
+        my_local_balls_lost = 0
+        your_local_balls_lost = 0
+        their_local_balls_lost = 0
+        local_multiplier = 1
+        local_names = []
+        local_ids = []
 
-                    else:
-                        their_local_shots += 1
+        my_local_score = 0
+        your_local_score = 0
+        opp1_local_score = 0
+        opp2_local_score = 0
+        my_local_pos_tendencies = [0] * pos_tendencies_nr
+        your_local_pos_tendencies = [0] * pos_tendencies_nr
 
-                        if "goal" in i:
-                            their_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
-                            their_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
-                            their_shot_goals_z.append(i["ballData"]["posZ"])
-                            their_shot_goals_distance_to_goal.append(i["distanceToGoal"])
-                            their_shot_goals_distance_to_goal_file_list.append(file)
-                            their_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
+        # Link our names to IDs and detect our team color
+        for i in data['players']:
+            local_names.append(i["name"])
+            if i["name"] == my_name:
+                if i["isOrange"]:
+                    local_color = "orange"
+                    local_multiplier = -1
+                my_id = i["id"]["id"]
+            elif i["name"] == your_name:
+                your_id = i["id"]["id"]
+            if i["id"]["id"] == my_id:
+                if "assists" in i:
+                    my_local_assists += i["assists"]
+            elif i["id"]["id"] == your_id:
+                if "assists" in i:
+                    your_local_assists += i["assists"]
+            else:
+                if "assists" in i:
+                    their_local_assists += i["assists"]
 
+            if i["id"]["id"] != my_id and i["id"]["id"] != your_id:
+                local_ids.append(i["id"]["id"])
+            if i["id"]["id"] == my_id:
+                if "score" in i:
+                    my_local_score = i["score"]
+                    my_scores_over_time.append(i["score"])
+                if "saves" in i:
+                    my_local_saves += i["saves"]
+                if "totalPasses" in i["stats"]["hitCounts"]:
+                    my_local_passes = i["stats"]["hitCounts"]["totalPasses"]
+                if "totalClears" in i["stats"]["hitCounts"]:
+                    my_local_clears = i["stats"]["hitCounts"]["totalClears"]
+                if "turnovers" in i["stats"]["possession"]:
+                    my_local_balls_lost = i["stats"]["possession"]["turnovers"]
+                if "wonTurnovers" in i["stats"]["possession"]:
+                    my_local_balls_won = i["stats"]["possession"]["wonTurnovers"]
+                if "totalDribbles" in i["stats"]["hitCounts"]:
+                    my_local_dribbles = i["stats"]["hitCounts"]["totalDribbles"]
+                if "totalAerials" in i["stats"]["hitCounts"]:
+                    my_local_aerials = i["stats"]["hitCounts"]["totalAerials"]
+                # positional tendencies
+                if "timeOnGround" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
+                    my_local_pos_tendencies[0] = i["stats"]["positionalTendencies"]["timeOnGround"]
+                if "timeLowInAir" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[1] += i["stats"]["positionalTendencies"]["timeLowInAir"]
+                    my_local_pos_tendencies[1] = i["stats"]["positionalTendencies"]["timeLowInAir"]
+                if "timeHighInAir" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[2] += i["stats"]["positionalTendencies"]["timeHighInAir"]
+                    my_local_pos_tendencies[2] = i["stats"]["positionalTendencies"]["timeHighInAir"]
+                if "timeInDefendingHalf" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[3] += i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
+                    my_local_pos_tendencies[3] = i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
+                if "timeInAttackingHalf" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[4] += i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
+                    my_local_pos_tendencies[4] = i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
+                if "timeInDefendingThird" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[5] += i["stats"]["positionalTendencies"]["timeInDefendingThird"]
+                    my_local_pos_tendencies[5] = i["stats"]["positionalTendencies"]["timeInDefendingThird"]
+                if "timeInNeutralThird" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[6] += i["stats"]["positionalTendencies"]["timeInNeutralThird"]
+                    my_local_pos_tendencies[6] = i["stats"]["positionalTendencies"]["timeInNeutralThird"]
+                if "timeInAttackingThird" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[7] += i["stats"]["positionalTendencies"]["timeInAttackingThird"]
+                    my_local_pos_tendencies[7] = i["stats"]["positionalTendencies"]["timeInAttackingThird"]
+                if "timeBehindBall" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[8] += i["stats"]["positionalTendencies"]["timeBehindBall"]
+                    my_local_pos_tendencies[8] = i["stats"]["positionalTendencies"]["timeBehindBall"]
+                if "timeInFrontBall" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[9] += i["stats"]["positionalTendencies"]["timeInFrontBall"]
+                    my_local_pos_tendencies[9] = i["stats"]["positionalTendencies"]["timeInFrontBall"]
+                if "timeNearWall" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[10] += i["stats"]["positionalTendencies"]["timeNearWall"]
+                    my_local_pos_tendencies[10] = i["stats"]["positionalTendencies"]["timeNearWall"]
+                if "timeInCorner" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
+                    my_local_pos_tendencies[11] = i["stats"]["positionalTendencies"]["timeInCorner"]
+                if "timeOnWall" in i["stats"]["positionalTendencies"]:
+                    my_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
+                    my_local_pos_tendencies[12] = i["stats"]["positionalTendencies"]["timeOnWall"]
+                if "timeFullBoost" in i["stats"]["boost"]:
+                    my_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
+                    my_local_pos_tendencies[13] = i["stats"]["boost"]["timeFullBoost"]
+                if "timeLowBoost" in i["stats"]["boost"]:
+                    my_pos_tendencies[14] += i["stats"]["boost"]["timeLowBoost"]
+                    my_local_pos_tendencies[14] = i["stats"]["boost"]["timeLowBoost"]
+                if "timeNoBoost" in i["stats"]["boost"]:
+                    my_pos_tendencies[15] += i["stats"]["boost"]["timeNoBoost"]
+                    my_local_pos_tendencies[15] = i["stats"]["boost"]["timeNoBoost"]
+                if "timeClosestToBall" in i["stats"]["distance"]:
+                    my_pos_tendencies[16] += i["stats"]["distance"]["timeClosestToBall"]
+                    my_local_pos_tendencies[16] = i["stats"]["distance"]["timeClosestToBall"]
+                if "timeCloseToBall" in i["stats"]["distance"]:
+                    my_pos_tendencies[17] += i["stats"]["distance"]["timeCloseToBall"]
+                    my_local_pos_tendencies[17] = i["stats"]["distance"]["timeCloseToBall"]
+                if "timeFurthestFromBall" in i["stats"]["distance"]:
+                    my_pos_tendencies[18] += i["stats"]["distance"]["timeFurthestFromBall"]
+                    my_local_pos_tendencies[18] = i["stats"]["distance"]["timeFurthestFromBall"]
+                if "timeAtSlowSpeed" in i["stats"]["speed"]:
+                    my_pos_tendencies[19] += i["stats"]["speed"]["timeAtSlowSpeed"]
+                    my_local_pos_tendencies[19] = i["stats"]["speed"]["timeAtSlowSpeed"]
+                if "timeAtBoostSpeed" in i["stats"]["speed"]:
+                    my_pos_tendencies[20] += i["stats"]["speed"]["timeAtBoostSpeed"]
+                    my_local_pos_tendencies[20] = i["stats"]["speed"]["timeAtBoostSpeed"]
+                if "timeAtSuperSonic" in i["stats"]["speed"]:
+                    my_pos_tendencies[21] += i["stats"]["speed"]["timeAtSuperSonic"]
+                    my_local_pos_tendencies[21] = i["stats"]["speed"]["timeAtSuperSonic"]
+                if "ballCarries" in i["stats"]:
+                    if "totalCarryTime" in i["stats"]["ballCarries"]:
+                        my_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
+                        my_local_pos_tendencies[22] = i["stats"]["ballCarries"]["totalCarryTime"]
+            elif i["id"]["id"] == your_id:
+                if "score" in i:
+                    your_scores_over_time.append(i["score"])
+                    your_local_score = i["score"]
+                if "saves" in i:
+                    your_local_saves += i["saves"]
+                if "totalPasses" in i["stats"]["hitCounts"]:
+                    your_local_passes = i["stats"]["hitCounts"]["totalPasses"]
+                if "totalClears" in i["stats"]["hitCounts"]:
+                    your_local_clears = i["stats"]["hitCounts"]["totalClears"]
+                if "turnovers" in i["stats"]["possession"]:
+                    your_local_balls_lost = i["stats"]["possession"]["turnovers"]
+                if "wonTurnovers" in i["stats"]["possession"]:
+                    your_local_balls_won = i["stats"]["possession"]["wonTurnovers"]
+                if "totalDribbles" in i["stats"]["hitCounts"]:
+                    your_local_dribbles = i["stats"]["hitCounts"]["totalDribbles"]
+                if "totalAerials" in i["stats"]["hitCounts"]:
+                    your_local_aerials = i["stats"]["hitCounts"]["totalAerials"]
+                # positional tendencies
+                if "timeOnGround" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
+                    your_local_pos_tendencies[0] = i["stats"]["positionalTendencies"]["timeOnGround"]
+                if "timeLowInAir" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[1] += i["stats"]["positionalTendencies"]["timeLowInAir"]
+                    your_local_pos_tendencies[1] = i["stats"]["positionalTendencies"]["timeLowInAir"]
+                if "timeHighInAir" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[2] += i["stats"]["positionalTendencies"]["timeHighInAir"]
+                    your_local_pos_tendencies[2] = i["stats"]["positionalTendencies"]["timeHighInAir"]
+                if "timeInDefendingHalf" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[3] += i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
+                    your_local_pos_tendencies[3] = i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
+                if "timeInAttackingHalf" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[4] += i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
+                    your_local_pos_tendencies[4] = i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
+                if "timeInDefendingThird" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[5] += i["stats"]["positionalTendencies"]["timeInDefendingThird"]
+                    your_local_pos_tendencies[5] = i["stats"]["positionalTendencies"]["timeInDefendingThird"]
+                if "timeInNeutralThird" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[6] += i["stats"]["positionalTendencies"]["timeInNeutralThird"]
+                    your_local_pos_tendencies[6] = i["stats"]["positionalTendencies"]["timeInNeutralThird"]
+                if "timeInAttackingThird" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[7] += i["stats"]["positionalTendencies"]["timeInAttackingThird"]
+                    your_local_pos_tendencies[7] = i["stats"]["positionalTendencies"]["timeInAttackingThird"]
+                if "timeBehindBall" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[8] += i["stats"]["positionalTendencies"]["timeBehindBall"]
+                    your_local_pos_tendencies[8] = i["stats"]["positionalTendencies"]["timeBehindBall"]
+                if "timeInFrontBall" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[9] += i["stats"]["positionalTendencies"]["timeInFrontBall"]
+                    your_local_pos_tendencies[9] = i["stats"]["positionalTendencies"]["timeInFrontBall"]
+                if "timeNearWall" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[10] += i["stats"]["positionalTendencies"]["timeNearWall"]
+                    your_local_pos_tendencies[10] = i["stats"]["positionalTendencies"]["timeNearWall"]
+                if "timeInCorner" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
+                    your_local_pos_tendencies[11] = i["stats"]["positionalTendencies"]["timeInCorner"]
+                if "timeOnWall" in i["stats"]["positionalTendencies"]:
+                    your_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
+                    your_local_pos_tendencies[12] = i["stats"]["positionalTendencies"]["timeOnWall"]
+                if "timeFullBoost" in i["stats"]["boost"]:
+                    your_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
+                    your_local_pos_tendencies[13] = i["stats"]["boost"]["timeFullBoost"]
+                if "timeLowBoost" in i["stats"]["boost"]:
+                    your_pos_tendencies[14] += i["stats"]["boost"]["timeLowBoost"]
+                    your_local_pos_tendencies[14] = i["stats"]["boost"]["timeLowBoost"]
+                if "timeNoBoost" in i["stats"]["boost"]:
+                    your_pos_tendencies[15] += i["stats"]["boost"]["timeNoBoost"]
+                    your_local_pos_tendencies[15] = i["stats"]["boost"]["timeNoBoost"]
+                if "timeClosestToBall" in i["stats"]["distance"]:
+                    your_pos_tendencies[16] += i["stats"]["distance"]["timeClosestToBall"]
+                    your_local_pos_tendencies[16] = i["stats"]["distance"]["timeClosestToBall"]
+                if "timeCloseToBall" in i["stats"]["distance"]:
+                    your_pos_tendencies[17] += i["stats"]["distance"]["timeCloseToBall"]
+                    your_local_pos_tendencies[17] = i["stats"]["distance"]["timeCloseToBall"]
+                if "timeFurthestFromBall" in i["stats"]["distance"]:
+                    your_pos_tendencies[18] += i["stats"]["distance"]["timeFurthestFromBall"]
+                    your_local_pos_tendencies[18] = i["stats"]["distance"]["timeFurthestFromBall"]
+                if "timeAtSlowSpeed" in i["stats"]["speed"]:
+                    your_pos_tendencies[19] += i["stats"]["speed"]["timeAtSlowSpeed"]
+                    your_local_pos_tendencies[19] = i["stats"]["speed"]["timeAtSlowSpeed"]
+                if "timeAtBoostSpeed" in i["stats"]["speed"]:
+                    your_pos_tendencies[20] += i["stats"]["speed"]["timeAtBoostSpeed"]
+                    your_local_pos_tendencies[20] = i["stats"]["speed"]["timeAtBoostSpeed"]
+                if "timeAtSuperSonic" in i["stats"]["speed"]:
+                    your_pos_tendencies[21] += i["stats"]["speed"]["timeAtSuperSonic"]
+                    your_local_pos_tendencies[21] = i["stats"]["speed"]["timeAtSuperSonic"]
+                if "ballCarries" in i["stats"]:
+                    if "totalCarryTime" in i["stats"]["ballCarries"]:
+                        your_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
+                        your_local_pos_tendencies[22] = i["stats"]["ballCarries"]["totalCarryTime"]
+            else:
+                if "score" in i:
+                    if i["id"]["id"] == local_ids[0]:
+                        opp1_local_score = i["score"]
+                    elif i["id"]["id"] == local_ids[1]:
+                        opp2_local_score = i["score"]
+                if "saves" in i:
+                    their_local_saves += i["saves"]
+                if "totalPasses" in i["stats"]["hitCounts"]:
+                    their_local_passes += i["stats"]["hitCounts"]["totalPasses"]
+                if "totalClears" in i["stats"]["hitCounts"]:
+                    their_local_clears += i["stats"]["hitCounts"]["totalClears"]
+                if "turnovers" in i["stats"]["possession"]:
+                    their_local_balls_lost += i["stats"]["possession"]["turnovers"]
+                if "wonTurnovers" in i["stats"]["possession"]:
+                    their_local_balls_won += i["stats"]["possession"]["wonTurnovers"]
+                if "totalDribbles" in i["stats"]["hitCounts"]:
+                    their_local_dribbles += i["stats"]["hitCounts"]["totalDribbles"]
+                if "totalAerials" in i["stats"]["hitCounts"]:
+                    their_local_aerials += i["stats"]["hitCounts"]["totalAerials"]
+
+        for i in data["gameMetadata"]["goals"]:
+            if i["playerId"]["id"] == my_id:
+                my_local_goals += 1
+            elif i["playerId"]["id"] == your_id:
+                your_local_goals += 1
+            else:
+                their_local_goals += 1
+
+        my_other_goals_over_time.append(my_local_goals - my_local_goals_from_shots -
+                                        my_local_goals_from_non_shots)
+        your_other_goals_over_time.append(your_local_goals - your_local_goals_from_shots -
+                                          your_local_goals_from_non_shots)
+        their_other_goals_over_time.append(their_local_goals - their_local_goals_from_shots -
+                                           their_local_goals_from_non_shots)
+
+        my_pos_tendencies_over_time.append(my_local_pos_tendencies)
+        your_pos_tendencies_over_time.append(your_local_pos_tendencies)
+        my_passes_over_time.append(my_local_passes)
+        your_passes_over_time.append(your_local_passes)
+        our_passes_over_time.append(my_local_passes + your_local_passes)
+        their_passes_over_time.append(their_local_passes)
+        game_passes_over_time.append(my_local_passes + your_local_passes + their_local_passes)
+        my_dribbles_over_time.append(my_local_dribbles)
+        your_dribbles_over_time.append(your_local_dribbles)
+        our_dribbles_over_time.append(my_local_dribbles + your_local_dribbles)
+        their_dribbles_over_time.append(their_local_dribbles)
+        game_dribbles_over_time.append(my_local_dribbles + your_local_dribbles + their_local_dribbles)
+        my_clears_over_time.append(my_local_clears)
+        your_clears_over_time.append(your_local_clears)
+        our_clears_over_time.append(my_local_clears + your_local_clears)
+        their_clears_over_time.append(their_local_clears)
+        game_clears_over_time.append(my_local_clears + your_local_clears + their_local_clears)
+        my_aerials_over_time.append(my_local_aerials)
+        your_aerials_over_time.append(your_local_aerials)
+        our_aerials_over_time.append(my_local_aerials + your_local_aerials)
+        their_aerials_over_time.append(their_local_aerials)
+        game_aerials_over_time.append(my_local_aerials + your_local_aerials + their_local_aerials)
+        my_balls_won_over_time.append(my_local_balls_won)
+        your_balls_won_over_time.append(your_local_balls_won)
+        our_balls_won_over_time.append(my_local_balls_won + your_local_balls_won)
+        their_balls_won_over_time.append(their_local_balls_won)
+        game_balls_won_over_time.append(my_local_balls_won + your_local_balls_won + their_local_balls_won)
+        my_balls_lost_over_time.append(my_local_balls_lost)
+        your_balls_lost_over_time.append(your_local_balls_lost)
+        our_balls_lost_over_time.append(my_local_balls_lost + your_local_balls_lost)
+        their_balls_lost_over_time.append(their_local_balls_lost)
+        game_balls_lost_over_time.append(my_local_balls_lost + your_local_balls_lost + their_local_balls_lost)
+        max_local_score = max(max(my_local_score, your_local_score), max(opp1_local_score, opp2_local_score))
+        local_mvp_per_game = ["", "", "", ""]
+        their_scores_over_time.append(opp1_local_score + opp2_local_score)
+
+        # determine MVP - no tiebreaker (players can share MVP if they scored the same amount of pts)
+        if my_local_score == max_local_score:
+            my_mvp_list.append(1)
+            local_mvp_per_game[0] = my_alias
+        if my_local_score < max_local_score:
+            my_mvp_list.append(0)
+        if your_local_score == max_local_score:
+            your_mvp_list.append(1)
+            local_mvp_per_game[1] = your_alias
+        if your_local_score < max_local_score:
+            your_mvp_list.append(0)
+        if opp1_local_score == max_local_score:
+            opp1_mvp_list.append(1)
+            local_mvp_per_game[2] = "Opponent1"
+        if opp1_local_score < max_local_score:
+            opp1_mvp_list.append(0)
+        if opp2_local_score == max_local_score:
+            opp2_mvp_list.append(1)
+            local_mvp_per_game[3] = "Opponent2"
+        if opp2_local_score < max_local_score:
+            opp2_mvp_list.append(0)
+        mvp_per_game.append(local_mvp_per_game)
+        my_local_demos = 0
+        your_local_demos = 0
+        their_local_demos = 0
+        my_local_demoed = 0
+        your_local_demoed = 0
+        their_local_demoed = 0
+
+        if "demos" in data["gameMetadata"]:
+            for i in data["gameMetadata"]["demos"]:
+                if i["attackerId"]["id"] == my_id and i["victimId"]["id"] != my_id:
+                    my_local_demos += 1
+                    their_local_demoed += 1
+                if i["attackerId"]["id"] == your_id and i["victimId"]["id"] != your_id:
+                    your_local_demos += 1
+                    their_local_demoed += 1
+                if i["victimId"]["id"] == my_id and i["attackerId"]["id"] != your_id \
+                        and i["attackerId"]["id"] != my_id:
+                    their_local_demos += 1
+                    my_local_demoed += 1
+                if i["victimId"]["id"] == your_id and i["attackerId"]["id"] != your_id \
+                        and i["attackerId"]["id"] != my_id:
+                    their_local_demos += 1
+                    your_local_demoed += 1
+
+        my_demos_over_time.append(my_local_demos)
+        your_demos_over_time.append(your_local_demos)
+        our_demos_over_time.append(my_local_demos + your_local_demos)
+        their_demos_over_time.append(their_local_demos)
+        my_demoed_over_time.append(my_local_demoed)
+        your_demoed_over_time.append(your_local_demoed)
+        our_demoed_over_time.append(my_local_demoed + your_local_demoed)
+        their_demoed_over_time.append(their_local_demoed)
+        game_demos_over_time.append(my_local_demos + your_local_demos + their_local_demos)
+
+        if local_color == "orange":
+            our_team_color.append("O")
+            if data["teams"][0]["isOrange"]:
+                local_gs = data["teams"][0]["score"]
+                local_gc = data["teams"][1]["score"]
+            elif data["teams"][1]["isOrange"]:
+                local_gs = data["teams"][1]["score"]
+                local_gc = data["teams"][0]["score"]
+        elif local_color == "blue":
+            our_team_color.append("B")
+            if data["teams"][0]["isOrange"]:
+                local_gs = data["teams"][1]["score"]
+                local_gc = data["teams"][0]["score"]
+            elif data["teams"][1]["isOrange"]:
+                local_gs = data["teams"][0]["score"]
+                local_gc = data["teams"][1]["score"]
+
+        for i in data['gameStats']['hits']:
+            if i["playerId"]["id"] == my_id:
+                my_touches_x.append(i["ballData"]["posX"] * local_multiplier)
+                my_touches_y.append(i["ballData"]["posY"] * local_multiplier)
+                my_touches_z.append(i["ballData"]["posZ"])
+            elif i["playerId"]["id"] == your_id:
+                your_touches_x.append(i["ballData"]["posX"] * local_multiplier)
+                your_touches_y.append(i["ballData"]["posY"] * local_multiplier)
+                your_touches_z.append(i["ballData"]["posZ"])
+            if "shot" in i:
+                if i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id:
+                    our_local_shots += 1
+                    if "goal" in i:
+                        if i["playerId"]["id"] == my_id:
+                            my_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                            my_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                            my_shot_goals_z.append(i["ballData"]["posZ"])
+                            my_local_shots += 1
                         else:
-                            their_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
-                            their_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
-                            their_shot_misses_z.append(i["ballData"]["posZ"])
-                            their_shot_misses_distance_to_goal.append(i["distanceToGoal"])
-
-                if "shot" not in i:
-                    if i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id:
-
-                        if "goal" in i:
-                            if i["playerId"]["id"] == my_id:
-                                my_non_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
-                                my_non_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
-                                my_non_shot_goals_z.append(i["ballData"]["posZ"])
-                            if i["playerId"]["id"] == your_id:
-                                your_non_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
-                                your_non_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
-                                your_non_shot_goals_z.append(i["ballData"]["posZ"])
-
+                            your_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                            your_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                            your_shot_goals_z.append(i["ballData"]["posZ"])
+                            your_local_shots += 1
                     else:
-
-                        if "goal" in i:
-                            their_non_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
-                            their_non_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
-                            their_non_shot_goals_z.append(i["ballData"]["posZ"])
-                            their_non_shot_goals_distance_to_goal.append(i["distanceToGoal"])
-                            their_non_shot_goals_distance_to_goal_file_list.append(file)
-                            their_non_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
-
-                if i["playerId"]["id"] == my_id and "shot" in i:
-                    my_shots_distance_to_goal.append(i["distanceToGoal"])
-                    my_shots_x.append(i["ballData"]["posX"] * local_multiplier)
-                    my_shots_y.append(i["ballData"]["posY"] * local_multiplier)
-                    my_shots_z.append(i["ballData"]["posZ"])
-
-                    if "goal" in i:
-                        my_shot_goals_distance_to_goal.append(i["distanceToGoal"])
-                        my_shot_goals_distance_to_goal_file_list.append(file)
-                        my_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
-
-                    else:
-                        my_shot_misses_distance_to_goal.append(i["distanceToGoal"])
-
-                if i["playerId"]["id"] == your_id and "shot" in i:
-                    your_shots_distance_to_goal.append(i["distanceToGoal"])
-                    your_shots_x.append(i["ballData"]["posX"] * local_multiplier)
-                    your_shots_y.append(i["ballData"]["posY"] * local_multiplier)
-                    your_shots_z.append(i["ballData"]["posZ"])
-                    if "goal" in i:
-                        your_shot_goals_distance_to_goal.append(i["distanceToGoal"])
-                        your_shot_goals_distance_to_goal_file_list.append(file)
-                        your_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
-
-                    else:
-                        your_shot_misses_distance_to_goal.append(i["distanceToGoal"])
-
-                if (i["playerId"]["id"] != my_id and i["playerId"]["id"] != your_id) and "shot" in i:
-                    their_shots_x.append(i["ballData"]["posX"] * local_multiplier)
-                    their_shots_y.append(i["ballData"]["posY"] * local_multiplier)
-                    their_shots_z.append(i["ballData"]["posZ"])
-
-                # non shots
-
-                if i["playerId"]["id"] == my_id and "shot" not in i:
-                    if "goal" in i:
-                        my_non_shot_goals_distance_to_goal.append(i["distanceToGoal"])
-                        my_non_shot_goals_distance_to_goal_file_list.append(file)
-                        my_non_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
-
-                if i["playerId"]["id"] == your_id and "shot" not in i:
-                    if "goal" in i:
-                        your_non_shot_goals_distance_to_goal.append(i["distanceToGoal"])
-                        your_non_shot_goals_distance_to_goal_file_list.append(file)
-                        your_non_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
-
-            gd_array.append(local_gs - local_gc)
-            gs_array.append(local_gs)
-            gc_array.append(local_gc)
-            shot_diff_array.append(our_local_shots - their_local_shots)
-
-            my_goals_over_time.append(my_local_goals)
-            your_goals_over_time.append(your_local_goals)
-            their_goals_over_time.append(their_local_goals)
-
-            my_shots_over_time.append(my_local_shots)
-            your_shots_over_time.append(your_local_shots)
-            their_shots_over_time.append(their_local_shots)
-
-            my_saves_over_time.append(my_local_saves)
-            your_saves_over_time.append(your_local_saves)
-            their_saves_over_time.append(their_local_saves)
-
-            my_assists_over_time.append(my_local_assists)
-            your_assists_over_time.append(your_local_assists)
-            their_assists_over_time.append(their_local_assists)
-
-            my_xg_over_time.append(my_local_xg)
-            your_xg_over_time.append(your_local_xg)
-            their_xg_over_time.append(their_local_xg)
-
-            my_shot_xg_over_time.append(my_local_shot_xg)
-            your_shot_xg_over_time.append(your_local_shot_xg)
-            their_shot_xg_over_time.append(their_local_shot_xg)
-
-            my_non_shot_xg_over_time.append(my_local_non_shot_xg)
-            your_non_shot_xg_over_time.append(your_local_non_shot_xg)
-            their_non_shot_xg_over_time.append(their_local_non_shot_xg)
-
-            my_hits_over_time.append(my_local_hits)
-            your_hits_over_time.append(your_local_hits)
-            our_hits_over_time.append(my_local_hits + your_local_hits)
-            their_hits_over_time.append(their_local_hits)
-
-            local_went_overtime = False
-
-            # check if game went overtime -- only if there is 1 GD between the teams, or 0 GD (FF in OT)
-            if (local_gs - local_gc) == 1 or (local_gc - local_gs) == 1 or (local_gc == local_gs):
-                csv_file = file.replace(".json", ".csv")
-                with open(path_to_csv + csv_file, newline='') as f:
-                    reader = csv.reader(f)
-                    row1 = next(reader)
-                if "ball_pos_z-GAME-WENT-OT" in row1:
-                    local_went_overtime = True
-                    if local_gs > local_gc:
-                        overtime_wins_count += 1
-                    elif local_gc > local_gs:
-                        overtime_losses_count += 1
-
-            if local_gs > local_gc and local_went_overtime:
-                win_count += 1
-                result_array.append("W")
-                result_array_with_ot.append("W*")
-                result_array_num.append(1)
-                result_color.append("darkblue")
-
-            elif local_gs > local_gc and not local_went_overtime:
-                win_count += 1
-                result_array.append("W")
-                result_array_with_ot.append("W")
-                result_array_num.append(1)
-                result_color.append(our_color)
-                normaltime_gd_array.append(local_gs - local_gc)
-
-            elif local_gc > local_gs and local_went_overtime:
-                loss_count += 1
-                result_array.append("L")
-                result_array_with_ot.append("L*")
-                result_array_num.append(-1)
-                result_color.append("darkorange")
-
-            elif local_gc > local_gs and not local_went_overtime:
-                loss_count += 1
-                result_array.append("L")
-                result_array_with_ot.append("L")
-                result_array_num.append(-1)
-                result_color.append(their_color)
-                normaltime_gd_array.append(local_gs - local_gc)
-
-            win_chance = 0
-            draw_chance = 0
-            loss_chance = 0
-
-            # our chances of scoring up to N goals where N is the number of shots we took
-            our_xgf_prob_raw = poisson_binomial_pmf(our_local_xg_per_hit)
-            our_xgc_prob_raw = poisson_binomial_pmf(their_local_xg_per_hit)
-
-            max_possible_goals = max(len(our_xgf_prob_raw), len(our_xgc_prob_raw))
-
-            our_xgf_prob = [0] * max_possible_goals
-            our_xgc_prob = [0] * max_possible_goals
-
-            our_local_hits_att = len(our_local_xg_per_hit)
-            our_local_hits_con = len(their_local_xg_per_hit)
-
-            for i in range(len(our_xgf_prob_raw)):
-                our_xgf_prob[i] = our_xgf_prob_raw[i]
-
-            for i in range(len(our_xgc_prob_raw)):
-                our_xgc_prob[i] = our_xgc_prob_raw[i]
-
-            for i in range(0, max_possible_goals):
-                draw_chance += (our_xgf_prob[i] * our_xgc_prob[i])
-                for j in range(0, max_possible_goals):
-                    if i > j:
-                        win_chance += (our_xgf_prob[i] * our_xgc_prob[j])
-                        loss_chance += (our_xgf_prob[j] * our_xgc_prob[i])
-
-            win_chance += (draw_chance / 2)
-            loss_chance += (draw_chance / 2)
-
-            if local_gs < max_possible_goals and local_gc < max_possible_goals:
-                score_prob = (our_xgf_prob[local_gs] * our_xgc_prob[local_gc]) / (1 - draw_chance)
-            else:
-                score_prob = 0
-
-            win_chance_per_game.append(win_chance * 100)
-            loss_chance_per_game.append(loss_chance * 100)
-            total_win_chance += (win_chance * 100)
-
-            result_type = "W"
-            if local_gc > local_gs:
-                if local_went_overtime:
-                    result_type = "L*"
+                        if i["playerId"]["id"] == my_id:
+                            my_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
+                            my_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
+                            my_shot_misses_z.append(i["ballData"]["posZ"])
+                            my_local_shots += 1
+                        else:
+                            your_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
+                            your_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
+                            your_shot_misses_z.append(i["ballData"]["posZ"])
+                            your_local_shots += 1
                 else:
-                    result_type = "L"
-            if local_gs > local_gc and local_went_overtime:
-                result_type = "W*"
-            if result_type == "W" or result_type == "W*":
-                result_fairness = win_chance
+                    their_local_shots += 1
+                    if "goal" in i:
+                        their_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                        their_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                        their_shot_goals_z.append(i["ballData"]["posZ"])
+                        their_shot_goals_distance_to_goal.append(i["distanceToGoal"])
+                        their_shot_goals_distance_to_goal_file_list.append(file)
+                        their_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
+                    else:
+                        their_shot_misses_x.append(i["ballData"]["posX"] * local_multiplier)
+                        their_shot_misses_y.append(i["ballData"]["posY"] * local_multiplier)
+                        their_shot_misses_z.append(i["ballData"]["posZ"])
+                        their_shot_misses_distance_to_goal.append(i["distanceToGoal"])
+            if "shot" not in i:
+                if i["playerId"]["id"] == my_id or i["playerId"]["id"] == your_id:
+                    if "goal" in i:
+                        if i["playerId"]["id"] == my_id:
+                            my_non_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                            my_non_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                            my_non_shot_goals_z.append(i["ballData"]["posZ"])
+                        if i["playerId"]["id"] == your_id:
+                            your_non_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                            your_non_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                            your_non_shot_goals_z.append(i["ballData"]["posZ"])
+                else:
+                    if "goal" in i:
+                        their_non_shot_goals_x.append(i["ballData"]["posX"] * local_multiplier)
+                        their_non_shot_goals_y.append(i["ballData"]["posY"] * local_multiplier)
+                        their_non_shot_goals_z.append(i["ballData"]["posZ"])
+                        their_non_shot_goals_distance_to_goal.append(i["distanceToGoal"])
+                        their_non_shot_goals_distance_to_goal_file_list.append(file)
+                        their_non_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
+            if i["playerId"]["id"] == my_id and "shot" in i:
+                my_shots_distance_to_goal.append(i["distanceToGoal"])
+                my_shots_x.append(i["ballData"]["posX"] * local_multiplier)
+                my_shots_y.append(i["ballData"]["posY"] * local_multiplier)
+                my_shots_z.append(i["ballData"]["posZ"])
+                if "goal" in i:
+                    my_shot_goals_distance_to_goal.append(i["distanceToGoal"])
+                    my_shot_goals_distance_to_goal_file_list.append(file)
+                    my_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
+                else:
+                    my_shot_misses_distance_to_goal.append(i["distanceToGoal"])
+            if i["playerId"]["id"] == your_id and "shot" in i:
+                your_shots_distance_to_goal.append(i["distanceToGoal"])
+                your_shots_x.append(i["ballData"]["posX"] * local_multiplier)
+                your_shots_y.append(i["ballData"]["posY"] * local_multiplier)
+                your_shots_z.append(i["ballData"]["posZ"])
+                if "goal" in i:
+                    your_shot_goals_distance_to_goal.append(i["distanceToGoal"])
+                    your_shot_goals_distance_to_goal_file_list.append(file)
+                    your_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
+                else:
+                    your_shot_misses_distance_to_goal.append(i["distanceToGoal"])
+            if (i["playerId"]["id"] != my_id and i["playerId"]["id"] != your_id) and "shot" in i:
+                their_shots_x.append(i["ballData"]["posX"] * local_multiplier)
+                their_shots_y.append(i["ballData"]["posY"] * local_multiplier)
+                their_shots_z.append(i["ballData"]["posZ"])
+            # non shots
+            if i["playerId"]["id"] == my_id and "shot" not in i:
+                if "goal" in i:
+                    my_non_shot_goals_distance_to_goal.append(i["distanceToGoal"])
+                    my_non_shot_goals_distance_to_goal_file_list.append(file)
+                    my_non_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
+            if i["playerId"]["id"] == your_id and "shot" not in i:
+                if "goal" in i:
+                    your_non_shot_goals_distance_to_goal.append(i["distanceToGoal"])
+                    your_non_shot_goals_distance_to_goal_file_list.append(file)
+                    your_non_shot_goals_distance_to_goal_frame_list.append(int(i["frameNumber"]))
+
+        gd_array.append(local_gs - local_gc)
+        gs_array.append(local_gs)
+        gc_array.append(local_gc)
+        shot_diff_array.append(our_local_shots - their_local_shots)
+        my_goals_over_time.append(my_local_goals)
+        your_goals_over_time.append(your_local_goals)
+        their_goals_over_time.append(their_local_goals)
+        my_shots_over_time.append(my_local_shots)
+        your_shots_over_time.append(your_local_shots)
+        their_shots_over_time.append(their_local_shots)
+        my_saves_over_time.append(my_local_saves)
+        your_saves_over_time.append(your_local_saves)
+        their_saves_over_time.append(their_local_saves)
+        my_assists_over_time.append(my_local_assists)
+        your_assists_over_time.append(your_local_assists)
+        their_assists_over_time.append(their_local_assists)
+        my_xg_over_time.append(my_local_xg)
+        your_xg_over_time.append(your_local_xg)
+        their_xg_over_time.append(their_local_xg)
+        my_shot_xg_over_time.append(my_local_shot_xg)
+        your_shot_xg_over_time.append(your_local_shot_xg)
+        their_shot_xg_over_time.append(their_local_shot_xg)
+        my_non_shot_xg_over_time.append(my_local_non_shot_xg)
+        your_non_shot_xg_over_time.append(your_local_non_shot_xg)
+        their_non_shot_xg_over_time.append(their_local_non_shot_xg)
+        my_hits_over_time.append(my_local_hits)
+        your_hits_over_time.append(your_local_hits)
+        our_hits_over_time.append(my_local_hits + your_local_hits)
+        their_hits_over_time.append(their_local_hits)
+        local_went_overtime = False
+
+        # check if game went overtime -- only if there is 1 GD between the teams, or 0 GD (FF in OT)
+        if (local_gs - local_gc) == 1 or (local_gc - local_gs) == 1 or (local_gc == local_gs):
+            csv_file = file.replace(".json", ".csv")
+            with open(path_to_csv + csv_file, newline='') as f:
+                reader = csv.reader(f)
+                row1 = next(reader)
+            if "ball_pos_z-GAME-WENT-OT" in row1:
+                local_went_overtime = True
+                if local_gs > local_gc:
+                    overtime_wins_count += 1
+                elif local_gc > local_gs:
+                    overtime_losses_count += 1
+
+        if local_gs > local_gc and local_went_overtime:
+            win_count += 1
+            result_array.append("W")
+            result_array_with_ot.append("W*")
+            result_array_num.append(1)
+            result_color.append("darkblue")
+        elif local_gs > local_gc and not local_went_overtime:
+            win_count += 1
+            result_array.append("W")
+            result_array_with_ot.append("W")
+            result_array_num.append(1)
+            result_color.append(our_color)
+            normaltime_gd_array.append(local_gs - local_gc)
+        elif local_gc > local_gs and local_went_overtime:
+            loss_count += 1
+            result_array.append("L")
+            result_array_with_ot.append("L*")
+            result_array_num.append(-1)
+            result_color.append("darkorange")
+        elif local_gc > local_gs and not local_went_overtime:
+            loss_count += 1
+            result_array.append("L")
+            result_array_with_ot.append("L")
+            result_array_num.append(-1)
+            result_color.append(their_color)
+            normaltime_gd_array.append(local_gs - local_gc)
+
+        win_chance = 0
+        draw_chance = 0
+        loss_chance = 0
+        # our chances of scoring up to N goals where N is the number of shots we took
+        our_xgf_prob_raw = poisson_binomial_pmf(our_local_xg_per_hit)
+        our_xgc_prob_raw = poisson_binomial_pmf(their_local_xg_per_hit)
+        max_possible_goals = max(len(our_xgf_prob_raw), len(our_xgc_prob_raw))
+        our_xgf_prob = [0] * max_possible_goals
+        our_xgc_prob = [0] * max_possible_goals
+        our_local_hits_att = len(our_local_xg_per_hit)
+        our_local_hits_con = len(their_local_xg_per_hit)
+
+        for i in range(len(our_xgf_prob_raw)):
+            our_xgf_prob[i] = our_xgf_prob_raw[i]
+
+        for i in range(len(our_xgc_prob_raw)):
+            our_xgc_prob[i] = our_xgc_prob_raw[i]
+
+        for i in range(0, max_possible_goals):
+            draw_chance += (our_xgf_prob[i] * our_xgc_prob[i])
+            for j in range(0, max_possible_goals):
+                if i > j:
+                    win_chance += (our_xgf_prob[i] * our_xgc_prob[j])
+                    loss_chance += (our_xgf_prob[j] * our_xgc_prob[i])
+
+        win_chance += (draw_chance / 2)
+        loss_chance += (draw_chance / 2)
+
+        if local_gs < max_possible_goals and local_gc < max_possible_goals:
+            score_prob = (our_xgf_prob[local_gs] * our_xgc_prob[local_gc]) / (1 - draw_chance)
+        else:
+            score_prob = 0
+
+        win_chance_per_game.append(win_chance * 100)
+        loss_chance_per_game.append(loss_chance * 100)
+        total_win_chance += (win_chance * 100)
+        result_type = "W"
+        if local_gc > local_gs:
+            if local_went_overtime:
+                result_type = "L*"
             else:
-                result_fairness = loss_chance
+                result_type = "L"
+
+        if local_gs > local_gc and local_went_overtime:
+            result_type = "W*"
+
+        if result_type == "W" or result_type == "W*":
+            result_fairness = win_chance
+        else:
+            result_fairness = loss_chance
+
+        if show_tables:
             if result_type == "W":
                 color_to_add = Fore.GREEN
             if result_type == "W*":
@@ -1377,19 +1257,16 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
                 color_to_add = Fore.RED
             if result_type == "L*":
                 color_to_add = Fore.LIGHTRED_EX
+        if result_type == "W" or result_type == "W*":
+            result_luck = 1 - win_chance
+        if result_type == "L" or result_type == "L*":
+            result_luck = 0 - win_chance
+        local_goal_difference = local_gs - local_gc
+        local_xg_difference = (my_local_xg + your_local_xg) - their_local_xg
+        local_hit_difference = our_local_hits_att - our_local_hits_con
+        luck_over_time.append(result_luck * 100)
 
-            if result_type == "W" or result_type == "W*":
-                result_luck = 1 - win_chance
-
-            if result_type == "L" or result_type == "L*":
-                result_luck = 0 - win_chance
-
-            local_goal_difference = local_gs - local_gc
-            local_xg_difference = (my_local_xg + your_local_xg) - their_local_xg
-            local_hit_difference = our_local_hits_att - our_local_hits_con
-
-            luck_over_time.append(result_luck * 100)
-
+        if show_tables:
             scoreline_data.append(
                 [color_to_add + "%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_gs, local_gc,
                  our_local_hits_att, our_local_hits_con, "%.2f" % local_xg_difference, local_goal_difference,
@@ -1397,13 +1274,13 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
                  round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
                  round((result_luck * 100), 2),
                  result_type + Style.RESET_ALL])
-            scoreline_data_no_colors.append(
-                ["%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_gs, local_gc,
-                 our_local_hits_att, our_local_hits_con, "%.2f" % local_xg_difference, local_goal_difference,
-                 local_hit_difference, file.replace(".json", ""),
-                 round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
-                 round((result_luck * 100), 2),
-                 result_type, local_time])
+        scoreline_data_no_colors.append(
+            ["%.2f" % (my_local_xg + your_local_xg), "%.2f" % their_local_xg, local_gs, local_gc,
+             our_local_hits_att, our_local_hits_con, "%.2f" % local_xg_difference, local_goal_difference,
+             local_hit_difference, file.replace(".json", ""),
+             round((win_chance * 100), 2), round((result_fairness * 100), 2), round((score_prob * 100), 2),
+             round((result_luck * 100), 2),
+             result_type, local_time])
 
     if show_xg_scorelines:
         print(tabulate(scoreline_data,
@@ -1422,6 +1299,7 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     f.write(content)
     f.close()
 
+    print("Generating further stats")
     games_nr = len(new_json_files)
 
     my_max_demos_file = new_json_files[my_demos_over_time.index(max(my_demos_over_time))]
@@ -1569,7 +1447,7 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     our_non_shot_xg = my_non_shot_xg + your_non_shot_xg
     our_shot_xg = my_shot_xg + your_shot_xg
 
-    # gfs = Shot Goals
+    # gfs = goals from shots
     if my_shot_xg > 0:
         my_gfs_xg_ratio = my_goals_from_shots / my_shot_xg
     else:
@@ -1686,6 +1564,7 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     # only from shots
     our_misses_over_time = [your_misses_over_time[x] + my_misses_over_time[x] for x in range(games_nr)]
 
+    print("Calculating per game data")
     per_game_data = []
     my_pos_tendencies_game_data = []
     your_pos_tendencies_game_data = []
@@ -1904,56 +1783,58 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     f.write(content)
     f.close()
 
-    # coloring output
-    for i in range(len(individual_data)):
-        if individual_data[i][0] != "Misses" and individual_data[i][0] != "Demoed" \
-                and individual_data[i][0] != "Lost Ball":
-            if individual_data[i][1] > individual_data[i][2]:
-                individual_data[i][1] = Fore.MAGENTA + str(individual_data[i][1])
-                individual_data[i][2] = Fore.CYAN + str(individual_data[i][2]) + Style.RESET_ALL
-            if individual_data[i][1] == individual_data[i][2]:
-                individual_data[i][1] = Fore.YELLOW + str(individual_data[i][1])
-                individual_data[i][2] = Fore.YELLOW + str(individual_data[i][2]) + Style.RESET_ALL
-            if individual_data[i][1] < individual_data[i][2]:
-                individual_data[i][1] = Fore.CYAN + str(individual_data[i][1])
-                individual_data[i][2] = Fore.MAGENTA + str(individual_data[i][2]) + Style.RESET_ALL
-        else:
-            if individual_data[i][1] < individual_data[i][2]:
-                individual_data[i][1] = Fore.MAGENTA + str(individual_data[i][1])
-                individual_data[i][2] = Fore.CYAN + str(individual_data[i][2]) + Style.RESET_ALL
-            if individual_data[i][1] == individual_data[i][2]:
-                individual_data[i][1] = Fore.YELLOW + str(individual_data[i][1])
-                individual_data[i][2] = Fore.YELLOW + str(individual_data[i][2]) + Style.RESET_ALL
-            if individual_data[i][1] > individual_data[i][2]:
-                individual_data[i][1] = Fore.CYAN + str(individual_data[i][1])
-                individual_data[i][2] = Fore.MAGENTA + str(individual_data[i][2]) + Style.RESET_ALL
+    if show_tables:
+        # coloring output
+        for i in range(len(individual_data)):
+            if individual_data[i][0] != "Misses" and individual_data[i][0] != "Demoed" \
+                    and individual_data[i][0] != "Lost Ball":
+                if individual_data[i][1] > individual_data[i][2]:
+                    individual_data[i][1] = Fore.MAGENTA + str(individual_data[i][1])
+                    individual_data[i][2] = Fore.CYAN + str(individual_data[i][2]) + Style.RESET_ALL
+                if individual_data[i][1] == individual_data[i][2]:
+                    individual_data[i][1] = Fore.YELLOW + str(individual_data[i][1])
+                    individual_data[i][2] = Fore.YELLOW + str(individual_data[i][2]) + Style.RESET_ALL
+                if individual_data[i][1] < individual_data[i][2]:
+                    individual_data[i][1] = Fore.CYAN + str(individual_data[i][1])
+                    individual_data[i][2] = Fore.MAGENTA + str(individual_data[i][2]) + Style.RESET_ALL
+            else:
+                if individual_data[i][1] < individual_data[i][2]:
+                    individual_data[i][1] = Fore.MAGENTA + str(individual_data[i][1])
+                    individual_data[i][2] = Fore.CYAN + str(individual_data[i][2]) + Style.RESET_ALL
+                if individual_data[i][1] == individual_data[i][2]:
+                    individual_data[i][1] = Fore.YELLOW + str(individual_data[i][1])
+                    individual_data[i][2] = Fore.YELLOW + str(individual_data[i][2]) + Style.RESET_ALL
+                if individual_data[i][1] > individual_data[i][2]:
+                    individual_data[i][1] = Fore.CYAN + str(individual_data[i][1])
+                    individual_data[i][2] = Fore.MAGENTA + str(individual_data[i][2]) + Style.RESET_ALL
 
-    for i in range(len(team_data)):
-        if team_data[i][0] != "Misses":
-            if team_data[i][1] > team_data[i][2]:
-                team_data[i][1] = Fore.GREEN + str(team_data[i][1])
-                team_data[i][2] = Fore.RED + str(team_data[i][2]) + Style.RESET_ALL
-            if team_data[i][1] == team_data[i][2]:
-                team_data[i][1] = Fore.YELLOW + str(team_data[i][1])
-                team_data[i][2] = Fore.YELLOW + str(team_data[i][2]) + Style.RESET_ALL
-            if team_data[i][1] < team_data[i][2]:
-                team_data[i][1] = Fore.RED + str(team_data[i][1])
-                team_data[i][2] = Fore.GREEN + str(team_data[i][2]) + Style.RESET_ALL
-        else:
-            if team_data[i][1] < team_data[i][2]:
-                team_data[i][1] = Fore.GREEN + str(team_data[i][1])
-                team_data[i][2] = Fore.RED + str(team_data[i][2]) + Style.RESET_ALL
-            if team_data[i][1] == team_data[i][2]:
-                team_data[i][1] = Fore.YELLOW + str(team_data[i][1])
-                team_data[i][2] = Fore.YELLOW + str(team_data[i][2]) + Style.RESET_ALL
-            if team_data[i][1] > team_data[i][2]:
-                team_data[i][1] = Fore.RED + str(team_data[i][1])
-                team_data[i][2] = Fore.GREEN + str(team_data[i][2]) + Style.RESET_ALL
+        for i in range(len(team_data)):
+            if team_data[i][0] != "Misses":
+                if team_data[i][1] > team_data[i][2]:
+                    team_data[i][1] = Fore.GREEN + str(team_data[i][1])
+                    team_data[i][2] = Fore.RED + str(team_data[i][2]) + Style.RESET_ALL
+                if team_data[i][1] == team_data[i][2]:
+                    team_data[i][1] = Fore.YELLOW + str(team_data[i][1])
+                    team_data[i][2] = Fore.YELLOW + str(team_data[i][2]) + Style.RESET_ALL
+                if team_data[i][1] < team_data[i][2]:
+                    team_data[i][1] = Fore.RED + str(team_data[i][1])
+                    team_data[i][2] = Fore.GREEN + str(team_data[i][2]) + Style.RESET_ALL
+            else:
+                if team_data[i][1] < team_data[i][2]:
+                    team_data[i][1] = Fore.GREEN + str(team_data[i][1])
+                    team_data[i][2] = Fore.RED + str(team_data[i][2]) + Style.RESET_ALL
+                if team_data[i][1] == team_data[i][2]:
+                    team_data[i][1] = Fore.YELLOW + str(team_data[i][1])
+                    team_data[i][2] = Fore.YELLOW + str(team_data[i][2]) + Style.RESET_ALL
+                if team_data[i][1] > team_data[i][2]:
+                    team_data[i][1] = Fore.RED + str(team_data[i][1])
+                    team_data[i][2] = Fore.GREEN + str(team_data[i][2]) + Style.RESET_ALL
 
-    print(tabulate(individual_data, headers=["STATS", my_alias, your_alias], numalign="right"))
-    print("\n")
-    print(tabulate(team_data, headers=["STATS", "Us", "Them"], numalign="right"))
+        print(tabulate(individual_data, headers=["STATS", my_alias, your_alias], numalign="right"))
+        print("\n")
+        print(tabulate(team_data, headers=["STATS", "Us", "Them"], numalign="right"))
 
+    print("Calculating streak data")
     res_num = 0
     local_wins_in_streak = 0
     local_losses_in_streak = 0
@@ -2047,25 +1928,28 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
 
         res_num += 1
 
-    # Clear json_new directory
-    all_files = glob.glob('../data/json_new/*.json')
-    for f in all_files:
-        os.unlink(f)
-    Path("../data/json_new").mkdir(parents=True, exist_ok=True)
+    if not added_streak:
+        print("Adding files from latest streak to /json_new/")
+        # Clear json_new directory
+        all_files = glob.glob('../data/json_new/*.json')
+        for f in all_files:
+            os.unlink(f)
+        Path("../data/json_new").mkdir(parents=True, exist_ok=True)
 
-    # Copy most recent streak games to /json_new/
-    for file in streak_filenames[len(streak_filenames) - 1]:
-        src_dir = "../data/json/"
-        dst_dir = "../data/json_new/"
+        # Copy most recent streak games to /json_new/
+        for file in streak_filenames[len(streak_filenames) - 1]:
+            src_dir = "../data/json/"
+            dst_dir = "../data/json_new/"
 
-        src_filepath = src_dir + file
-        dst_filepath = dst_dir + file
+            src_filepath = src_dir + file
+            dst_filepath = dst_dir + file
 
-        shutil.copyfile(src_filepath, dst_filepath)
+            shutil.copyfile(src_filepath, dst_filepath)
+
+            added_streak = True
 
     streak_data = []
 
-    # print as table (tabulate)
     for streak in range(0, len(streak_num_games)):
         num_games_in_streak = streak_wins[streak] + streak_losses[streak]
         win_rate = streak_wins[streak] / num_games_in_streak
@@ -2105,143 +1989,116 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     f.close()
 
     # colored output
-    for i in range(len(streak_data)):
-        streak_win_pct = streak_data[i][0].replace("%", "")
-        streak_expected_win_pct = streak_data[i][15].replace("%", "")
-        streak_luck_pct = streak_data[i][16].replace("%", "")
+    if show_tables:
+        for i in range(len(streak_data)):
+            streak_win_pct = streak_data[i][0].replace("%", "")
+            streak_expected_win_pct = streak_data[i][15].replace("%", "")
+            streak_luck_pct = streak_data[i][16].replace("%", "")
 
-        if int(streak_win_pct) > 50:
-            streak_data[i][0] = Fore.GREEN + str(streak_data[i][0]) + Style.RESET_ALL
-            streak_data[i][2] = Fore.GREEN + str(streak_data[i][2]) + Style.RESET_ALL
-            streak_data[i][3] = Fore.GREEN + str(streak_data[i][3]) + Style.RESET_ALL
-            streak_data[i][4] = Fore.GREEN + str(streak_data[i][4]) + Style.RESET_ALL
+            if int(streak_win_pct) > 50:
+                streak_data[i][0] = Fore.GREEN + str(streak_data[i][0]) + Style.RESET_ALL
+                streak_data[i][2] = Fore.GREEN + str(streak_data[i][2]) + Style.RESET_ALL
+                streak_data[i][3] = Fore.GREEN + str(streak_data[i][3]) + Style.RESET_ALL
+                streak_data[i][4] = Fore.GREEN + str(streak_data[i][4]) + Style.RESET_ALL
 
-        if int(streak_win_pct) == 50:
-            streak_data[i][0] = Fore.YELLOW + str(streak_data[i][0]) + Style.RESET_ALL
-            streak_data[i][2] = Fore.YELLOW + str(streak_data[i][2]) + Style.RESET_ALL
-            streak_data[i][3] = Fore.YELLOW + str(streak_data[i][3]) + Style.RESET_ALL
-            streak_data[i][4] = Fore.YELLOW + str(streak_data[i][4]) + Style.RESET_ALL
+            if int(streak_win_pct) == 50:
+                streak_data[i][0] = Fore.YELLOW + str(streak_data[i][0]) + Style.RESET_ALL
+                streak_data[i][2] = Fore.YELLOW + str(streak_data[i][2]) + Style.RESET_ALL
+                streak_data[i][3] = Fore.YELLOW + str(streak_data[i][3]) + Style.RESET_ALL
+                streak_data[i][4] = Fore.YELLOW + str(streak_data[i][4]) + Style.RESET_ALL
 
-        if int(streak_win_pct) < 50:
-            streak_data[i][0] = Fore.RED + str(streak_data[i][0]) + Style.RESET_ALL
-            streak_data[i][2] = Fore.RED + str(streak_data[i][2]) + Style.RESET_ALL
-            streak_data[i][3] = Fore.RED + str(streak_data[i][3]) + Style.RESET_ALL
-            streak_data[i][4] = Fore.RED + str(streak_data[i][4]) + Style.RESET_ALL
+            if int(streak_win_pct) < 50:
+                streak_data[i][0] = Fore.RED + str(streak_data[i][0]) + Style.RESET_ALL
+                streak_data[i][2] = Fore.RED + str(streak_data[i][2]) + Style.RESET_ALL
+                streak_data[i][3] = Fore.RED + str(streak_data[i][3]) + Style.RESET_ALL
+                streak_data[i][4] = Fore.RED + str(streak_data[i][4]) + Style.RESET_ALL
 
-        if int(streak_expected_win_pct) > 50:
-            streak_data[i][15] = Fore.GREEN + str(streak_data[i][15]) + Style.RESET_ALL
+            if int(streak_expected_win_pct) > 50:
+                streak_data[i][15] = Fore.GREEN + str(streak_data[i][15]) + Style.RESET_ALL
 
-        if int(streak_expected_win_pct) == 50:
-            streak_data[i][15] = Fore.YELLOW + str(streak_data[i][15]) + Style.RESET_ALL
+            if int(streak_expected_win_pct) == 50:
+                streak_data[i][15] = Fore.YELLOW + str(streak_data[i][15]) + Style.RESET_ALL
 
-        if int(streak_expected_win_pct) < 50:
-            streak_data[i][15] = Fore.RED + str(streak_data[i][15]) + Style.RESET_ALL
+            if int(streak_expected_win_pct) < 50:
+                streak_data[i][15] = Fore.RED + str(streak_data[i][15]) + Style.RESET_ALL
 
-        if int(streak_luck_pct) > 0:
-            streak_data[i][16] = Fore.GREEN + str(streak_data[i][16]) + Style.RESET_ALL
+            if int(streak_luck_pct) > 0:
+                streak_data[i][16] = Fore.GREEN + str(streak_data[i][16]) + Style.RESET_ALL
 
-        if int(streak_luck_pct) == 0:
-            streak_data[i][16] = Fore.YELLOW + str(streak_data[i][16]) + Style.RESET_ALL
+            if int(streak_luck_pct) == 0:
+                streak_data[i][16] = Fore.YELLOW + str(streak_data[i][16]) + Style.RESET_ALL
 
-        if int(streak_luck_pct) < 0:
-            streak_data[i][16] = Fore.RED + str(streak_data[i][16]) + Style.RESET_ALL
+            if int(streak_luck_pct) < 0:
+                streak_data[i][16] = Fore.RED + str(streak_data[i][16]) + Style.RESET_ALL
 
-        streak_data[i][1] = streak_data[i][1].replace("W", Fore.GREEN + "W")
-        streak_data[i][1] = streak_data[i][1].replace("L", Fore.RED + "L")
-        streak_data[i][1] += Style.RESET_ALL
+            streak_data[i][1] = streak_data[i][1].replace("W", Fore.GREEN + "W")
+            streak_data[i][1] = streak_data[i][1].replace("L", Fore.RED + "L")
+            streak_data[i][1] += Style.RESET_ALL
 
-        # individual GS/G values
-        if streak_data[i][5] > streak_data[i][6]:
-            streak_data[i][5] = Fore.MAGENTA + str(streak_data[i][5])
-            streak_data[i][6] = Fore.CYAN + str(streak_data[i][6]) + Style.RESET_ALL
-        if streak_data[i][5] == streak_data[i][6]:
-            streak_data[i][5] = Fore.YELLOW + str(streak_data[i][5])
-            streak_data[i][6] = Fore.YELLOW + str(streak_data[i][6]) + Style.RESET_ALL
-        if streak_data[i][5] < streak_data[i][6]:
-            streak_data[i][5] = Fore.CYAN + str(streak_data[i][5])
-            streak_data[i][6] = Fore.MAGENTA + str(streak_data[i][6]) + Style.RESET_ALL
+            # individual GS/G values
+            if streak_data[i][5] > streak_data[i][6]:
+                streak_data[i][5] = Fore.MAGENTA + str(streak_data[i][5])
+                streak_data[i][6] = Fore.CYAN + str(streak_data[i][6]) + Style.RESET_ALL
+            if streak_data[i][5] == streak_data[i][6]:
+                streak_data[i][5] = Fore.YELLOW + str(streak_data[i][5])
+                streak_data[i][6] = Fore.YELLOW + str(streak_data[i][6]) + Style.RESET_ALL
+            if streak_data[i][5] < streak_data[i][6]:
+                streak_data[i][5] = Fore.CYAN + str(streak_data[i][5])
+                streak_data[i][6] = Fore.MAGENTA + str(streak_data[i][6]) + Style.RESET_ALL
 
-        # GD / G
-        gdpg_in_streak = float(streak_data[i][9])
+            # GD / G
+            gdpg_in_streak = float(streak_data[i][9])
 
-        if gdpg_in_streak > 0:
-            streak_data[i][9] = Fore.GREEN + str(streak_data[i][9]) + Style.RESET_ALL
-            streak_data[i][8] = Fore.GREEN + str(streak_data[i][8]) + Style.RESET_ALL
-            streak_data[i][7] = Fore.GREEN + str(streak_data[i][7]) + Style.RESET_ALL
+            if gdpg_in_streak > 0:
+                streak_data[i][9] = Fore.GREEN + str(streak_data[i][9]) + Style.RESET_ALL
+                streak_data[i][8] = Fore.GREEN + str(streak_data[i][8]) + Style.RESET_ALL
+                streak_data[i][7] = Fore.GREEN + str(streak_data[i][7]) + Style.RESET_ALL
 
-        if gdpg_in_streak == 0:
-            streak_data[i][9] = Fore.YELLOW + str(streak_data[i][9]) + Style.RESET_ALL
-            streak_data[i][8] = Fore.YELLOW + str(streak_data[i][8]) + Style.RESET_ALL
-            streak_data[i][7] = Fore.YELLOW + str(streak_data[i][7]) + Style.RESET_ALL
+            if gdpg_in_streak == 0:
+                streak_data[i][9] = Fore.YELLOW + str(streak_data[i][9]) + Style.RESET_ALL
+                streak_data[i][8] = Fore.YELLOW + str(streak_data[i][8]) + Style.RESET_ALL
+                streak_data[i][7] = Fore.YELLOW + str(streak_data[i][7]) + Style.RESET_ALL
 
-        if gdpg_in_streak < 0:
-            streak_data[i][9] = Fore.RED + str(streak_data[i][9]) + Style.RESET_ALL
-            streak_data[i][8] = Fore.RED + str(streak_data[i][8]) + Style.RESET_ALL
-            streak_data[i][7] = Fore.RED + str(streak_data[i][7]) + Style.RESET_ALL
+            if gdpg_in_streak < 0:
+                streak_data[i][9] = Fore.RED + str(streak_data[i][9]) + Style.RESET_ALL
+                streak_data[i][8] = Fore.RED + str(streak_data[i][8]) + Style.RESET_ALL
+                streak_data[i][7] = Fore.RED + str(streak_data[i][7]) + Style.RESET_ALL
 
-        # xGD / G
-        xgdpg_in_streak = float(streak_data[i][14])
+            # xGD / G
+            xgdpg_in_streak = float(streak_data[i][14])
 
-        if xgdpg_in_streak > 0:
-            streak_data[i][14] = Fore.GREEN + str(streak_data[i][14]) + Style.RESET_ALL
-            streak_data[i][13] = Fore.GREEN + str(streak_data[i][13]) + Style.RESET_ALL
-            streak_data[i][12] = Fore.GREEN + str(streak_data[i][12]) + Style.RESET_ALL
+            if xgdpg_in_streak > 0:
+                streak_data[i][14] = Fore.GREEN + str(streak_data[i][14]) + Style.RESET_ALL
+                streak_data[i][13] = Fore.GREEN + str(streak_data[i][13]) + Style.RESET_ALL
+                streak_data[i][12] = Fore.GREEN + str(streak_data[i][12]) + Style.RESET_ALL
 
-        if xgdpg_in_streak == 0:
-            streak_data[i][14] = Fore.YELLOW + str(streak_data[i][14]) + Style.RESET_ALL
-            streak_data[i][13] = Fore.YELLOW + str(streak_data[i][13]) + Style.RESET_ALL
-            streak_data[i][12] = Fore.YELLOW + str(streak_data[i][12]) + Style.RESET_ALL
+            if xgdpg_in_streak == 0:
+                streak_data[i][14] = Fore.YELLOW + str(streak_data[i][14]) + Style.RESET_ALL
+                streak_data[i][13] = Fore.YELLOW + str(streak_data[i][13]) + Style.RESET_ALL
+                streak_data[i][12] = Fore.YELLOW + str(streak_data[i][12]) + Style.RESET_ALL
 
-        if xgdpg_in_streak < 0:
-            streak_data[i][14] = Fore.RED + str(streak_data[i][14]) + Style.RESET_ALL
-            streak_data[i][13] = Fore.RED + str(streak_data[i][13]) + Style.RESET_ALL
-            streak_data[i][12] = Fore.RED + str(streak_data[i][12]) + Style.RESET_ALL
+            if xgdpg_in_streak < 0:
+                streak_data[i][14] = Fore.RED + str(streak_data[i][14]) + Style.RESET_ALL
+                streak_data[i][13] = Fore.RED + str(streak_data[i][13]) + Style.RESET_ALL
+                streak_data[i][12] = Fore.RED + str(streak_data[i][12]) + Style.RESET_ALL
 
-        # individual xG/G values
-        if streak_data[i][10] > streak_data[i][11]:
-            streak_data[i][10] = Fore.MAGENTA + str(streak_data[i][10])
-            streak_data[i][11] = Fore.CYAN + str(streak_data[i][11]) + Style.RESET_ALL
-        if streak_data[i][10] == streak_data[i][11]:
-            streak_data[i][10] = Fore.YELLOW + str(streak_data[i][10])
-            streak_data[i][11] = Fore.YELLOW + str(streak_data[i][11]) + Style.RESET_ALL
-        if streak_data[i][10] < streak_data[i][11]:
-            streak_data[i][10] = Fore.CYAN + str(streak_data[i][10])
-            streak_data[i][11] = Fore.MAGENTA + str(streak_data[i][11]) + Style.RESET_ALL
+            # individual xG/G values
+            if streak_data[i][10] > streak_data[i][11]:
+                streak_data[i][10] = Fore.MAGENTA + str(streak_data[i][10])
+                streak_data[i][11] = Fore.CYAN + str(streak_data[i][11]) + Style.RESET_ALL
+            if streak_data[i][10] == streak_data[i][11]:
+                streak_data[i][10] = Fore.YELLOW + str(streak_data[i][10])
+                streak_data[i][11] = Fore.YELLOW + str(streak_data[i][11]) + Style.RESET_ALL
+            if streak_data[i][10] < streak_data[i][11]:
+                streak_data[i][10] = Fore.CYAN + str(streak_data[i][10])
+                streak_data[i][11] = Fore.MAGENTA + str(streak_data[i][11]) + Style.RESET_ALL
 
-    print("\n")
-    print(tabulate(streak_data,
-                   headers=["Win %", "Results", "GP", "W", "L", my_alias + " GS/G", your_alias + " GS/G",
-                            "GS/G", "GC/G", "GD/G", my_alias + " xG/G", your_alias + " xG/G",
-                            "xG/G", "xGC/G", "xGD/G", "expected_win %", "Luck %"], numalign="right"))
-    print("\n")
-
-    """
-    scorelines_array = []
-    for g in range(0,len(gs_array)):
-        scoreline_str = str(gs_array[g]) + "-" + str(gc_array[g])
-        scorelines_array.append(scoreline_str)
-    
-    scoreline_counter = Counter(scorelines_array)
-    scoreline_counter_keys = list(scoreline_counter.keys())
-    scoreline_counter_values = list(scoreline_counter.values())
-    
-    scoreline_and_pct = []
-    
-    for score in range(0,len(scoreline_counter_keys)):
-        gs_and_gc = scoreline_counter_keys[score].split('-')
-        result_type = "W"
-        if gs_and_gc[0] < gs_and_gc[1]:
-            result_type = "L"
-        goal_diff_for_score = int(gs_and_gc[0]) - int(gs_and_gc[1])
-        score_pct = round(((scoreline_counter_values[score] / games_nr) * 100),1)
-        scoreline_and_pct.append([result_type,scoreline_counter_keys[score],score_pct,scoreline_counter_values[score],goal_diff_for_score])
-    
-    scoreline_and_pct = sorted(scoreline_and_pct, key=lambda x: -x[2])
-    
-    print(tabulate(scoreline_and_pct,
-                   headers=["Result", "Scoreline", "Occurrence %", "Occurrence", "Goal Diff."], numalign="right"))
-    print("\n")
-    """
+        print("\n")
+        print(tabulate(streak_data,
+                       headers=["Win %", "Results", "GP", "W", "L", my_alias + " GS/G", your_alias + " GS/G",
+                                "GS/G", "GC/G", "GD/G", my_alias + " xG/G", your_alias + " xG/G",
+                                "xG/G", "xGC/G", "xGD/G", "expected_win %", "Luck %"], numalign="right"))
+        print("\n")
 
     my_goals_minus_xg_over_time = []
     your_goals_minus_xg_over_time = []
@@ -2307,25 +2164,27 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     f.write(content)
     f.close()
 
-    for i in range(len(result_data)):
-        if i == 0:
-            result_data[i][1] = Fore.YELLOW + str(result_data[i][1]) + Style.RESET_ALL
-            result_data[i][2] = Fore.MAGENTA + str(result_data[i][2]) + Style.RESET_ALL
-            result_data[i][3] = Fore.CYAN + str(result_data[i][3]) + Style.RESET_ALL
+    if show_tables:
+        for i in range(len(result_data)):
+            if i == 0:
+                result_data[i][1] = Fore.YELLOW + str(result_data[i][1]) + Style.RESET_ALL
+                result_data[i][2] = Fore.MAGENTA + str(result_data[i][2]) + Style.RESET_ALL
+                result_data[i][3] = Fore.CYAN + str(result_data[i][3]) + Style.RESET_ALL
 
-        if i == 1 or i == 3:
-            result_data[i][1] = Fore.GREEN + str(result_data[i][1]) + Style.RESET_ALL
-            result_data[i][2] = Fore.GREEN + str(result_data[i][2]) + Style.RESET_ALL
-            result_data[i][3] = Fore.GREEN + str(result_data[i][3]) + Style.RESET_ALL
+            if i == 1 or i == 3:
+                result_data[i][1] = Fore.GREEN + str(result_data[i][1]) + Style.RESET_ALL
+                result_data[i][2] = Fore.GREEN + str(result_data[i][2]) + Style.RESET_ALL
+                result_data[i][3] = Fore.GREEN + str(result_data[i][3]) + Style.RESET_ALL
 
-        if i == 2 or i == 4:
-            result_data[i][1] = Fore.RED + str(result_data[i][1]) + Style.RESET_ALL
-            result_data[i][2] = Fore.RED + str(result_data[i][2]) + Style.RESET_ALL
-            result_data[i][3] = Fore.RED + str(result_data[i][3]) + Style.RESET_ALL
+            if i == 2 or i == 4:
+                result_data[i][1] = Fore.RED + str(result_data[i][1]) + Style.RESET_ALL
+                result_data[i][2] = Fore.RED + str(result_data[i][2]) + Style.RESET_ALL
+                result_data[i][3] = Fore.RED + str(result_data[i][3]) + Style.RESET_ALL
 
-    print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime"], numalign="right"))
+        print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime"], numalign="right"))
 
     # Individual Records
+    print("Calculating record data")
     my_most_consecutive_games_scored_in_helper = 0
     my_most_consecutive_games_scored_in = 0
     my_most_consecutive_games_fts_in_helper = 0
@@ -3845,6 +3704,7 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
     f.close()
 
     if save_and_crop:
+        print("Generating matplotlib charts")
         bg_img = plt.imread("../simple-pitch.png")
         fig = plt.figure(figsize=(40, 20))
         n_plots = 26
@@ -4769,6 +4629,7 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
         ax10.set_position([0.75, 0.26, 0.227, 0.1])  # Saves over time
         ax11.set_position([0.75, 0.365, 0.227, 0.1])  # Assists over time
 
+        print("Cropping charts")
         plt.savefig(path_to_charts + "full_canvas.png")
         # Divide the canvas into individual charts by cropping
         img = Image.open(path_to_charts + "full_canvas.png")
@@ -4927,17 +4788,18 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
 
 
 class my_thread(threading.Thread):
-    def __init__(self, threadID, name, counter, check_new, show_xg_scorelines, save_and_crop):
+    def __init__(self, threadID, name, counter, check_new, show_xg_scorelines, show_tables, save_and_crop):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
         self.counter = counter
         self.check_new = check_new
         self.show_xg_scorelines = show_xg_scorelines
+        self.show_tables = show_tables
         self.save_and_crop = save_and_crop
 
     def run(self):
-        crunch_stats(self.check_new, self.show_xg_scorelines, self.save_and_crop)
+        crunch_stats(self.check_new, self.show_xg_scorelines, self.show_tables, self.save_and_crop)
 
 
 # Multi-threading doesn't offer any serious speed advantages yet
@@ -4947,10 +4809,12 @@ if multi_thread:
     startTime = time.time()
 
     # Update files using all games
-    thread1 = my_thread(1, "Thread1", 1, check_new=False, show_xg_scorelines=False, save_and_crop=False)
+    thread1 = my_thread(1, "Thread1", 1, check_new=False, show_xg_scorelines=False, show_tables=False,
+                        save_and_crop=False)
 
     # Update files using games from latest streak
-    thread2 = my_thread(2, "Thread2", 2, check_new=True, show_xg_scorelines=False, save_and_crop=False)
+    thread2 = my_thread(2, "Thread2", 2, check_new=True, show_xg_scorelines=False, show_tables=False,
+                        save_and_crop=False)
 
     thread1.start()
     thread2.start()
@@ -4967,12 +4831,12 @@ else:
     startTime = time.time()
 
     # Update files using all games
-    crunch_stats(check_new=False, show_xg_scorelines=False, save_and_crop=True)
+    crunch_stats(check_new=False, show_xg_scorelines=False, show_tables=False, save_and_crop=True)
 
     midTime = time.time()
 
     # Update files using games from latest streak
-    crunch_stats(check_new=True, show_xg_scorelines=False, save_and_crop=True)
+    crunch_stats(check_new=True, show_xg_scorelines=False, show_tables=False, save_and_crop=True)
 
     lastTime = time.time()
     executionTime = (time.time() - startTime)
