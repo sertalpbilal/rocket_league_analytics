@@ -7,6 +7,8 @@
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
 
+# TODO: add a check to ensure that the games being analyzed include both player 1 and player 2 on the same team
+
 import csv
 import glob
 import json
@@ -294,10 +296,6 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
     # Number of available "positional tendencies"
     pos_tendencies_nr = 23
 
-    # positional tendencies
-    my_pos_tendencies = [0] * pos_tendencies_nr
-    your_pos_tendencies = [0] * pos_tendencies_nr
-
     my_pos_tendencies_over_time = []
     your_pos_tendencies_over_time = []
 
@@ -497,6 +495,7 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
         my_local_misses = 0
         your_local_misses = 0
         their_local_misses = 0
+
         for col in range(ncols):
             for row in range(0, nrows):
                 if my_list[0][col] == "shot_taker_name":
@@ -631,7 +630,9 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
         my_misses_over_time.append(my_local_misses)
         your_misses_over_time.append(your_local_misses)
         their_misses_over_time.append(their_local_misses)
+
         local_color = "blue"
+
         local_gs = 0
         local_gc = 0
         my_local_goals = 0
@@ -666,6 +667,7 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
         your_local_balls_lost = 0
         their_local_balls_lost = 0
         local_multiplier = 1
+
         local_names = []
         local_ids = []
 
@@ -673,6 +675,7 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
         your_local_score = 0
         opp1_local_score = 0
         opp2_local_score = 0
+
         my_local_pos_tendencies = [0] * pos_tendencies_nr
         your_local_pos_tendencies = [0] * pos_tendencies_nr
 
@@ -924,6 +927,7 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
         if opp2_local_score < max_local_score:
             opp2_mvp_list.append(0)
         mvp_per_game.append(local_mvp_per_game)
+
         my_local_demos = 0
         your_local_demos = 0
         their_local_demos = 0
