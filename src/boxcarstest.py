@@ -7,8 +7,6 @@
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
 
-# TODO: add a check to ensure that the games being analyzed include both player 1 and player 2 on the same team
-
 import csv
 import glob
 import json
@@ -427,8 +425,12 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
     json_files_2v2 = []
     file_time = []
 
-    # Only keep RANKED_DOUBLES games
-    # Sort files by time created - loop through jsons, get start time of game, then sort by time
+    # The game files which are kept for further analysis must meet all four of the following conditions:
+    # 1. Must not be a manually excluded game (e.g. abandoned games)
+    # 2. Must be a game in the RANKED_DOUBLES playlist
+    # 3. Must include both players whose names are specified in "my_name" and "your_name"
+    # 4. The players specified in condition #3 must be in the same team
+
     for file in json_files:
         # exclude abandoned game
         if file != "9e4c5030-ff84-49b5-b32f-2e4d585fd44e.json":
@@ -436,19 +438,29 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
             data = json.load(f)
 
             local_playlist = data["gameMetadata"]["playlist"]
-            local_time = data["gameMetadata"]["time"]
 
             if local_playlist == "RANKED_DOUBLES":
-                json_files_2v2.append(file)
-                file_time.append(local_time)
+                local_time = data["gameMetadata"]["time"]
+                local_names = []
+                local_teams = []
 
+                for i in data["players"]:
+                    local_names.append(i["name"])
+                    local_teams.append(i["isOrange"])
+
+                if my_name in local_names and your_name in local_names:
+                    if local_teams[local_names.index(my_name)] == local_teams[local_names.index(your_name)]:
+                        json_files_2v2.append(file)
+                        file_time.append(local_time)
+
+    # Sort files by the start time of each game
     new_json_files = [x for _, x in sorted(zip(file_time, json_files_2v2))]
 
     local_time_array = []
     streak_start_games = []
     file_pos = 0
 
-    # if at least N minutes pass between two games, they are not part of the same streak
+    # The number of minutes that need to pass between 2 games for them not to be considered part of the same streak
     streak_min_threshold = 30
 
     print("Reading stats from files")
