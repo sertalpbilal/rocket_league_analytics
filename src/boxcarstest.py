@@ -6,7 +6,6 @@
 # TODO: decide whether to plot "non-shot" goals in the 4 goal heatmaps
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
-# TODO: smarter streak handling (output latest streak game data when checking all games rather than before/after)
 
 import csv
 import glob
@@ -429,6 +428,7 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
 
     json_files_2v2 = []
     file_time = []
+
     # Only keep RANKED_DOUBLES games
     # Sort files by time created - loop through jsons, get start time of game, then sort by time
     for file in json_files:
@@ -718,74 +718,51 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
                     my_local_aerials = i["stats"]["hitCounts"]["totalAerials"]
                 # positional tendencies
                 if "timeOnGround" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
                     my_local_pos_tendencies[0] = i["stats"]["positionalTendencies"]["timeOnGround"]
                 if "timeLowInAir" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[1] += i["stats"]["positionalTendencies"]["timeLowInAir"]
                     my_local_pos_tendencies[1] = i["stats"]["positionalTendencies"]["timeLowInAir"]
                 if "timeHighInAir" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[2] += i["stats"]["positionalTendencies"]["timeHighInAir"]
                     my_local_pos_tendencies[2] = i["stats"]["positionalTendencies"]["timeHighInAir"]
                 if "timeInDefendingHalf" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[3] += i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
                     my_local_pos_tendencies[3] = i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
                 if "timeInAttackingHalf" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[4] += i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
                     my_local_pos_tendencies[4] = i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
                 if "timeInDefendingThird" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[5] += i["stats"]["positionalTendencies"]["timeInDefendingThird"]
                     my_local_pos_tendencies[5] = i["stats"]["positionalTendencies"]["timeInDefendingThird"]
                 if "timeInNeutralThird" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[6] += i["stats"]["positionalTendencies"]["timeInNeutralThird"]
                     my_local_pos_tendencies[6] = i["stats"]["positionalTendencies"]["timeInNeutralThird"]
                 if "timeInAttackingThird" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[7] += i["stats"]["positionalTendencies"]["timeInAttackingThird"]
                     my_local_pos_tendencies[7] = i["stats"]["positionalTendencies"]["timeInAttackingThird"]
                 if "timeBehindBall" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[8] += i["stats"]["positionalTendencies"]["timeBehindBall"]
                     my_local_pos_tendencies[8] = i["stats"]["positionalTendencies"]["timeBehindBall"]
                 if "timeInFrontBall" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[9] += i["stats"]["positionalTendencies"]["timeInFrontBall"]
                     my_local_pos_tendencies[9] = i["stats"]["positionalTendencies"]["timeInFrontBall"]
                 if "timeNearWall" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[10] += i["stats"]["positionalTendencies"]["timeNearWall"]
                     my_local_pos_tendencies[10] = i["stats"]["positionalTendencies"]["timeNearWall"]
                 if "timeInCorner" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
                     my_local_pos_tendencies[11] = i["stats"]["positionalTendencies"]["timeInCorner"]
                 if "timeOnWall" in i["stats"]["positionalTendencies"]:
-                    my_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
                     my_local_pos_tendencies[12] = i["stats"]["positionalTendencies"]["timeOnWall"]
                 if "timeFullBoost" in i["stats"]["boost"]:
-                    my_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
                     my_local_pos_tendencies[13] = i["stats"]["boost"]["timeFullBoost"]
                 if "timeLowBoost" in i["stats"]["boost"]:
-                    my_pos_tendencies[14] += i["stats"]["boost"]["timeLowBoost"]
                     my_local_pos_tendencies[14] = i["stats"]["boost"]["timeLowBoost"]
                 if "timeNoBoost" in i["stats"]["boost"]:
-                    my_pos_tendencies[15] += i["stats"]["boost"]["timeNoBoost"]
                     my_local_pos_tendencies[15] = i["stats"]["boost"]["timeNoBoost"]
                 if "timeClosestToBall" in i["stats"]["distance"]:
-                    my_pos_tendencies[16] += i["stats"]["distance"]["timeClosestToBall"]
                     my_local_pos_tendencies[16] = i["stats"]["distance"]["timeClosestToBall"]
                 if "timeCloseToBall" in i["stats"]["distance"]:
-                    my_pos_tendencies[17] += i["stats"]["distance"]["timeCloseToBall"]
                     my_local_pos_tendencies[17] = i["stats"]["distance"]["timeCloseToBall"]
                 if "timeFurthestFromBall" in i["stats"]["distance"]:
-                    my_pos_tendencies[18] += i["stats"]["distance"]["timeFurthestFromBall"]
                     my_local_pos_tendencies[18] = i["stats"]["distance"]["timeFurthestFromBall"]
                 if "timeAtSlowSpeed" in i["stats"]["speed"]:
-                    my_pos_tendencies[19] += i["stats"]["speed"]["timeAtSlowSpeed"]
                     my_local_pos_tendencies[19] = i["stats"]["speed"]["timeAtSlowSpeed"]
                 if "timeAtBoostSpeed" in i["stats"]["speed"]:
-                    my_pos_tendencies[20] += i["stats"]["speed"]["timeAtBoostSpeed"]
                     my_local_pos_tendencies[20] = i["stats"]["speed"]["timeAtBoostSpeed"]
                 if "timeAtSuperSonic" in i["stats"]["speed"]:
-                    my_pos_tendencies[21] += i["stats"]["speed"]["timeAtSuperSonic"]
                     my_local_pos_tendencies[21] = i["stats"]["speed"]["timeAtSuperSonic"]
                 if "ballCarries" in i["stats"]:
                     if "totalCarryTime" in i["stats"]["ballCarries"]:
-                        my_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
                         my_local_pos_tendencies[22] = i["stats"]["ballCarries"]["totalCarryTime"]
             elif i["id"]["id"] == your_id:
                 if "score" in i:
@@ -807,74 +784,51 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
                     your_local_aerials = i["stats"]["hitCounts"]["totalAerials"]
                 # positional tendencies
                 if "timeOnGround" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[0] += i["stats"]["positionalTendencies"]["timeOnGround"]
                     your_local_pos_tendencies[0] = i["stats"]["positionalTendencies"]["timeOnGround"]
                 if "timeLowInAir" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[1] += i["stats"]["positionalTendencies"]["timeLowInAir"]
                     your_local_pos_tendencies[1] = i["stats"]["positionalTendencies"]["timeLowInAir"]
                 if "timeHighInAir" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[2] += i["stats"]["positionalTendencies"]["timeHighInAir"]
                     your_local_pos_tendencies[2] = i["stats"]["positionalTendencies"]["timeHighInAir"]
                 if "timeInDefendingHalf" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[3] += i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
                     your_local_pos_tendencies[3] = i["stats"]["positionalTendencies"]["timeInDefendingHalf"]
                 if "timeInAttackingHalf" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[4] += i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
                     your_local_pos_tendencies[4] = i["stats"]["positionalTendencies"]["timeInAttackingHalf"]
                 if "timeInDefendingThird" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[5] += i["stats"]["positionalTendencies"]["timeInDefendingThird"]
                     your_local_pos_tendencies[5] = i["stats"]["positionalTendencies"]["timeInDefendingThird"]
                 if "timeInNeutralThird" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[6] += i["stats"]["positionalTendencies"]["timeInNeutralThird"]
                     your_local_pos_tendencies[6] = i["stats"]["positionalTendencies"]["timeInNeutralThird"]
                 if "timeInAttackingThird" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[7] += i["stats"]["positionalTendencies"]["timeInAttackingThird"]
                     your_local_pos_tendencies[7] = i["stats"]["positionalTendencies"]["timeInAttackingThird"]
                 if "timeBehindBall" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[8] += i["stats"]["positionalTendencies"]["timeBehindBall"]
                     your_local_pos_tendencies[8] = i["stats"]["positionalTendencies"]["timeBehindBall"]
                 if "timeInFrontBall" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[9] += i["stats"]["positionalTendencies"]["timeInFrontBall"]
                     your_local_pos_tendencies[9] = i["stats"]["positionalTendencies"]["timeInFrontBall"]
                 if "timeNearWall" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[10] += i["stats"]["positionalTendencies"]["timeNearWall"]
                     your_local_pos_tendencies[10] = i["stats"]["positionalTendencies"]["timeNearWall"]
                 if "timeInCorner" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[11] += i["stats"]["positionalTendencies"]["timeInCorner"]
                     your_local_pos_tendencies[11] = i["stats"]["positionalTendencies"]["timeInCorner"]
                 if "timeOnWall" in i["stats"]["positionalTendencies"]:
-                    your_pos_tendencies[12] += i["stats"]["positionalTendencies"]["timeOnWall"]
                     your_local_pos_tendencies[12] = i["stats"]["positionalTendencies"]["timeOnWall"]
                 if "timeFullBoost" in i["stats"]["boost"]:
-                    your_pos_tendencies[13] += i["stats"]["boost"]["timeFullBoost"]
                     your_local_pos_tendencies[13] = i["stats"]["boost"]["timeFullBoost"]
                 if "timeLowBoost" in i["stats"]["boost"]:
-                    your_pos_tendencies[14] += i["stats"]["boost"]["timeLowBoost"]
                     your_local_pos_tendencies[14] = i["stats"]["boost"]["timeLowBoost"]
                 if "timeNoBoost" in i["stats"]["boost"]:
-                    your_pos_tendencies[15] += i["stats"]["boost"]["timeNoBoost"]
                     your_local_pos_tendencies[15] = i["stats"]["boost"]["timeNoBoost"]
                 if "timeClosestToBall" in i["stats"]["distance"]:
-                    your_pos_tendencies[16] += i["stats"]["distance"]["timeClosestToBall"]
                     your_local_pos_tendencies[16] = i["stats"]["distance"]["timeClosestToBall"]
                 if "timeCloseToBall" in i["stats"]["distance"]:
-                    your_pos_tendencies[17] += i["stats"]["distance"]["timeCloseToBall"]
                     your_local_pos_tendencies[17] = i["stats"]["distance"]["timeCloseToBall"]
                 if "timeFurthestFromBall" in i["stats"]["distance"]:
-                    your_pos_tendencies[18] += i["stats"]["distance"]["timeFurthestFromBall"]
                     your_local_pos_tendencies[18] = i["stats"]["distance"]["timeFurthestFromBall"]
                 if "timeAtSlowSpeed" in i["stats"]["speed"]:
-                    your_pos_tendencies[19] += i["stats"]["speed"]["timeAtSlowSpeed"]
                     your_local_pos_tendencies[19] = i["stats"]["speed"]["timeAtSlowSpeed"]
                 if "timeAtBoostSpeed" in i["stats"]["speed"]:
-                    your_pos_tendencies[20] += i["stats"]["speed"]["timeAtBoostSpeed"]
                     your_local_pos_tendencies[20] = i["stats"]["speed"]["timeAtBoostSpeed"]
                 if "timeAtSuperSonic" in i["stats"]["speed"]:
-                    your_pos_tendencies[21] += i["stats"]["speed"]["timeAtSuperSonic"]
                     your_local_pos_tendencies[21] = i["stats"]["speed"]["timeAtSuperSonic"]
                 if "ballCarries" in i["stats"]:
                     if "totalCarryTime" in i["stats"]["ballCarries"]:
-                        your_pos_tendencies[22] += i["stats"]["ballCarries"]["totalCarryTime"]
                         your_local_pos_tendencies[22] = i["stats"]["ballCarries"]["totalCarryTime"]
             else:
                 if "score" in i:
@@ -1343,6 +1297,9 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
 
     my_max_balls_lost_file = new_json_files[my_balls_lost_over_time.index(max(my_balls_lost_over_time))]
     your_max_balls_lost_file = new_json_files[your_balls_lost_over_time.index(max(your_balls_lost_over_time))]
+
+    my_pos_tendencies = [sum(item) for item in zip(*my_pos_tendencies_over_time)]
+    your_pos_tendencies = [sum(item) for item in zip(*your_pos_tendencies_over_time)]
 
     my_goal_count = sum(my_goals_over_time)
     your_goal_count = sum(your_goals_over_time)
