@@ -28,6 +28,7 @@ from astropy.convolution.kernels import Gaussian2DKernel
 from colorama import Fore, Style
 from numpy.lib.stride_tricks import sliding_window_view
 from tabulate import tabulate
+import threading
 
 
 # Generates replay links given a game ID and/or frame
@@ -4925,19 +4926,57 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
         img_res_19.save(path_to_charts + "team_winrate_chart.png")
 
 
-startTime = time.time()
+class my_thread(threading.Thread):
+    def __init__(self, check_new, show_xg_scorelines, save_and_crop):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
+        self.check_new = check_new
+        self.show_xg_scorelines = show_xg_scorelines
+        self.save_and_crop = save_and_crop
 
-# Update files using all games
-crunch_stats(check_new=False, show_xg_scorelines=False, save_and_crop=True)
+    def run(self):
+        crunch_stats(self.check_new, self.show_xg_scorelines, self.save_and_crop)
 
-midTime = time.time()
 
-# Update files using games from latest streak
-crunch_stats(check_new=True, show_xg_scorelines=False, save_and_crop=True)
+# Multi-threading doesn't offer any serious speed advantages yet
+multi_thread = False
 
-lastTime = time.time()
-executionTime = (time.time() - startTime)
+if multi_thread:
+    startTime = time.time()
 
-print('\n\nAll games execution time: ', "%.2f" % (midTime - startTime) + "s")
-print('Latest streak execution time: ', "%.2f" % (lastTime - midTime) + "s")
-print('Total execution time: ', "%.2f" % executionTime + "s")
+    # Update files using all games
+    thread1 = my_thread(1, "Thread1", 1, check_new=False, show_xg_scorelines=False, save_and_crop=False)
+
+    # Update files using games from latest streak
+    thread2 = my_thread(2, "Thread2", 2, check_new=True, show_xg_scorelines=False, save_and_crop=False)
+
+    thread1.start()
+    thread2.start()
+
+    thread1.join()
+    thread2.join()
+
+    endTime = time.time()
+
+    print('\n\nMultithreaded execution time: ', "%.2f" % (endTime - startTime) + "s")
+
+
+else:
+    startTime = time.time()
+
+    # Update files using all games
+    crunch_stats(check_new=False, show_xg_scorelines=False, save_and_crop=True)
+
+    midTime = time.time()
+
+    # Update files using games from latest streak
+    crunch_stats(check_new=True, show_xg_scorelines=False, save_and_crop=True)
+
+    lastTime = time.time()
+    executionTime = (time.time() - startTime)
+
+    print('\n\nAll games execution time: ', "%.2f" % (midTime - startTime) + "s")
+    print('Latest streak execution time: ', "%.2f" % (lastTime - midTime) + "s")
+    print('Total execution time: ', "%.2f" % executionTime + "s")
