@@ -6,6 +6,7 @@
 # TODO: decide whether to plot "non-shot" goals in the 4 goal heatmaps
 # TODO: plot assists (maybe highlight assisted goals in a different color in the 4 goal heatmaps)
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
+# TODO: fix execution time prints for multithreading (if we will keep multithreading)
 
 import csv
 import glob
@@ -65,7 +66,7 @@ def poisson_binomial_pmf(p):
 
 
 # Crunches all the stats and generates output files
-def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
+def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop, time_list):
     global added_streak
 
     if not show_tables:
@@ -419,7 +420,7 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
 
     luck_over_time = []
 
-    print("Filtering files to use")
+    print("Filtering files to use", end="")
     json_files = [pos_json for pos_json in os.listdir(path_to_json) if pos_json.endswith('.json')]
 
     json_files_2v2 = []
@@ -463,7 +464,10 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
     # The number of minutes that need to pass between 2 games for them not to be considered part of the same streak
     streak_min_threshold = 30
 
-    print("Reading stats from files")
+    time_list.append(time.time())
+    print(" [%.2f" % (time_list[len(time_list)-1]-time_list[len(time_list)-2]) + "s]")
+    print("Reading stats from files", end="")
+
     for file in new_json_files:
         f = open(path_to_json + file, )
         data = json.load(f)
@@ -1269,7 +1273,10 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
     f.write(content)
     f.close()
 
-    print("Generating further stats")
+    time_list.append(time.time())
+    print(" [%.2f" % (time_list[len(time_list)-1]-time_list[len(time_list)-2]) + "s]")
+    print("Generating further stats", end="")
+
     games_nr = len(new_json_files)
 
     my_max_demos_file = new_json_files[my_demos_over_time.index(max(my_demos_over_time))]
@@ -1537,7 +1544,10 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
     # only from shots
     our_misses_over_time = [your_misses_over_time[x] + my_misses_over_time[x] for x in range(games_nr)]
 
-    print("Calculating per game data")
+    time_list.append(time.time())
+    print(" [%.2f" % (time_list[len(time_list)-1]-time_list[len(time_list)-2]) + "s]")
+    print("Calculating per game data", end="")
+
     per_game_data = []
     my_pos_tendencies_game_data = []
     your_pos_tendencies_game_data = []
@@ -1807,7 +1817,10 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
         print("\n")
         print(tabulate(team_data, headers=["STATS", "Us", "Them"], numalign="right"))
 
-    print("Calculating streak data")
+    time_list.append(time.time())
+    print(" [%.2f" % (time_list[len(time_list)-1]-time_list[len(time_list)-2]) + "s]")
+    print("Calculating streak data", end="")
+
     res_num = 0
     local_wins_in_streak = 0
     local_losses_in_streak = 0
@@ -1902,7 +1915,9 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
         res_num += 1
 
     if not added_streak:
-        print("Adding files from latest streak to /json_new/")
+        time_list.append(time.time())
+        print(" [%.2f" % (time_list[len(time_list) - 1] - time_list[len(time_list) - 2]) + "s]")
+        print("Adding files from latest streak to /json_new/",end="")
         # Clear json_new directory
         all_files = glob.glob('../data/json_new/*.json')
         for f in all_files:
@@ -2157,7 +2172,9 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
         print(tabulate(result_data, headers=["STATS", "Overall", "Normaltime", "Overtime"], numalign="right"))
 
     # Individual Records
-    print("Calculating record data")
+    time_list.append(time.time())
+    print(" [%.2f" % (time_list[len(time_list)-1]-time_list[len(time_list)-2]) + "s]")
+    print("Calculating record data",end="")
     my_most_consecutive_games_scored_in_helper = 0
     my_most_consecutive_games_scored_in = 0
     my_most_consecutive_games_fts_in_helper = 0
@@ -3677,7 +3694,9 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
     f.close()
 
     if save_and_crop:
-        print("Generating matplotlib charts")
+        time_list.append(time.time())
+        print(" [%.2f" % (time_list[len(time_list) - 1] - time_list[len(time_list) - 2]) + "s]")
+        print("Generating matplotlib charts",end="")
         bg_img = plt.imread("../simple-pitch.png")
         fig = plt.figure(figsize=(40, 20))
         n_plots = 26
@@ -4602,7 +4621,9 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
         ax10.set_position([0.75, 0.26, 0.227, 0.1])  # Saves over time
         ax11.set_position([0.75, 0.365, 0.227, 0.1])  # Assists over time
 
-        print("Cropping charts")
+        time_list.append(time.time())
+        print(" [%.2f" % (time_list[len(time_list) - 1] - time_list[len(time_list) - 2]) + "s]")
+        print("Cropping charts",end="")
         plt.savefig(path_to_charts + "full_canvas.png")
         # Divide the canvas into individual charts by cropping
         img = Image.open(path_to_charts + "full_canvas.png")
@@ -4759,9 +4780,12 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop):
         img_res_19 = img.crop((left, top, right, bottom))
         img_res_19.save(path_to_charts + "team_winrate_chart.png")
 
+    time_list.append(time.time())
+    print(" [%.2f" % (time_list[len(time_list) - 1] - time_list[len(time_list) - 2]) + "s]")
+
 
 class my_thread(threading.Thread):
-    def __init__(self, threadID, name, counter, check_new, show_xg_scorelines, show_tables, save_and_crop):
+    def __init__(self, threadID, name, counter, check_new, show_xg_scorelines, show_tables, save_and_crop, time_list):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
@@ -4770,9 +4794,10 @@ class my_thread(threading.Thread):
         self.show_xg_scorelines = show_xg_scorelines
         self.show_tables = show_tables
         self.save_and_crop = save_and_crop
+        self.time_list = time_list
 
     def run(self):
-        crunch_stats(self.check_new, self.show_xg_scorelines, self.show_tables, self.save_and_crop)
+        crunch_stats(self.check_new, self.show_xg_scorelines, self.show_tables, self.save_and_crop, self.time_list)
 
 
 # Multi-threading doesn't offer any serious speed advantages yet
@@ -4780,14 +4805,14 @@ multi_thread = False
 
 if multi_thread:
     startTime = time.time()
-
+    default_time_list = [startTime]
     # Update files using all games
     thread1 = my_thread(1, "Thread1", 1, check_new=False, show_xg_scorelines=False, show_tables=False,
-                        save_and_crop=False)
+                        save_and_crop=False, time_list=default_time_list)
 
     # Update files using games from latest streak
     thread2 = my_thread(2, "Thread2", 2, check_new=True, show_xg_scorelines=False, show_tables=False,
-                        save_and_crop=False)
+                        save_and_crop=False, time_list=default_time_list)
 
     thread1.start()
     thread2.start()
@@ -4802,14 +4827,16 @@ if multi_thread:
 
 else:
     startTime = time.time()
-
+    all_exec_time_list = [startTime]
     # Update files using all games
-    crunch_stats(check_new=False, show_xg_scorelines=False, show_tables=False, save_and_crop=True)
+    crunch_stats(check_new=False, show_xg_scorelines=False, show_tables=False, save_and_crop=True,
+                 time_list=all_exec_time_list)
 
     midTime = time.time()
-
+    latest_exec_time_list = [midTime]
     # Update files using games from latest streak
-    crunch_stats(check_new=True, show_xg_scorelines=False, show_tables=False, save_and_crop=True)
+    crunch_stats(check_new=True, show_xg_scorelines=False, show_tables=False, save_and_crop=True,
+                 time_list=latest_exec_time_list)
 
     lastTime = time.time()
     executionTime = (time.time() - startTime)
