@@ -4927,7 +4927,7 @@ def crunch_stats(check_new, show_xg_scorelines, save_and_crop):
 
 
 class my_thread(threading.Thread):
-    def __init__(self, check_new, show_xg_scorelines, save_and_crop):
+    def __init__(self, threadID, name, counter, check_new, show_xg_scorelines, save_and_crop):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
