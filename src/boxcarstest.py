@@ -8,6 +8,9 @@
 # TODO: add a check to see whether there are any games to check (i.e. indicate error if no games found)
 # TODO: fix execution time prints for multithreading (if we will keep multithreading)
 
+# TODO: add start time of each game to the .JSON filename when going from .replay -> .JSON so that we don't have to
+#  loop through the files once to find their start times
+
 import csv
 import glob
 import json
@@ -46,11 +49,15 @@ def link_replay(game_id, frame, show_timestamp):
     if ".csv" in game_id:
         game_id = game_id.replace(".csv", "")
 
-    if show_timestamp:
-        converted_time = round((int(frame) / 27.5 - 3), 2)
-        return replay_base_url + game_id + timestamp_text + str(converted_time) + "s"
+    if game_id == "":
+        return "-"
+
     else:
-        return replay_base_url + game_id + no_timestamp_text
+        if show_timestamp:
+            converted_time = round((int(frame) / 27.5 - 3), 2)
+            return replay_base_url + game_id + timestamp_text + str(converted_time) + "s"
+        else:
+            return replay_base_url + game_id + no_timestamp_text
 
 
 # Returns the p.m.f. of the Poisson Binomial distribution
@@ -2456,6 +2463,8 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop, time
     for shot in range(len(my_xg_per_shot_goal_list)):
         if shot == 0:
             my_lowest_xg_goal_from_shot = my_xg_per_shot_goal_list[shot]
+            my_lowest_xg_goal_from_shot_file = my_xg_per_shot_goal_file_list[shot]
+            my_lowest_xg_goal_from_shot_frame = my_xg_per_shot_goal_frame_list[shot]
         else:
             if my_xg_per_shot_goal_list[shot] < my_lowest_xg_goal_from_shot:
                 my_lowest_xg_goal_from_shot = my_xg_per_shot_goal_list[shot]
@@ -2470,9 +2479,15 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop, time
 
     your_biggest_xg_miss_from_shot = 0
     your_lowest_xg_goal_from_shot = 0
+    your_biggest_xg_miss_from_shot_file = ""
+    your_lowest_xg_goal_from_shot_file = ""
+    your_biggest_xg_miss_from_shot_frame = 0
+    your_lowest_xg_goal_from_shot_frame = 0
     for shot in range(len(your_xg_per_shot_goal_list)):
         if shot == 0:
             your_lowest_xg_goal_from_shot = your_xg_per_shot_goal_list[shot]
+            your_lowest_xg_goal_from_shot_file = your_xg_per_shot_goal_file_list[shot]
+            your_lowest_xg_goal_from_shot_frame = your_xg_per_shot_goal_frame_list[shot]
         else:
             if your_xg_per_shot_goal_list[shot] < your_lowest_xg_goal_from_shot:
                 your_lowest_xg_goal_from_shot = your_xg_per_shot_goal_list[shot]
@@ -2486,8 +2501,32 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop, time
             your_biggest_xg_miss_from_shot_frame = your_xg_per_miss_from_shot_frame_list[shot]
 
     our_biggest_xg_miss_from_shot = max(your_biggest_xg_miss_from_shot, my_biggest_xg_miss_from_shot)
-    our_lowest_xg_goal_from_shot = min(your_lowest_xg_goal_from_shot, my_lowest_xg_goal_from_shot)
+    
+    our_lowest_xg_goal_from_shot_file = ""
+    our_lowest_xg_goal_from_shot_frame = 0
+    
+    if your_goals_from_shots == 0 and my_goals_from_shots == 0:
+        our_lowest_xg_goal_from_shot = 0
 
+    elif your_goals_from_shots > 0 and my_goals_from_shots == 0:
+        our_lowest_xg_goal_from_shot = your_lowest_xg_goal_from_shot
+        our_lowest_xg_goal_from_shot_file = your_lowest_xg_goal_from_shot_file
+        our_lowest_xg_goal_from_shot_frame = your_lowest_xg_goal_from_shot_frame
+
+    elif your_goals_from_shots == 0 and my_goals_from_shots > 0:
+        our_lowest_xg_goal_from_shot = my_lowest_xg_goal_from_shot
+        our_lowest_xg_goal_from_shot_file = my_lowest_xg_goal_from_shot_file
+        our_lowest_xg_goal_from_shot_frame = my_lowest_xg_goal_from_shot_frame
+
+    elif your_goals_from_shots > 0 and my_goals_from_shots > 0:
+        our_lowest_xg_goal_from_shot = min(your_lowest_xg_goal_from_shot, my_lowest_xg_goal_from_shot)
+        if our_lowest_xg_goal_from_shot == your_lowest_xg_goal_from_shot:
+            our_lowest_xg_goal_from_shot_file = your_lowest_xg_goal_from_shot_file
+            our_lowest_xg_goal_from_shot_frame = your_lowest_xg_goal_from_shot_frame
+        else:
+            our_lowest_xg_goal_from_shot_file = my_lowest_xg_goal_from_shot_file
+            our_lowest_xg_goal_from_shot_frame = my_lowest_xg_goal_from_shot_frame
+            
     our_biggest_xg_miss_from_shot_file = ""
     if our_biggest_xg_miss_from_shot == your_biggest_xg_miss_from_shot:
         our_biggest_xg_miss_from_shot_file = your_biggest_xg_miss_from_shot_file
@@ -2496,25 +2535,6 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop, time
     if our_biggest_xg_miss_from_shot == my_biggest_xg_miss_from_shot:
         our_biggest_xg_miss_from_shot_file = my_biggest_xg_miss_from_shot_file
         our_biggest_xg_miss_from_shot_frame = my_biggest_xg_miss_from_shot_frame
-
-    our_lowest_xg_goal_from_shot_file = ""
-    if our_lowest_xg_goal_from_shot == your_lowest_xg_goal_from_shot:
-        our_lowest_xg_goal_from_shot_file = your_lowest_xg_goal_from_shot_file
-        our_lowest_xg_goal_from_shot_frame = your_lowest_xg_goal_from_shot_frame
-
-    if our_lowest_xg_goal_from_shot == my_lowest_xg_goal_from_shot:
-        our_lowest_xg_goal_from_shot_file = my_lowest_xg_goal_from_shot_file
-        our_lowest_xg_goal_from_shot_frame = my_lowest_xg_goal_from_shot_frame
-
-    if my_goals_from_shots > 0 and your_goals_from_shots == 0:
-        our_lowest_xg_goal_from_shot_file = my_lowest_xg_goal_from_shot_file
-        our_lowest_xg_goal_from_shot = my_lowest_xg_goal_from_shot
-        our_lowest_xg_goal_from_shot_frame = my_lowest_xg_goal_from_shot_frame
-
-    elif my_goals_from_shots == 0 and your_goals_from_shots > 0:
-        our_lowest_xg_goal_from_shot_file = your_lowest_xg_goal_from_shot_file
-        our_lowest_xg_goal_from_shot = your_lowest_xg_goal_from_shot
-        our_lowest_xg_goal_from_shot_frame = your_lowest_xg_goal_from_shot_frame
 
     their_biggest_xg_miss_from_shot = 0
     their_lowest_xg_goal_from_shot = 0
@@ -2566,6 +2586,8 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop, time
     your_lowest_xg_goal_from_non_shot = 0
     your_biggest_xg_miss_from_non_shot_file = ""
     your_lowest_xg_goal_from_non_shot_file = ""
+    your_biggest_xg_miss_from_non_shot_frame = 0
+    your_lowest_xg_goal_from_non_shot_frame = 0
     for non_shot in range(len(your_xg_per_non_shot_goal_list)):
         if non_shot == 0:
             your_lowest_xg_goal_from_non_shot = your_xg_per_non_shot_goal_list[non_shot]
@@ -2941,12 +2963,18 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop, time
             your_most_consecutive_games_ftsoa_in_helper += 1
             if your_most_consecutive_games_ftsoa_in_helper > your_most_consecutive_games_ftsoa_in:
                 your_most_consecutive_games_ftsoa_in = your_most_consecutive_games_ftsoa_in_helper
+    
+    if my_biggest_xg_overperformance_xg != 0:
+        my_biggest_xg_overperformance_in_one_game_percentage = \
+            "%.0f" % (((my_biggest_xg_overperformance_goals / my_biggest_xg_overperformance_xg) * 100) - 100) + "%"
+    else:
+        my_biggest_xg_overperformance_in_one_game_percentage = 0
 
-    my_biggest_xg_overperformance_in_one_game_percentage = \
-        "%.0f" % (((my_biggest_xg_overperformance_goals / my_biggest_xg_overperformance_xg) * 100) - 100) + "%"
-
-    your_biggest_xg_overperformance_in_one_game_percentage = \
-        "%.0f" % (((your_biggest_xg_overperformance_goals / your_biggest_xg_overperformance_xg) * 100) - 100) + "%"
+    if your_biggest_xg_overperformance_xg != 0:
+        your_biggest_xg_overperformance_in_one_game_percentage = \
+            "%.0f" % (((your_biggest_xg_overperformance_goals / your_biggest_xg_overperformance_xg) * 100) - 100) + "%"
+    else:
+        your_biggest_xg_overperformance_in_one_game_percentage = 0
 
     individual_record_data = [["Most goals scored in one game", max(my_goals_over_time), max(your_goals_over_time),
                                link_replay(new_json_files[my_goals_over_time.index(max(my_goals_over_time))], 0, False),
@@ -3323,7 +3351,7 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop, time
 
         else:
             our_highest_shot_goal_scored_file = your_highest_shot_goal_scored_file
-            our_highest_shot_goal_scored_frame = my_highest_shot_goal_scored_frame
+            our_highest_shot_goal_scored_frame = your_highest_shot_goal_scored_frame
 
         if my_furthest_non_shot_goal_scored == max(my_furthest_non_shot_goal_scored,
                                                    your_furthest_non_shot_goal_scored):
