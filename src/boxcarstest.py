@@ -1449,7 +1449,10 @@ def crunch_stats(check_new, show_xg_scorelines, show_tables, save_and_crop, time
         their_gfs_xg_ratio = 0
 
     if my_goal_count > 0:
-        my_avg_shot_goal_distance = "%.0f" % mean(my_shot_goals_distance_to_goal)
+        if len(my_shot_goals_distance_to_goal) == 0:
+            my_avg_shot_goal_distance = 0
+        else:
+            my_avg_shot_goal_distance = "%.0f" % mean(my_shot_goals_distance_to_goal)
     else:
         my_avg_shot_goal_distance = 0
 
