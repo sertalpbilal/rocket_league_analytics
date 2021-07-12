@@ -8,7 +8,7 @@ import glob
 import os
 import pickle
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.metrics import accuracy_score, roc_auc_score, average_precision_score
 from xgboost import XGBClassifier
 from sklearn.neural_network import MLPClassifier
 from progress.bar import IncrementalBar
@@ -212,7 +212,7 @@ class RocketLeagueXG:
         reg.fit(scaled_X_train, y_train)
         y_pred = reg.predict(scaled_X_test)
         print("Model is ready, measuring performance")
-        print("Test", accuracy_score(y_pred, y_test), "Train", accuracy_score(reg.predict(scaled_X_train), y_train), "ROC AUC Score", roc_auc_score(y_test, y_pred))
+        print("Test", accuracy_score(y_pred, y_test), "Train", accuracy_score(reg.predict(scaled_X_train), y_train), "ROC AUC Score", roc_auc_score(y_test, y_pred), "PR AUC Score", average_precision_score(y_test, y_pred))
         with open(self.folder / "xg.model", "wb") as f:
             pickle.dump(reg, f)
         with open(self.folder / "xg.scaler", "wb") as f:
