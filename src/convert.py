@@ -15,10 +15,13 @@ for r in replays:
         print(f"{r} files exist, skipping...")
         continue
 
-    analysis = carball.analyze_replay_file(r)
-    with open(json_name, "w") as f:
-        analysis.write_json_out_to_file(f)
-    df = analysis.get_data_frame()
-    with open(df_name, "w") as f:
-        df.to_csv(f)
+    try:
+        analysis = carball.analyze_replay_file(r)
+        with open(json_name, "w") as f:
+            analysis.write_json_out_to_file(f)
+        df = analysis.get_data_frame()
+        with open(df_name, "w") as f:
+            df.to_csv(f)
+    except:
+        print(f"Exception occured for game {r}, skipping...")
 

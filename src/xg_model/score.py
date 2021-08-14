@@ -90,7 +90,10 @@ def convert_all():
     game_ids = [i.split('/')[-1].split('.')[0] for i in games]
     s = RocketLeagueXGScorer('model')
     for g in game_ids:
-        s.score_game(g)
+        try:
+            s.score_game(g)
+        except:
+            print(f"Exception when reading game {g}, skipping...")
 
 if __name__ == "__main__":
     s = RocketLeagueXGScorer('model')
