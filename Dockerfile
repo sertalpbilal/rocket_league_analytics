@@ -1,18 +1,10 @@
 FROM ubuntu:latest
 
 RUN apt-get update
-RUN apt install -y python3 python3-pip
+RUN apt install -y python3 python3-pip wget
 
-RUN pip install carball
-RUN pip install numpy==1.20.3
-RUN pip install requests
-RUN pip install python-dotenv
-RUN pip install ipykernel
-RUN pip install xgboost
-RUN pip install scikit-learn
-RUN pip install progress
-RUN pip install wrapt_timeout_decorator
-RUN pip install matplotlib tabulate astropy colorama
+RUN pip install carball numpy==1.20.3 requests python-dotenv ipykernel xgboost scikit-learn progress wrapt_timeout_decorator matplotlib tabulate astropy colorama
+RUN pip install boxcars-py --upgrade
 
 WORKDIR /app/src
 
