@@ -92,8 +92,8 @@ def convert_all():
     for g in game_ids:
         try:
             s.score_game(g)
-        except:
-            print(f"Exception when reading game {g}, skipping...")
+        except Exception as e:
+            print(f"Exception when reading game {g}, skipping... {e}")
 
 if __name__ == "__main__":
     s = RocketLeagueXGScorer('model')

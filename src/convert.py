@@ -22,6 +22,6 @@ for r in replays:
         df = analysis.get_data_frame()
         with open(df_name, "w") as f:
             df.to_csv(f)
-    except:
-        print(f"Exception occured for game {r}, skipping...")
+    except Exception as e:
+        print(f"Exception when reading game {r}, skipping... {e}")
 
