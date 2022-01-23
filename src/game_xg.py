@@ -110,11 +110,11 @@ class RocketLeagueGame:
 
         self.game_df = pd.DataFrame(model_shots)
 
-    def get_xg_values(self):
+    def get_xg_values(self, write_file=True):
         
-        with open("../data/xg/xg.model", "rb") as f:
+        with open("../data/model/xg.model", "rb") as f:
             reg = pickle.load(f)
-        with open("../data/xg/xg.scaler", "rb") as f:
+        with open("../data/model/xg.scaler", "rb") as f:
             sc = pickle.load(f)
 
         gdf = self.game_df.reset_index()
@@ -127,7 +127,10 @@ class RocketLeagueGame:
         print(self.game_df.groupby('shot_taker_name')['xg'].sum())
 
         e = self.game_df[['shot_taker_name', 'is_orange', 'time', 'xg', 'goal']].copy()
-        e.to_csv(f"../data/game_shots/{self.game_id}.csv")
+        if write_file:
+            e.to_csv(f"../data/game_shots/{self.game_id}.csv")
+        else:
+            return e
 
 if __name__ == "__main__":
     from dotenv import dotenv_values
